@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController">
+    <!-- Login Container -->
+    <VBox fx:id="loginContainer" alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <Label text="Username:"/>
+        <TextField fx:id="usernameField" />
+
+        <Label text="Password:"/>
+        <PasswordField fx:id="passwordField" />
+
+        <Button text="Login" onAction="#handleLoginAction"/>
+    </VBox>
+
+    <!-- Main Content, hidden until login is successful -->
+    <VBox fx:id="mainContainer" alignment="TOP_CENTER" spacing="10" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" visible="false">
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Button onAction="#showInicio" text="Inicio" />
+            <Button onAction="#showRegistro" text="Registro" />
+            <Button onAction="#showRegistroSucursal" text="Gestión de empleados " />
+            <Button onAction="#showMonitoreo" text="Monitoreo" />
+            <Button onAction="#showTerminacion" text="Asistencia" />
+            <Button alignment="BASELINE_RIGHT" centerShape="false" contentDisplay="RIGHT" onAction="#showAyuda" text="Ayuda" />
+        </HBox>
+        <StackPane fx:id="mainContent" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
+            <!-- Las vistas cargadas dinámicamente se insertarán aquí -->
+        </StackPane>
+    </VBox>
+</AnchorPane>

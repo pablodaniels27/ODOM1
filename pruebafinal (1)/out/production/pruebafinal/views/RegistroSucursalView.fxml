@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.image.ImageView?>
+
+<HBox xmlns="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" spacing="20" alignment="TOP_CENTER" style="-fx-padding: 20;">
+
+    <!-- Supervisores -->
+    <VBox spacing="10" alignment="TOP_CENTER">
+        <Label text="Supervisores" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+
+        <HBox spacing="10">
+            <TextField promptText="Buscar supervisor....." style="-fx-font-size: 14px;" />
+            <Button text="+ Agregar" style="-fx-font-size: 14px;" />
+        </HBox>
+
+        <VBox spacing="10">
+            <VBox spacing="5" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
+                <Label text="Pablo NERUDA" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                <Label text="Jefe de ingeniería: va a arreglar algo" style="-fx-font-size: 14px; -fx-text-fill: grey;" />
+            </VBox>
+            <!-- Repetir VBox para cada supervisor -->
+        </VBox>
+    </VBox>
+
+    <!-- Empleados -->
+    <VBox spacing="10" alignment="TOP_CENTER">
+        <Label text="Empleados" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+
+        <HBox spacing="10">
+            <TextField promptText="Buscar Empleados....." style="-fx-font-size: 14px;" />
+            <Button text="+ Agregar" style="-fx-font-size: 14px;" />
+        </HBox>
+
+        <VBox spacing="10">
+            <VBox spacing="5" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
+                <Label text="Pablo NERUDA" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                <Label text="Jefe de ingeniería: va a arreglar algo" style="-fx-font-size: 14px; -fx-text-fill: grey;" />
+            </VBox>
+            <!-- Repetir VBox para cada empleado -->
+        </VBox>
+
+        <VBox spacing="10">
+            <Button text="Editar" style="-fx-font-size: 14px;" />
+            <Button text="Eliminar" style="-fx-font-size: 14px;" />
+        </VBox>
+    </VBox>
+</HBox>

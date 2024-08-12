@@ -1,0 +1,61 @@
+.label {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+    -fx-alignment: center; /* Centra el texto en las etiquetas */
+}
+
+.hbox {
+    -fx-spacing: 10px;
+    -fx-alignment: center; /* Centra los elementos horizontalmente */
+}
+
+.vbox {
+    -fx-spacing: 10px;
+    -fx-padding: 10px;
+    -fx-alignment: center; /* Centra los elementos verticalmente */
+}
+
+.list-view {
+    -fx-padding: 10px;
+    -fx-alignment: center; /* Centra los elementos en la lista */
+    -fx-pref-width: 100%;  /* Ajuste automático al ancho disponible */
+    -fx-pref-height: 100%; /* Ajuste automático a la altura disponible */
+}
+
+/* Centrar el contenido en el ScrollPane */
+.scroll-pane .viewport {
+    -fx-alignment: center;
+}
+.root {
+    -fx-font-family: 'Arial';
+    -fx-background-color: #F5F5F5;
+}
+
+.text-field, .password-field {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+    -fx-background-color: #EFEFEF;
+}
+
+.button {
+    -fx-background-color: #FF6F3F;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+.hyperlink {
+    -fx-text-fill: blue;
+    -fx-font-size: 12px;
+}
+
+.label {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+

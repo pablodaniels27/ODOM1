@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" spacing="10" HBox.hgrow="ALWAYS">
+    <VBox spacing="10" VBox.vgrow="ALWAYS">
+        <Label text="Lista de empleados" />
+        <ListView fx:id="employeeListView" prefHeight="600" VBox.vgrow="ALWAYS"/>
+    </VBox>
+    <VBox spacing="10">
+        <Label text="Calendario" />
+        <DatePicker fx:id="calendarDatePicker" />
+    </VBox>
+</HBox>
+
+
+
