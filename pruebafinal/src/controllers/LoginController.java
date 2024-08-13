@@ -23,7 +23,7 @@ public class LoginController {
     @FXML
     private ImageView eyeIcon;
 
-    private Stage primaryStage; // Para almacenar la referencia de la ventana principal
+    private Stage primaryStage;
 
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
@@ -67,11 +67,5 @@ public class LoginController {
         passwordField.setText(passwordVisibleField.getText());
         passwordField.setVisible(true);
         passwordVisibleField.setVisible(false);
-    }
-
-    private MainController mainController;
-
-    public void setMainController(MainController mainController) {
-        this.mainController = mainController;
     }
 }
