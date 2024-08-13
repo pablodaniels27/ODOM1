@@ -33,13 +33,14 @@
                 <TextField fx:id="curpField" GridPane.columnIndex="7" GridPane.rowIndex="2" />
                 <Label text="Profesión" GridPane.columnIndex="0" GridPane.rowIndex="3" />
                 <TextField fx:id="profesionField" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
-                <Label text="Notas" GridPane.columnIndex="4" GridPane.rowIndex="3" />
-                <TextArea fx:id="notasArea" prefHeight="192.0" prefWidth="502.0" GridPane.columnIndex="5" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+                <Label GridPane.columnIndex="4" GridPane.rowIndex="3" />
+                <TextArea fx:id="notasArea" prefHeight="192.0" prefWidth="502.0" GridPane.columnIndex="5" GridPane.columnSpan="3" GridPane.rowIndex="3"
+                          editable="false" focusTraversable="false" />
                 <ImageView fx:id="imageView" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="4" />
                 <Button fx:id="ingresarHuellaButton" onAction="#handleIngresarHuellaButton" prefHeight="26.0" prefWidth="179.0" text="Presionar para ingresar huella" GridPane.columnIndex="6" GridPane.rowIndex="4" />
 
                 <HBox alignment="CENTER" spacing="10" GridPane.columnIndex="0" GridPane.columnSpan="8" GridPane.rowIndex="5">
-                    <Button fx:id="enviarButton" text="Enviar" onAction="#enviarDatos" />
+                    <Button fx:id="enviarButton" onAction="#enviarDatos" text="Enviar" />
                     <Button fx:id="borrarButton" text="Borrar" />
                 </HBox>
             <columnConstraints>
