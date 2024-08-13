@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+
+<?import javafx.scene.image.Image?>
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" alignment="TOP_LEFT" spacing="20.0">
+
+    <!-- Establecer padding utilizando Insets -->
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <!-- Sección de información de la aplicación -->
+    <VBox alignment="CENTER" spacing="10.0">
+        <Label text="Acerca de esta aplicación" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+        <Label text="Aplicación creada por los pasantes de la universidad Tecmilenio 2024"/>
+    </VBox>
+
+    <!-- Sección de Descargas -->
+    <VBox alignment="TOP_LEFT" spacing="10.0">
+        <Label text="Descargas" style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+        <HBox alignment="TOP_LEFT" spacing="10.0">
+            <Label text="Manual PDF" style="-fx-text-fill: blue;"/>
+            <ImageView fx:id="manualIcon" fitHeight="24" fitWidth="24">
+                <Image url="@../resources/icono.png"/>
+            </ImageView>
+        </HBox>
+
+        <HBox alignment="TOP_LEFT" spacing="10.0">
+            <Label text="Aviso de privacidad" style="-fx-text-fill: blue;"/>
+            <ImageView fx:id="privacyIcon" fitHeight="24" fitWidth="24">
+                <Image url="@../resources/icono.png"/>
+            </ImageView>
+        </HBox>
+    </VBox>
+
+    <!-- Sección de reporte de problemas -->
+    <VBox alignment="BOTTOM_LEFT" spacing="10.0">
+        <Label text="Reportar un problema:" style="-fx-font-size: 14px;"/>
+        <Label text="Tecmibroscancun@gmail.com" style="-fx-text-fill: blue;"/>
+    </VBox>
+
+
+    <!-- Versión de la aplicación -->
+    <VBox alignment="BOTTOM_LEFT" spacing="10.0">
+        <Label text="Versión de aplicación 0.1" style="-fx-font-size: 12px;"/>
+    </VBox>
+</VBox>
