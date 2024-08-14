@@ -23,10 +23,28 @@ public class LoginController {
     @FXML
     private ImageView eyeIcon;
 
-    private Stage primaryStage; // Para almacenar la referencia de la ventana principal
+    private Stage primaryStage;
 
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
+
+    }
+    @FXML
+    private void handleBackToPreLoginAction() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/PreLoginView.fxml"));
+            Parent root = loader.load();
+
+            PreLoginView preLoginController = loader.getController();
+            preLoginController.setPrimaryStage(primaryStage);
+
+            Scene scene = new Scene(root);
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("ODOM. SA DE CV - PreLogin");
+            primaryStage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -67,11 +85,5 @@ public class LoginController {
         passwordField.setText(passwordVisibleField.getText());
         passwordField.setVisible(true);
         passwordVisibleField.setVisible(false);
-    }
-
-    private MainController mainController;
-
-    public void setMainController(MainController mainController) {
-        this.mainController = mainController;
     }
 }
