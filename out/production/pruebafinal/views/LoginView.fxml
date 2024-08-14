@@ -4,18 +4,22 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="CENTER" prefHeight="422.0" prefWidth="746.0" spacing="10" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.LoginController">
-    <TextField fx:id="usernameField" promptText="Enter your email" style="-fx-background-radius: 10;" />
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.LoginController" prefHeight="422.0" prefWidth="746.0">
+    <!-- Botón Regresar en la esquina superior izquierda -->
+    <Button onAction="#handleBackToPreLoginAction" text="Regresar" style="-fx-background-color: #CCCCCC; -fx-text-fill: black; -fx-font-size: 14px; -fx-background-radius: 10;" prefWidth="100" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
 
-    <StackPane>
-        <PasswordField fx:id="passwordField" promptText="Password" style="-fx-background-radius: 10;" />
-        <TextField fx:id="passwordVisibleField" promptText="Password" style="-fx-background-radius: 10;" visible="false" />
-        <ImageView fx:id="eyeIcon" fitHeight="20" fitWidth="20" onMousePressed="#showPassword" onMouseReleased="#hidePassword" style="-fx-cursor: hand; -fx-translate-x: -25px;" />
-    </StackPane>
+    <!-- Contenido central alineado verticalmente -->
+    <VBox alignment="CENTER" spacing="10" prefWidth="400.0" AnchorPane.leftAnchor="173.0" AnchorPane.rightAnchor="173.0" AnchorPane.topAnchor="100.0">
+        <TextField fx:id="usernameField" promptText="Enter your email" style="-fx-background-radius: 10;" prefWidth="300.0" />
 
-    <Hyperlink style="-fx-text-fill: blue;" text="Forgot password?" />
+        <StackPane prefWidth="300.0">
+            <PasswordField fx:id="passwordField" promptText="Password" style="-fx-background-radius: 10;" prefWidth="300.0" />
+            <TextField fx:id="passwordVisibleField" promptText="Password" style="-fx-background-radius: 10;" visible="false" prefWidth="300.0" />
+            <ImageView fx:id="eyeIcon" fitHeight="20" fitWidth="20" onMousePressed="#showPassword" onMouseReleased="#hidePassword" style="-fx-cursor: hand; -fx-translate-x: -25px;" />
+        </StackPane>
 
-    <Button onAction="#handleLoginAction" style="-fx-background-color: #FF6F3F; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 10;" text="Log In" />
+        <Hyperlink style="-fx-text-fill: blue;" text="Forgot password?" />
 
-    <Button alignment="CENTER" onAction="#handleBackToPreLoginAction" prefHeight="26.0" prefWidth="190.0" style="-fx-background-color: #CCCCCC; -fx-text-fill: black; -fx-font-size: 14px; -fx-background-radius: 10;" text="Regresar" />
-</VBox>
+        <Button onAction="#handleLoginAction" text="Log In" style="-fx-background-color: #FF6F3F; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 10;" prefWidth="300.0" />
+    </VBox>
+</AnchorPane>
