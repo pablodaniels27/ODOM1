@@ -27,6 +27,24 @@ public class LoginController {
 
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
+
+    }
+    @FXML
+    private void handleBackToPreLoginAction() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/PreLoginView.fxml"));
+            Parent root = loader.load();
+
+            PreLoginView preLoginController = loader.getController();
+            preLoginController.setPrimaryStage(primaryStage);
+
+            Scene scene = new Scene(root);
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("ODOM. SA DE CV - PreLogin");
+            primaryStage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
