@@ -55,9 +55,44 @@ public class RegistroController {
 
     @FXML
     private void initialize() {
-        // Inicializar ComboBox con datos de la base de datos
-        cargarDepartamentos();
-        cargarPuestos();
+        System.out.println("Inicializando...");
+        departamentoComboBox.setMinWidth(150);  // Asegura un tamaño mínimo para el ComboBox
+        departamentoComboBox.setPrefWidth(200); // Tamaño preferido para mejor visualización
+        departamentoComboBox.setVisibleRowCount(5); // Ajusta la cantidad de elementos visibles
+
+
+        // Crear ObservableList para departamentos
+        ObservableList<String> departamentos = FXCollections.observableArrayList();
+        departamentos.addAll("Administración", "Construcción", "Terminal 2");
+
+        // Crear ObservableList para puestos
+        ObservableList<String> puestos = FXCollections.observableArrayList();
+        puestos.addAll("Líder", "Supervisor", "Empleado");
+
+        // Asignar las listas al ComboBox
+        departamentoComboBox.setItems(departamentos);
+        puestoComboBox.setItems(puestos);
+
+        // Verifica que los items se carguen correctamente
+        System.out.println("Departamentos cargados: " + departamentoComboBox.getItems());
+        System.out.println("Puestos cargados: " + puestoComboBox.getItems());
+
+        // Seleccionar un valor predeterminado
+        departamentoComboBox.getSelectionModel().select("Construcción");  // Selecciona "Construcción" por defecto
+        puestoComboBox.getSelectionModel().select(1);  // Selecciona el segundo puesto (Supervisor) por defecto
+
+        // Manejar la selección en el ComboBox de departamentos
+        departamentoComboBox.setOnAction(event -> {
+            String selectedDepartamento = departamentoComboBox.getSelectionModel().getSelectedItem();
+            System.out.println("Departamento seleccionado: " + selectedDepartamento);
+        });
+
+        // Manejar la selección en el ComboBox de puestos
+        puestoComboBox.setOnAction(event -> {
+            String selectedPuesto = puestoComboBox.getSelectionModel().getSelectedItem();
+            System.out.println("Puesto seleccionado: " + selectedPuesto);
+        });
+
     }
 
     private void cargarDepartamentos() {
@@ -73,12 +108,13 @@ public class RegistroController {
             e.printStackTrace();
         }
         departamentoComboBox.setItems(departamentos);
+        System.out.println("departamentos cargados");
     }
 
     private void cargarPuestos() {
         ObservableList<String> puestos = FXCollections.observableArrayList();
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String query = "SELECT nombre FROM jerarquias";  // Asumiendo que la tabla jerarquias ahora representa puestos
+            String query = "SELECT nombre FROM jerarquias";  // La tabla `jerarquias` representa los puestos
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -88,6 +124,7 @@ public class RegistroController {
             e.printStackTrace();
         }
         puestoComboBox.setItems(puestos);
+        System.out.println("puestos cargados");
     }
 
     @FXML
@@ -106,14 +143,35 @@ public class RegistroController {
         String curp = curpField.getText();
         String profesion = profesionField.getText();
 
-        // Obtener los datos de los ComboBox
-        String departamento = departamentoComboBox.getValue();
-        String puesto = puestoComboBox.getValue();
+        // Obtener los valores seleccionados en los ComboBox
+        String departamentoSeleccionado = departamentoComboBox.getSelectionModel().getSelectedItem();
+        String puestoSeleccionado = puestoComboBox.getSelectionModel().getSelectedItem();
 
         // Conexión a la base de datos e inserción de datos
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, puesto_id) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT id FROM departamentos WHERE nombre = ?), (SELECT id FROM jerarquias WHERE nombre = ?))";
+            // Encontrar el ID del departamento seleccionado
+            String departamentoQuery = "SELECT id FROM departamentos WHERE nombre = ?";
+            PreparedStatement departamentoStatement = connection.prepareStatement(departamentoQuery);
+            departamentoStatement.setString(1, departamentoSeleccionado);
+            ResultSet departamentoResult = departamentoStatement.executeQuery();
+            int departamentoId = 0;
+            if (departamentoResult.next()) {
+                departamentoId = departamentoResult.getInt("id");
+            }
+
+            // Encontrar el ID del puesto (jerarquía) seleccionado
+            String puestoQuery = "SELECT id FROM jerarquias WHERE nombre = ?";
+            PreparedStatement puestoStatement = connection.prepareStatement(puestoQuery);
+            puestoStatement.setString(1, puestoSeleccionado);
+            ResultSet puestoResult = puestoStatement.executeQuery();
+            int jerarquiaId = 0;
+            if (puestoResult.next()) {
+                jerarquiaId = puestoResult.getInt("id");
+            }
+
+            // Insertar los datos del empleado
+            String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, nombre);
             statement.setString(2, apellidoMaterno);
@@ -127,8 +185,8 @@ public class RegistroController {
             statement.setString(10, rfc);
             statement.setString(11, curp);
             statement.setString(12, profesion);
-            statement.setString(13, departamento);  // Buscar ID del departamento
-            statement.setString(14, puesto);        // Buscar ID del puesto
+            statement.setInt(13, departamentoId);  // Usar el ID del departamento
+            statement.setInt(14, jerarquiaId);     // Usar el ID de la jerarquía
 
             statement.executeUpdate();
 
