@@ -48,6 +48,11 @@ public class MainController {
 
     @FXML
     private StackPane mainContent;
+    @FXML
+    public void initialize() {
+        // Cargar la vista de inicio al cargar el MainView
+        showInicio();
+    }
 
     @FXML
     public void showInicio() {
