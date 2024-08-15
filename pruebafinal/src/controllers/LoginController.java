@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,6 +12,7 @@ import javafx.scene.Scene;
 
 public class LoginController {
 
+    public HBox mainHBox;
     @FXML
     private TextField usernameField;
 
@@ -19,14 +21,41 @@ public class LoginController {
 
     @FXML
     private TextField passwordVisibleField;
+    @FXML
+    private ImageView backgroundImage;
+
+    @FXML
+    public void initialize() {
+        // Bind width and height of the ImageView to the width and height of the HBox
+        backgroundImage.fitWidthProperty().bind(mainHBox.widthProperty().multiply(0.5));
+        backgroundImage.fitHeightProperty().bind(mainHBox.heightProperty());
+    }
 
     @FXML
     private ImageView eyeIcon;
 
-    private Stage primaryStage; // Para almacenar la referencia de la ventana principal
+    private Stage primaryStage;
 
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
+
+    }
+    @FXML
+    private void handleBackToPreLoginAction() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/PreLoginView.fxml"));
+            Parent root = loader.load();
+
+            PreLoginView preLoginController = loader.getController();
+            preLoginController.setPrimaryStage(primaryStage);
+
+            Scene scene = new Scene(root);
+            primaryStage.setScene(scene);
+            primaryStage.setTitle("ODOM. SA DE CV - PreLogin");
+            primaryStage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -67,11 +96,5 @@ public class LoginController {
         passwordField.setText(passwordVisibleField.getText());
         passwordField.setVisible(true);
         passwordVisibleField.setVisible(false);
-    }
-
-    private MainController mainController;
-
-    public void setMainController(MainController mainController) {
-        this.mainController = mainController;
     }
 }
