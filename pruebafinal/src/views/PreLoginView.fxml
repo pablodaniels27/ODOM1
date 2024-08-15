@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PreLoginView">
     <!-- Botón Check-in/Check-out -->
-    <Button fx:id="registerEntryButton" alignment="CENTER" contentDisplay="CENTER" layoutX="171.0" layoutY="106.0" prefHeight="51.0" prefWidth="274.0" text="Check-in/Check-out" textFill="#2215e1" AnchorPane.leftAnchor="171.0" AnchorPane.rightAnchor="155.0" AnchorPane.topAnchor="106.0">
+    <Button fx:id="registerEntryButton" onAction="#popup" alignment="CENTER" contentDisplay="CENTER" layoutX="171.0" layoutY="106.0" prefHeight="51.0" prefWidth="274.0" text="Check-in/Check-out" textFill="#2215e1" AnchorPane.leftAnchor="171.0" AnchorPane.rightAnchor="155.0" AnchorPane.topAnchor="106.0">
         <font>
             <Font name="Bodoni MT Italic" size="24.0" />
         </font>
     </Button>
+
+    <!-- ImageView para el GIF más abajo y centrado a la derecha -->
+    <ImageView fx:id="gifImageView" fitWidth="150.0" fitHeight="150.0" AnchorPane.topAnchor="200.0" AnchorPane.rightAnchor="550.0" />
 
     <!-- Botón Login -->
     <Button fx:id="loginButton" onAction="#handleLoginAction" text="Login" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="250.0" AnchorPane.rightAnchor="250.0">
