@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -11,6 +12,7 @@ import javafx.scene.Scene;
 
 public class LoginController {
 
+    public HBox mainHBox;
     @FXML
     private TextField usernameField;
 
@@ -19,6 +21,15 @@ public class LoginController {
 
     @FXML
     private TextField passwordVisibleField;
+    @FXML
+    private ImageView backgroundImage;
+
+    @FXML
+    public void initialize() {
+        // Bind width and height of the ImageView to the width and height of the HBox
+        backgroundImage.fitWidthProperty().bind(mainHBox.widthProperty().multiply(0.5));
+        backgroundImage.fitHeightProperty().bind(mainHBox.heightProperty());
+    }
 
     @FXML
     private ImageView eyeIcon;
