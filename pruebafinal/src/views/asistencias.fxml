@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.asistenciasController" alignment="CENTER" spacing="10">
+    <Label text="Bienvenido a la vista de asistencias" />
+    <!-- Agrega más contenido aquí según sea necesario -->
+</VBox>
