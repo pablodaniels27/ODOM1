@@ -1,44 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.effect.GaussianBlur?>
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: #F8F9FA;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.LoginController">
-
-    <!-- HBox para dividir la pantalla en dos columnas -->
-    <HBox fx:id="mainHBox" prefHeight="600.0" prefWidth="800.0" style="-fx-background-color: transparent;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-
-        <!-- Imagen con efecto blurry ocupando el 50% -->
-        <ImageView fx:id="backgroundImage" preserveRatio="false" HBox.hgrow="ALWAYS">
-            <image>
-                <Image url="@../resources/fondologin.jpg" />
-            </image>
-            <effect>
-                <GaussianBlur radius="20" />
-            </effect>
-        </ImageView>
-
-        <!-- Panel de contraste con el formulario de inicio de sesión ocupando el otro 50% -->
-        <VBox alignment="CENTER" style="-fx-background-color: #FFFFFF; -fx-padding: 50;" HBox.hgrow="ALWAYS">
-            <VBox alignment="CENTER" spacing="10" style="-fx-background-color: #F7F7F7; -fx-padding: 30; -fx-border-color: #CCCCCC; -fx-border-radius: 10; -fx-background-radius: 10;">
-                <Label style="-fx-font-size: 24px; -fx-text-fill: #333333;" text="ACCOUNT LOGIN" />
-
-                <TextField fx:id="usernameField" prefWidth="250.0" promptText="User name" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />
-
-                <PasswordField fx:id="passwordField" prefWidth="250.0" promptText="Password" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />
-
-                <Button onAction="#handleLoginAction" prefHeight="40.0" prefWidth="250.0" style="-fx-background-color: #28A745; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 10;" text="SIGN IN" />
-
-                <Hyperlink style="-fx-text-fill: #28A745;" text="Forgot User Name | Password?" />
-
-                <Hyperlink style="-fx-text-fill: #28A745;" text="SIGN UP" />
-            </VBox>
-        </VBox>
-    </HBox>
-
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.LoginController" prefHeight="422.0" prefWidth="746.0">
     <!-- Botón Regresar en la esquina superior izquierda -->
-    <Button contentDisplay="TOP" onAction="#handleBackToPreLoginAction" prefWidth="100" prefHeight="40" style="-fx-background-color: #555555; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 10;" text="Regresar" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
+    <Button onAction="#handleBackToPreLoginAction" text="Regresar" style="-fx-background-color: #CCCCCC; -fx-text-fill: black; -fx-font-size: 14px; -fx-background-radius: 10;" prefWidth="100" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
+
+    <!-- Contenido central alineado verticalmente -->
+    <VBox alignment="CENTER" spacing="10" prefWidth="400.0" AnchorPane.leftAnchor="173.0" AnchorPane.rightAnchor="173.0" AnchorPane.topAnchor="100.0">
+        <TextField fx:id="usernameField" promptText="Enter your email" style="-fx-background-radius: 10;" prefWidth="300.0" />
+
+        <StackPane prefWidth="300.0">
+            <PasswordField fx:id="passwordField" promptText="Password" style="-fx-background-radius: 10;" prefWidth="300.0" />
+            <TextField fx:id="passwordVisibleField" promptText="Password" style="-fx-background-radius: 10;" visible="false" prefWidth="300.0" />
+            <ImageView fx:id="eyeIcon" fitHeight="20" fitWidth="20" onMousePressed="#showPassword" onMouseReleased="#hidePassword" style="-fx-cursor: hand; -fx-translate-x: -25px;" />
+        </StackPane>
+
+        <Hyperlink style="-fx-text-fill: blue;" text="Forgot password?" />
+
+        <Button onAction="#handleLoginAction" text="Log In" style="-fx-background-color: #FF6F3F; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 10;" prefWidth="300.0" />
+    </VBox>
 </AnchorPane>
