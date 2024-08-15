@@ -7,6 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
@@ -15,6 +16,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class RegistroController {
 
@@ -25,7 +28,7 @@ public class RegistroController {
     @FXML
     private TextField apellidoPaternoField;
     @FXML
-    private TextField fechaNacimientoField;
+    private DatePicker fechaNacimientoPicker;
     @FXML
     private TextField paisField;
     @FXML
@@ -98,13 +101,15 @@ public class RegistroController {
         }
     }
 
+
     @FXML
     private void enviarDatos() {
         // Obtener los datos de los campos de texto
         String nombre = nombreField.getText();
         String apellidoMaterno = apellidoMaternoField.getText();
         String apellidoPaterno = apellidoPaternoField.getText();
-        String fechaNacimiento = fechaNacimientoField.getText();
+        LocalDate fechaNacimiento = fechaNacimientoPicker.getValue();  // Cambiado para obtener la fecha del DatePicker
+        String fechaNacimientoFormatted = fechaNacimiento.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         String pais = paisField.getText();
         String ciudad = ciudadField.getText();
         String email = emailField.getText();
@@ -147,7 +152,7 @@ public class RegistroController {
             statement.setString(1, nombre);
             statement.setString(2, apellidoMaterno);
             statement.setString(3, apellidoPaterno);
-            statement.setString(4, fechaNacimiento);
+            statement.setString(4, fechaNacimientoFormatted);  // Usar la fecha formateada
             statement.setString(5, pais);
             statement.setString(6, ciudad);
             statement.setString(7, email);
