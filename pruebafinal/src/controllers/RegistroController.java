@@ -1,14 +1,12 @@
 package controllers;
 
 import Lector.EnrollmentFormController;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
@@ -46,9 +44,9 @@ public class RegistroController {
     private TextField profesionField;
 
     @FXML
-    private ComboBox<String> departamentoComboBox;
+    private ChoiceBox<String> departamentoChoiceBox;
     @FXML
-    private ComboBox<String> puestoComboBox;
+    private ChoiceBox<String> puestoChoiceBox;
 
     @FXML
     private ImageView imageView;
@@ -56,75 +54,48 @@ public class RegistroController {
     @FXML
     private void initialize() {
         System.out.println("Inicializando...");
-        departamentoComboBox.setMinWidth(150);  // Asegura un tamaño mínimo para el ComboBox
-        departamentoComboBox.setPrefWidth(200); // Tamaño preferido para mejor visualización
-        departamentoComboBox.setVisibleRowCount(5); // Ajusta la cantidad de elementos visibles
 
+        // Cargar datos en los ChoiceBox
+        cargarDepartamentos();
+        cargarPuestos();
 
-        // Crear ObservableList para departamentos
-        ObservableList<String> departamentos = FXCollections.observableArrayList();
-        departamentos.addAll("Administración", "Construcción", "Terminal 2");
-
-        // Crear ObservableList para puestos
-        ObservableList<String> puestos = FXCollections.observableArrayList();
-        puestos.addAll("Líder", "Supervisor", "Empleado");
-
-        // Asignar las listas al ComboBox
-        departamentoComboBox.setItems(departamentos);
-        puestoComboBox.setItems(puestos);
-
-        // Verifica que los items se carguen correctamente
-        System.out.println("Departamentos cargados: " + departamentoComboBox.getItems());
-        System.out.println("Puestos cargados: " + puestoComboBox.getItems());
-
-        // Seleccionar un valor predeterminado
-        departamentoComboBox.getSelectionModel().select("Construcción");  // Selecciona "Construcción" por defecto
-        puestoComboBox.getSelectionModel().select(1);  // Selecciona el segundo puesto (Supervisor) por defecto
-
-        // Manejar la selección en el ComboBox de departamentos
-        departamentoComboBox.setOnAction(event -> {
-            String selectedDepartamento = departamentoComboBox.getSelectionModel().getSelectedItem();
+        // Manejar la selección en el ChoiceBox de departamentos
+        departamentoChoiceBox.setOnAction(event -> {
+            String selectedDepartamento = departamentoChoiceBox.getSelectionModel().getSelectedItem();
             System.out.println("Departamento seleccionado: " + selectedDepartamento);
         });
 
-        // Manejar la selección en el ComboBox de puestos
-        puestoComboBox.setOnAction(event -> {
-            String selectedPuesto = puestoComboBox.getSelectionModel().getSelectedItem();
+        // Manejar la selección en el ChoiceBox de puestos
+        puestoChoiceBox.setOnAction(event -> {
+            String selectedPuesto = puestoChoiceBox.getSelectionModel().getSelectedItem();
             System.out.println("Puesto seleccionado: " + selectedPuesto);
         });
-
     }
 
     private void cargarDepartamentos() {
-        ObservableList<String> departamentos = FXCollections.observableArrayList();
         try (Connection connection = DatabaseConnection.getConnection()) {
             String query = "SELECT nombre FROM departamentos";
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                departamentos.add(resultSet.getString("nombre"));
+                departamentoChoiceBox.getItems().add(resultSet.getString("nombre"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        departamentoComboBox.setItems(departamentos);
-        System.out.println("departamentos cargados");
     }
 
     private void cargarPuestos() {
-        ObservableList<String> puestos = FXCollections.observableArrayList();
         try (Connection connection = DatabaseConnection.getConnection()) {
             String query = "SELECT nombre FROM jerarquias";  // La tabla `jerarquias` representa los puestos
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                puestos.add(resultSet.getString("nombre"));
+                puestoChoiceBox.getItems().add(resultSet.getString("nombre"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        puestoComboBox.setItems(puestos);
-        System.out.println("puestos cargados");
     }
 
     @FXML
@@ -143,9 +114,9 @@ public class RegistroController {
         String curp = curpField.getText();
         String profesion = profesionField.getText();
 
-        // Obtener los valores seleccionados en los ComboBox
-        String departamentoSeleccionado = departamentoComboBox.getSelectionModel().getSelectedItem();
-        String puestoSeleccionado = puestoComboBox.getSelectionModel().getSelectedItem();
+        // Obtener los valores seleccionados en los ChoiceBox
+        String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
+        String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
 
         // Conexión a la base de datos e inserción de datos
         try (Connection connection = DatabaseConnection.getConnection()) {
