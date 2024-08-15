@@ -1,9 +1,12 @@
 package controllers;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
@@ -23,12 +26,20 @@ public class LoginController {
     private TextField passwordVisibleField;
     @FXML
     private ImageView backgroundImage;
+    @FXML
+    private Button loginButton;
 
     @FXML
     public void initialize() {
         // Bind width and height of the ImageView to the width and height of the HBox
         backgroundImage.fitWidthProperty().bind(mainHBox.widthProperty().multiply(0.5));
         backgroundImage.fitHeightProperty().bind(mainHBox.heightProperty());
+    }
+    @FXML
+    private void handleEnterKey(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            handleLoginAction();
+        }
     }
 
     @FXML

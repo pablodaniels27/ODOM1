@@ -26,11 +26,11 @@
             <VBox alignment="CENTER" spacing="10" style="-fx-background-color: #F7F7F7; -fx-padding: 30; -fx-border-color: #CCCCCC; -fx-border-radius: 10; -fx-background-radius: 10;">
                 <Label style="-fx-font-size: 24px; -fx-text-fill: #333333;" text="ACCOUNT LOGIN" />
 
-                <TextField fx:id="usernameField" prefWidth="250.0" promptText="User name" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />
+                <TextField fx:id="usernameField" prefWidth="250.0" promptText="User name" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" onKeyPressed="#handleEnterKey"/>
 
-                <PasswordField fx:id="passwordField" prefWidth="250.0" promptText="Password" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />
+                <PasswordField fx:id="passwordField" prefWidth="250.0" promptText="Password" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" onKeyPressed="#handleEnterKey"/>
 
-                <Button onAction="#handleLoginAction" prefHeight="40.0" prefWidth="250.0" style="-fx-background-color: #28A745; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 10;" text="SIGN IN" />
+                <Button fx:id="loginButton" onAction="#handleLoginAction" prefHeight="40.0" prefWidth="250.0" style="-fx-background-color: #28A745; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 10;" text="SIGN IN" />
 
                 <Hyperlink style="-fx-text-fill: #28A745;" text="Forgot User Name | Password?" />
 
