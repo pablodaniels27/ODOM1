@@ -50,9 +50,9 @@
 }
 
 .button {
-    -fx-background-color: #28A745;
+    -fx-background-color: #FF6F3F;
     -fx-text-fill: white;
-    -fx-font-size: 16px;
+    -fx-font-size: 14px;
     -fx-background-radius: 10;
     -fx-padding: 10 20 10 20;
     -fx-cursor: hand;
@@ -71,4 +71,3 @@
     -fx-border-color: lightgrey;
     -fx-border-width: 1px;
 }
-
