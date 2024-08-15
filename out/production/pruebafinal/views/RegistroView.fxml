@@ -33,29 +33,29 @@
                 </rowConstraints>
 
                 <Label text="Nombre/es" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                <TextField fx:id="nombreField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200" />
+                <TextField fx:id="nombreField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Apellido Materno" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-                <TextField fx:id="apellidoMaternoField" GridPane.columnIndex="3" GridPane.rowIndex="0" prefWidth="200" />
+                <TextField fx:id="apellidoMaternoField" GridPane.columnIndex="3" GridPane.rowIndex="0" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Apellido Paterno" GridPane.columnIndex="4" GridPane.rowIndex="0" />
-                <TextField fx:id="apellidoPaternoField" GridPane.columnIndex="5" GridPane.rowIndex="0" prefWidth="200" />
+                <TextField fx:id="apellidoPaternoField" GridPane.columnIndex="5" GridPane.rowIndex="0" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Fecha de nacimiento" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                <TextField fx:id="fechaNacimientoField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="200" />
+                <TextField fx:id="fechaNacimientoField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="País" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                <TextField fx:id="paisField" GridPane.columnIndex="3" GridPane.rowIndex="1" prefWidth="200" />
+                <TextField fx:id="paisField" GridPane.columnIndex="3" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Ciudad" GridPane.columnIndex="4" GridPane.rowIndex="1" />
-                <TextField fx:id="ciudadField" GridPane.columnIndex="5" GridPane.rowIndex="1" prefWidth="200" />
+                <TextField fx:id="ciudadField" GridPane.columnIndex="5" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Correo electrónico" GridPane.columnIndex="6" GridPane.rowIndex="1" />
-                <TextField fx:id="emailField" GridPane.columnIndex="7" GridPane.rowIndex="1" prefWidth="200" />
+                <TextField fx:id="emailField" GridPane.columnIndex="7" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Lada" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                <TextField fx:id="ladaField" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="200" />
+                <TextField fx:id="ladaField" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Teléfono" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                <TextField fx:id="telefonoField" GridPane.columnIndex="3" GridPane.rowIndex="2" prefWidth="200" />
+                <TextField fx:id="telefonoField" GridPane.columnIndex="3" GridPane.rowIndex="2" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="RFC" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-                <TextField fx:id="rfcField" GridPane.columnIndex="5" GridPane.rowIndex="2" prefWidth="200" />
+                <TextField fx:id="rfcField" GridPane.columnIndex="5" GridPane.rowIndex="2" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="CURP" GridPane.columnIndex="6" GridPane.rowIndex="2" />
-                <TextField fx:id="curpField" GridPane.columnIndex="7" GridPane.rowIndex="2" prefWidth="200" />
+                <TextField fx:id="curpField" GridPane.columnIndex="7" GridPane.rowIndex="2" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Profesión" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                <TextField fx:id="profesionField" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" prefWidth="400" />
+                <TextField fx:id="profesionField" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" prefWidth="400" style="-fx-alignment: CENTER-LEFT;" />
 
                 <!-- Modificado: Puesto en lugar de Jerarquía -->
                 <Label text="Departamento" GridPane.columnIndex="4" GridPane.rowIndex="3" />

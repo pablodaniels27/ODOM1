@@ -6,7 +6,7 @@
 
 /* Estilo para etiquetas generales */
 .label {
-    -fx-font-size: 24px;
+    -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-text-fill: #333;
 }
@@ -71,19 +71,3 @@
     -fx-border-color: lightgrey;
     -fx-border-width: 1px;
 }
-
-.combo-box {
-    -fx-padding: 5px; /* Ajusta el relleno interno */
-}
-
-.combo-box-popup .list-cell {
-    -fx-pref-width: 200px; /* Ajusta el tamaño según lo necesario */
-    -fx-padding: 10px; /* Aumenta el espacio de relleno */
-        -fx-font-size: 14px; /* Ajusta el tamaño de la fuente si es necesario */
-}
-
-
-
-
-
-
