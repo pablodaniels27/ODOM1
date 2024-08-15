@@ -1,18 +1,21 @@
 package controllers;
 
 import Lector.EnrollmentFormController;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class RegistroController {
@@ -42,9 +45,50 @@ public class RegistroController {
     @FXML
     private TextField profesionField;
 
+    @FXML
+    private ComboBox<String> departamentoComboBox;
+    @FXML
+    private ComboBox<String> puestoComboBox;
 
     @FXML
     private ImageView imageView;
+
+    @FXML
+    private void initialize() {
+        // Inicializar ComboBox con datos de la base de datos
+        cargarDepartamentos();
+        cargarPuestos();
+    }
+
+    private void cargarDepartamentos() {
+        ObservableList<String> departamentos = FXCollections.observableArrayList();
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            String query = "SELECT nombre FROM departamentos";
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                departamentos.add(resultSet.getString("nombre"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        departamentoComboBox.setItems(departamentos);
+    }
+
+    private void cargarPuestos() {
+        ObservableList<String> puestos = FXCollections.observableArrayList();
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            String query = "SELECT nombre FROM jerarquias";  // Asumiendo que la tabla jerarquias ahora representa puestos
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                puestos.add(resultSet.getString("nombre"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        puestoComboBox.setItems(puestos);
+    }
 
     @FXML
     private void enviarDatos() {
@@ -62,11 +106,14 @@ public class RegistroController {
         String curp = curpField.getText();
         String profesion = profesionField.getText();
 
+        // Obtener los datos de los ComboBox
+        String departamento = departamentoComboBox.getValue();
+        String puesto = puestoComboBox.getValue();
 
         // Conexión a la base de datos e inserción de datos
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, puesto_id) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, (SELECT id FROM departamentos WHERE nombre = ?), (SELECT id FROM jerarquias WHERE nombre = ?))";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, nombre);
             statement.setString(2, apellidoMaterno);
@@ -80,7 +127,8 @@ public class RegistroController {
             statement.setString(10, rfc);
             statement.setString(11, curp);
             statement.setString(12, profesion);
-
+            statement.setString(13, departamento);  // Buscar ID del departamento
+            statement.setString(14, puesto);        // Buscar ID del puesto
 
             statement.executeUpdate();
 

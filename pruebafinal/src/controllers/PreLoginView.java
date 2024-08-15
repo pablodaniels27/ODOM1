@@ -40,9 +40,4 @@ public class PreLoginView {
     private void handleRegisterEntryAction() {
         // Lógica para manejar la acción de registrar entrada
     }
-
-    @FXML
-    private void handleRegisterExitAction() {
-        // Lógica para manejar la acción de registrar salida
-    }
 }
