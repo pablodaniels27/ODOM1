@@ -20,6 +20,7 @@
         <!-- Botón para guardar la plantilla -->
         <Button fx:id="saveTemplateButton" layoutX="20.0" layoutY="250.0" mnemonicParsing="false" onAction="#handleSaveTemplateButtonAction" text="Save Template" />
 
+
         <!-- Botón para detener la captura -->
         <Button fx:id="stopButton" layoutX="130.0" layoutY="250.0" mnemonicParsing="false" onAction="#stopCapture" text="Stop Capture" />
 

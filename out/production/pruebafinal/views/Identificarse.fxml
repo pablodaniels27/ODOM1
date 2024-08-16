@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.IdentificarseController" spacing="10" alignment="CENTER" prefWidth="300" prefHeight="300">
+    <Label fx:id="statusLabel" text="Identifíquese con su huella por favor" />
+    <VBox alignment="CENTER" style="-fx-border-color: black; -fx-padding: 10; -fx-border-width: 2;">
+        <ImageView fx:id="fingerprintImageView" fitWidth="100" fitHeight="100" />
+    </VBox>
+    <Label fx:id="timerLabel" text="" visible="false" /> <!-- Nuevo Label para el temporizador -->
+</VBox>

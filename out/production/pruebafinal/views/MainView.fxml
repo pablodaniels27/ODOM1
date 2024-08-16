@@ -1,20 +1,66 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController" stylesheets="@../resources/style.css">
+<AnchorPane stylesheets="@../resources/style.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController">
     <!-- Main Content -->
-    <VBox fx:id="mainContainer" alignment="TOP_CENTER" spacing="10" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <HBox alignment="CENTER_LEFT" spacing="10">
-            <Button onAction="#showInicio" text="Inicio" />
-            <Button onAction="#showRegistro" text="Registro" />
-            <Button onAction="#showRegistroSucursal" text="Gestión de empleados" />
-            <Button onAction="#showMonitoreo" text="Monitoreo" />
-            <Button onAction="#showTerminacion" text="Asistencia" />
-            <Button alignment="BASELINE_RIGHT" contentDisplay="RIGHT" onAction="#showAyuda" text="Ayuda" />
-        </HBox>
+    <VBox fx:id="mainContainer" alignment="TOP_CENTER" layoutY="-10.0" prefHeight="146.0" prefWidth="1060.0" spacing="5" AnchorPane.bottomAnchor="-33.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0">
+        <!-- Línea separadora arriba del StackPane -->
+        <Separator orientation="HORIZONTAL" prefHeight="0.0" prefWidth="1060.0" />
+
+        <!-- StackPane para agregar el fondo semitransparente -->
+        <StackPane alignment="CENTER" style="-fx-background-color: #efeded; -fx-padding: 5;">
+            <HBox alignment="CENTER_LEFT" prefHeight="51.0" prefWidth="1050.0" spacing="10">
+                <Button onAction="#showInicio" text="Inicio">
+                    <HBox.margin>
+                        <Insets bottom="5" left="0" right="10" top="5" />
+                    </HBox.margin>
+                </Button>
+                <Button onAction="#showRegistro" text="Registro">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+                <Button onAction="#showRegistroSucursal" text="Gestión de empleados">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+                <Button onAction="#showMonitoreo" text="Monitoreo">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+                <Button onAction="#showTerminacion" text="Asistencia">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+
+                <!-- Espaciador para empujar los botones de Configuración y Ayuda a la derecha -->
+                <Pane HBox.hgrow="ALWAYS" />
+
+                <!-- Botón Configuración con margen -->
+                <Button onAction="#showConfiguración" text="Configuración">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+
+                <!-- Botón Ayuda con margen en el lado derecho -->
+                <Button onAction="#showAyuda" text="Ayuda">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="20" top="10" />
+                    </HBox.margin>
+                </Button>
+            </HBox>
+        </StackPane>
+
+        <!-- Línea separadora debajo del StackPane -->
+        <Separator orientation="HORIZONTAL" />
+
         <StackPane fx:id="mainContent" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
             <!-- Las vistas cargadas dinámicamente se insertarán aquí -->
         </StackPane>

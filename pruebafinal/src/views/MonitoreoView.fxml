@@ -3,9 +3,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController" alignment="TOP_CENTER" spacing="10">
-    <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS">
-        <VBox alignment="TOP_CENTER" spacing="10">
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController" style="-fx-background-color: transparent; -fx-padding: 0;">
+    <ScrollPane fitToHeight="true" fitToWidth="true" style="-fx-background-color: transparent;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <VBox alignment="TOP_CENTER" spacing="10" style="-fx-background-color: transparent;">
             <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Monitoreo General de Empleados" />
             <GridPane hgap="10" vgap="10">
                 <columnConstraints>
@@ -49,4 +49,4 @@
             </GridPane>
         </VBox>
     </ScrollPane>
-</VBox>
+</AnchorPane>

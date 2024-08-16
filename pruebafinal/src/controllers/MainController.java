@@ -1,5 +1,6 @@
 package controllers;
 
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -83,6 +84,10 @@ public class MainController {
     public void showAyuda() {
         loadContent("/views/AyudaView.fxml");
     }
+    @FXML
+    public void showConfiguración() {
+        loadContent("/views/ConfiguracionView.fxml");
+    }
 
     private void loadContent(String fxmlPath) {
         try {
@@ -96,4 +101,7 @@ public class MainController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }}
+    }
+
+
+}
