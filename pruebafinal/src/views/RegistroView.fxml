@@ -4,42 +4,67 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="TOP_CENTER" spacing="10" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroController">
-    <ScrollPane fitToWidth="true">
-        <VBox alignment="TOP_CENTER" spacing="10">
+<VBox alignment="TOP_CENTER" spacing="10" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroController"
+      style="-fx-background-color: transparent; -fx-padding: 0;">
+    <!-- ScrollPane with horizontal and vertical scroll enabled -->
+    <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED"
+                style="-fx-background-color: transparent;">
+        <VBox alignment="TOP_CENTER" spacing="10" style="-fx-background-color: transparent;">
             <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Registro de empleado" />
             <GridPane hgap="10" vgap="10">
+                <columnConstraints>
+                    <!-- Configuración de las columnas: Ampliar el ancho de las columnas -->
+                    <ColumnConstraints minWidth="150" prefWidth="200" />
+                    <ColumnConstraints minWidth="150" prefWidth="200" />
+                    <ColumnConstraints minWidth="150" prefWidth="200" />
+                    <ColumnConstraints minWidth="150" prefWidth="200" />
+                    <ColumnConstraints minWidth="150" prefWidth="200" />
+                    <ColumnConstraints minWidth="150" prefWidth="200" />
+                    <ColumnConstraints minWidth="150" prefWidth="200" />
+                    <ColumnConstraints minWidth="150" prefWidth="200" />
+                </columnConstraints>
+                <rowConstraints>
+                    <!-- Configuración de las filas -->
+                    <RowConstraints minHeight="30" prefHeight="40" />
+                    <RowConstraints minHeight="30" prefHeight="40" />
+                    <RowConstraints minHeight="30" prefHeight="40" />
+                    <RowConstraints minHeight="30" prefHeight="40" />
+                    <RowConstraints minHeight="30" prefHeight="40" />
+                    <RowConstraints minHeight="30" prefHeight="40" />
+                    <RowConstraints minHeight="30" prefHeight="40" />
+                </rowConstraints>
+
                 <Label text="Nombre/es" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                <TextField fx:id="nombreField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <TextField fx:id="nombreField" GridPane.columnIndex="1" GridPane.rowIndex="0" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Apellido Materno" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-                <TextField fx:id="apellidoMaternoField" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                <TextField fx:id="apellidoMaternoField" GridPane.columnIndex="3" GridPane.rowIndex="0" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Apellido Paterno" GridPane.columnIndex="4" GridPane.rowIndex="0" />
-                <TextField fx:id="apellidoPaternoField" GridPane.columnIndex="5" GridPane.rowIndex="0" />
+                <TextField fx:id="apellidoPaternoField" GridPane.columnIndex="5" GridPane.rowIndex="0" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Fecha de nacimiento" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                <TextField fx:id="fechaNacimientoField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <DatePicker fx:id="fechaNacimientoPicker" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="País" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                <TextField fx:id="paisField" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                <TextField fx:id="paisField" GridPane.columnIndex="3" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Ciudad" GridPane.columnIndex="4" GridPane.rowIndex="1" />
-                <TextField fx:id="ciudadField" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+                <TextField fx:id="ciudadField" GridPane.columnIndex="5" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Correo electrónico" GridPane.columnIndex="6" GridPane.rowIndex="1" />
-                <TextField fx:id="emailField" GridPane.columnIndex="7" GridPane.rowIndex="1" />
+                <TextField fx:id="emailField" GridPane.columnIndex="7" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Lada" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                <TextField fx:id="ladaField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <TextField fx:id="ladaField" GridPane.columnIndex="1" GridPane.rowIndex="2" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Teléfono" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                <TextField fx:id="telefonoField" GridPane.columnIndex="3" GridPane.rowIndex="2" />
+                <TextField fx:id="telefonoField" GridPane.columnIndex="3" GridPane.rowIndex="2" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="RFC" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-                <TextField fx:id="rfcField" GridPane.columnIndex="5" GridPane.rowIndex="2" />
+                <TextField fx:id="rfcField" GridPane.columnIndex="5" GridPane.rowIndex="2" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="CURP" GridPane.columnIndex="6" GridPane.rowIndex="2" />
-                <TextField fx:id="curpField" GridPane.columnIndex="7" GridPane.rowIndex="2" />
+                <TextField fx:id="curpField" GridPane.columnIndex="7" GridPane.rowIndex="2" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Profesión" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                <TextField fx:id="profesionField" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
+                <TextField fx:id="profesionField" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" prefWidth="400" style="-fx-alignment: CENTER-LEFT;" />
 
                 <!-- Modificado: Puesto en lugar de Jerarquía -->
                 <Label text="Departamento" GridPane.columnIndex="4" GridPane.rowIndex="3" />
-                <ComboBox fx:id="departamentoComboBox" GridPane.columnIndex="5" GridPane.rowIndex="3" prefWidth="150.0"/>
+                <ChoiceBox fx:id="departamentoChoiceBox" GridPane.columnIndex="5" GridPane.rowIndex="3" prefWidth="200" minWidth="150" style="-fx-font-size: 12px;" />
 
                 <Label text="Puesto" GridPane.columnIndex="6" GridPane.rowIndex="3" />
-                <ComboBox fx:id="puestoComboBox" GridPane.columnIndex="7" GridPane.rowIndex="3" prefWidth="150.0"/>
+                <ChoiceBox fx:id="puestoChoiceBox" GridPane.columnIndex="7" GridPane.rowIndex="3" prefWidth="200" minWidth="150" style="-fx-font-size: 12px;" />
 
                 <Label GridPane.columnIndex="4" GridPane.rowIndex="4" />
                 <TextArea fx:id="notasArea" prefHeight="192.0" prefWidth="502.0" GridPane.columnIndex="5" GridPane.columnSpan="3" GridPane.rowIndex="4"
@@ -51,25 +76,6 @@
                     <Button fx:id="enviarButton" onAction="#enviarDatos" text="Enviar" />
                     <Button fx:id="borrarButton" text="Borrar" />
                 </HBox>
-                <columnConstraints>
-                    <ColumnConstraints />
-                    <ColumnConstraints />
-                    <ColumnConstraints />
-                    <ColumnConstraints />
-                    <ColumnConstraints />
-                    <ColumnConstraints />
-                    <ColumnConstraints />
-                    <ColumnConstraints />
-                </columnConstraints>
-                <rowConstraints>
-                    <RowConstraints />
-                    <RowConstraints />
-                    <RowConstraints />
-                    <RowConstraints />
-                    <RowConstraints />
-                    <RowConstraints />
-                    <RowConstraints />
-                </rowConstraints>
             </GridPane>
         </VBox>
     </ScrollPane>

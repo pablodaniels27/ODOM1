@@ -1,13 +1,19 @@
 package controllers;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.AnchorPane;
+
 
 public class LoginController {
 
@@ -19,16 +25,39 @@ public class LoginController {
 
     @FXML
     private TextField passwordVisibleField;
+    @FXML
+    private ImageView backgroundImage;
+    @FXML
+    private Button loginButton;
+
+    @FXML
+    private SplitPane splitPane; // Referencia al SplitPane en tu FXML
+
+    private Stage primaryStage;
+
+    @FXML
+    public void initialize() {
+        splitPane.setDividerPositions(0.3);
+        splitPane.lookupAll(".split-pane-divider").forEach(div -> div.setMouseTransparent(true));
+        // Vincular el tamaño de la imagen al SplitPane para que se ajuste dinámicamente
+        backgroundImage.fitWidthProperty().bind(splitPane.widthProperty());
+        backgroundImage.fitHeightProperty().bind(splitPane.heightProperty());
+    }
+
+    @FXML
+    private void handleEnterKey(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            handleLoginAction();
+        }
+    }
 
     @FXML
     private ImageView eyeIcon;
 
-    private Stage primaryStage;
-
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
-
     }
+
     @FXML
     private void handleBackToPreLoginAction() {
         try {
