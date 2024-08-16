@@ -3,16 +3,33 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" spacing="10" HBox.hgrow="ALWAYS">
-    <VBox spacing="10" VBox.vgrow="ALWAYS">
-        <Label text="Lista de empleados" />
-        <ListView fx:id="employeeListView" prefHeight="600" VBox.vgrow="ALWAYS"/>
-    </VBox>
-    <VBox spacing="10">
-        <Label text="Calendario" />
-        <DatePicker fx:id="calendarDatePicker" />
-    </VBox>
-</HBox>
+<BorderPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.InicioController">
+    <!-- Cuadrante 1: Lista de empleados -->
+    <left>
+        <VBox fx:id="employeeList" spacing="10" alignment="TOP_LEFT" styleClass="employee-section">
+            <Label text="Lista de empleados" styleClass="header-label"/>
+            <ListView fx:id="employeeListView" styleClass="employee-list"/>
+        </VBox>
+    </left>
 
+    <!-- Cuadrante 2: Calendario -->
+    <center>
+        <VBox fx:id="calendarSection" spacing="10" alignment="TOP_CENTER" styleClass="calendar-section">
+            <Label text="Calendario" styleClass="header-label"/>
+            <DatePicker fx:id="calendarPicker"/>
+        </VBox>
+    </center>
 
-
+    <!-- Cuadrante 3: Asistencias semanales -->
+    <right>
+        <VBox fx:id="attendanceSection" spacing="10" alignment="TOP_RIGHT" styleClass="attendance-section">
+            <Label text="Asistencias semanales" styleClass="header-label"/>
+            <TableView fx:id="attendanceTable" styleClass="attendance-table">
+                <columns>
+                    <TableColumn text="Día" fx:id="dayColumn"/>
+                    <TableColumn text="Horas" fx:id="hoursColumn"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </right>
+</BorderPane>
