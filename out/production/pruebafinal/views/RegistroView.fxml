@@ -4,10 +4,10 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox alignment="TOP_CENTER" spacing="10" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroController" style="-fx-background-color: transparent; -fx-padding: 0;">
+<VBox alignment="TOP_CENTER" spacing="10" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroController">
     <!-- ScrollPane with horizontal and vertical scroll enabled -->
-    <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" style="-fx-background-color: transparent;">
-        <VBox alignment="TOP_CENTER" spacing="10" style="-fx-background-color: transparent;">
+    <ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED">
+        <VBox alignment="TOP_CENTER" spacing="10">
             <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Registro de empleado" />
             <GridPane hgap="10" vgap="10">
                 <columnConstraints>
@@ -39,7 +39,7 @@
                 <Label text="Apellido Paterno" GridPane.columnIndex="4" GridPane.rowIndex="0" />
                 <TextField fx:id="apellidoPaternoField" GridPane.columnIndex="5" GridPane.rowIndex="0" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Fecha de nacimiento" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                <TextField fx:id="fechaNacimientoField" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
+                <DatePicker fx:id="fechaNacimientoPicker" GridPane.columnIndex="1" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="País" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                 <TextField fx:id="paisField" GridPane.columnIndex="3" GridPane.rowIndex="1" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" />
                 <Label text="Ciudad" GridPane.columnIndex="4" GridPane.rowIndex="1" />
@@ -67,7 +67,7 @@
                 <Label GridPane.columnIndex="4" GridPane.rowIndex="4" />
                 <TextArea fx:id="notasArea" prefHeight="192.0" prefWidth="502.0" GridPane.columnIndex="5" GridPane.columnSpan="3" GridPane.rowIndex="4"
                           editable="false" focusTraversable="false" />
-                <ImageView fx:id="imageView" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="5" />
+                <ImageView fx:id="fingerprintImageView" GridPane.columnIndex="0" GridPane.columnSpan="3" GridPane.rowIndex="5" />
                 <Button fx:id="ingresarHuellaButton" onAction="#handleIngresarHuellaButton" prefHeight="26.0" prefWidth="179.0" text="Presionar para ingresar huella" GridPane.columnIndex="6" GridPane.rowIndex="5" />
 
                 <HBox alignment="CENTER" spacing="10" GridPane.columnIndex="0" GridPane.columnSpan="8" GridPane.rowIndex="6">
