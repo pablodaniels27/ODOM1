@@ -15,7 +15,7 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
 import java.awt.image.BufferedImage;
-import java.io.IOException;
+import javafx.scene.image.Image;
 
 public class EnrollmentFormController {
 
@@ -190,15 +190,20 @@ public class EnrollmentFormController {
             bGr.dispose();
         }
 
-        // Mostrar la imagen de la huella en el ImageView
-        javafx.scene.image.Image fingerprintImage = SwingFXUtils.toFXImage(bufferedImage, null);
-        fingerprintImageView.setImage(fingerprintImage);
-    }
+        // Convertir BufferedImage a JavaFX Image
+        Image fingerprintImage = SwingFXUtils.toFXImage(bufferedImage, null);
 
+        // Mostrar la imagen de la huella en el ImageView
+        fingerprintImageView.setImage(fingerprintImage);
+
+        // Enviar la imagen al RegistroController
+        if (registroController != null) {
+            registroController.updateFingerprintImage(fingerprintImage);
+        }
+    }
 
     @FXML
     private void handleSaveTemplateButtonAction(ActionEvent event) {
-        // Implement the save logic here or call an existing method to save the template.
         saveTemplate();
     }
 
@@ -212,4 +217,5 @@ public class EnrollmentFormController {
         Stage stage = (Stage) stopButton.getScene().getWindow();
         stage.close();
     }
+
 }

@@ -93,6 +93,14 @@ public class RegistroController {
     }
 
     @FXML
+    private ImageView fingerprintImageView;
+
+    public void updateFingerprintImage(javafx.scene.image.Image image) {
+        fingerprintImageView.setImage(image);
+    }
+
+
+    @FXML
     private void enviarDatos() {
         String nombre = nombreField.getText();
         String apellidoMaterno = apellidoMaternoField.getText();
