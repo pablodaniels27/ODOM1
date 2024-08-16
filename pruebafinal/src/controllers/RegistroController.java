@@ -54,25 +54,16 @@ public class RegistroController {
     @FXML
     private ImageView imageView;
 
+    private byte[] huellaDigital; // Variable para almacenar la huella digital
+
     @FXML
     private void initialize() {
-        System.out.println("Inicializando...");
-
-        // Cargar datos en los ChoiceBox
         cargarDepartamentos();
         cargarPuestos();
+    }
 
-        // Manejar la selección en el ChoiceBox de departamentos
-        departamentoChoiceBox.setOnAction(event -> {
-            String selectedDepartamento = departamentoChoiceBox.getSelectionModel().getSelectedItem();
-            System.out.println("Departamento seleccionado: " + selectedDepartamento);
-        });
-
-        // Manejar la selección en el ChoiceBox de puestos
-        puestoChoiceBox.setOnAction(event -> {
-            String selectedPuesto = puestoChoiceBox.getSelectionModel().getSelectedItem();
-            System.out.println("Puesto seleccionado: " + selectedPuesto);
-        });
+    public void setHuellaDigital(byte[] huellaDigital) {
+        this.huellaDigital = huellaDigital;
     }
 
     private void cargarDepartamentos() {
@@ -90,7 +81,7 @@ public class RegistroController {
 
     private void cargarPuestos() {
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String query = "SELECT nombre FROM jerarquias";  // La tabla `jerarquias` representa los puestos
+            String query = "SELECT nombre FROM jerarquias";
             PreparedStatement statement = connection.prepareStatement(query);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -101,14 +92,20 @@ public class RegistroController {
         }
     }
 
+    @FXML
+    private ImageView fingerprintImageView;
+
+    public void updateFingerprintImage(javafx.scene.image.Image image) {
+        fingerprintImageView.setImage(image);
+    }
+
 
     @FXML
     private void enviarDatos() {
-        // Obtener los datos de los campos de texto
         String nombre = nombreField.getText();
         String apellidoMaterno = apellidoMaternoField.getText();
         String apellidoPaterno = apellidoPaternoField.getText();
-        LocalDate fechaNacimiento = fechaNacimientoPicker.getValue();  // Cambiado para obtener la fecha del DatePicker
+        LocalDate fechaNacimiento = fechaNacimientoPicker.getValue();
         String fechaNacimientoFormatted = fechaNacimiento.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         String pais = paisField.getText();
         String ciudad = ciudadField.getText();
@@ -119,13 +116,10 @@ public class RegistroController {
         String curp = curpField.getText();
         String profesion = profesionField.getText();
 
-        // Obtener los valores seleccionados en los ChoiceBox
         String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
         String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
 
-        // Conexión a la base de datos e inserción de datos
         try (Connection connection = DatabaseConnection.getConnection()) {
-            // Encontrar el ID del departamento seleccionado
             String departamentoQuery = "SELECT id FROM departamentos WHERE nombre = ?";
             PreparedStatement departamentoStatement = connection.prepareStatement(departamentoQuery);
             departamentoStatement.setString(1, departamentoSeleccionado);
@@ -135,7 +129,6 @@ public class RegistroController {
                 departamentoId = departamentoResult.getInt("id");
             }
 
-            // Encontrar el ID del puesto (jerarquía) seleccionado
             String puestoQuery = "SELECT id FROM jerarquias WHERE nombre = ?";
             PreparedStatement puestoStatement = connection.prepareStatement(puestoQuery);
             puestoStatement.setString(1, puestoSeleccionado);
@@ -145,14 +138,14 @@ public class RegistroController {
                 jerarquiaId = puestoResult.getInt("id");
             }
 
-            // Insertar los datos del empleado
-            String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            // Insertar los datos del empleado incluyendo la huella digital
+            String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, huella) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setString(1, nombre);
             statement.setString(2, apellidoMaterno);
             statement.setString(3, apellidoPaterno);
-            statement.setString(4, fechaNacimientoFormatted);  // Usar la fecha formateada
+            statement.setString(4, fechaNacimientoFormatted);
             statement.setString(5, pais);
             statement.setString(6, ciudad);
             statement.setString(7, email);
@@ -161,12 +154,11 @@ public class RegistroController {
             statement.setString(10, rfc);
             statement.setString(11, curp);
             statement.setString(12, profesion);
-            statement.setInt(13, departamentoId);  // Usar el ID del departamento
-            statement.setInt(14, jerarquiaId);     // Usar el ID de la jerarquía
+            statement.setInt(13, departamentoId);
+            statement.setInt(14, jerarquiaId);
+            statement.setBytes(15, huellaDigital); // Guardar la huella digital
 
             statement.executeUpdate();
-
-            // Aquí podrías añadir un mensaje de confirmación o redirigir a la vista de listado de empleados
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -182,9 +174,8 @@ public class RegistroController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EnrollmentForm.fxml"));
             Parent root = loader.load();
 
-            // Si necesitas pasar datos entre controladores, puedes obtener el controlador y configurarlo aquí.
             EnrollmentFormController controller = loader.getController();
-            // Pasar datos al controlador si es necesario
+            controller.setRegistroController(this); // Pasar el controlador de Registro al de Enrollment
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
