@@ -12,6 +12,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -52,7 +55,7 @@ public class RegistroController {
     private ChoiceBox<String> puestoChoiceBox;
 
     @FXML
-    private ImageView imageView;
+    private ImageView fingerprintImageView;
 
     private byte[] huellaDigital; // Variable para almacenar la huella digital
 
@@ -93,12 +96,9 @@ public class RegistroController {
     }
 
     @FXML
-    private ImageView fingerprintImageView;
-
     public void updateFingerprintImage(javafx.scene.image.Image image) {
         fingerprintImageView.setImage(image);
     }
-
 
     @FXML
     private void enviarDatos() {
@@ -138,7 +138,18 @@ public class RegistroController {
                 jerarquiaId = puestoResult.getInt("id");
             }
 
-            // Insertar los datos del empleado incluyendo la huella digital
+            // Serialize the DPFPTemplate
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(huellaDigital);
+                oos.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;  // Early return on serialization failure
+            }
+            byte[] serializedTemplate = bos.toByteArray();
+
+            // Insertar los datos del empleado incluyendo la huella digital serializada
             String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, huella) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -156,7 +167,7 @@ public class RegistroController {
             statement.setString(12, profesion);
             statement.setInt(13, departamentoId);
             statement.setInt(14, jerarquiaId);
-            statement.setBytes(15, huellaDigital); // Guardar la huella digital
+            statement.setBytes(15, serializedTemplate); // Guardar la huella digital serializada
 
             statement.executeUpdate();
         } catch (SQLException e) {
