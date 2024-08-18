@@ -12,10 +12,15 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.awt.image.BufferedImage;
 import javafx.scene.image.Image;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 
 public class EnrollmentFormController {
 
@@ -126,9 +131,9 @@ public class EnrollmentFormController {
                             uniqueID = java.util.UUID.randomUUID().toString();
                             idLabel.setText("ID: " + uniqueID);
 
-                            // Envía la huella digital al RegistroController
+                            // Enviar el template al RegistroController
                             if (registroController != null) {
-                                registroController.setHuellaDigital(template.serialize());
+                                registroController.setTemplate(template);
                             }
 
                             statusLabel.setText("Template is ready. ID: " + uniqueID + ". Click 'Save Template' to save it.");
@@ -176,27 +181,20 @@ public class EnrollmentFormController {
     }
 
     private void showFingerprintImage(DPFPSample sample) {
-        // Convertir el DPFPSample en una imagen BufferedImage
         java.awt.Image awtImage = DPFPGlobal.getSampleConversionFactory().createImage(sample);
 
-        // Convertir la imagen en BufferedImage
         if (awtImage instanceof BufferedImage) {
             bufferedImage = (BufferedImage) awtImage;
         } else {
-            // Crear un BufferedImage a partir de la imagen original
             bufferedImage = new BufferedImage(awtImage.getWidth(null), awtImage.getHeight(null), BufferedImage.TYPE_INT_ARGB);
             java.awt.Graphics2D bGr = bufferedImage.createGraphics();
             bGr.drawImage(awtImage, 0, 0, null);
             bGr.dispose();
         }
 
-        // Convertir BufferedImage a JavaFX Image
         Image fingerprintImage = SwingFXUtils.toFXImage(bufferedImage, null);
-
-        // Mostrar la imagen de la huella en el ImageView
         fingerprintImageView.setImage(fingerprintImage);
 
-        // Enviar la imagen al RegistroController
         if (registroController != null) {
             registroController.updateFingerprintImage(fingerprintImage);
         }
@@ -208,7 +206,24 @@ public class EnrollmentFormController {
     }
 
     private void saveTemplate() {
-        // Implement your save logic here
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar plantilla de huella digital");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Fingerprint Template", "*.ser"));
+        Stage stage = (Stage) saveTemplateButton.getScene().getWindow();
+        File file = fileChooser.showSaveDialog(stage);
+
+        if (file != null) {
+            try (FileOutputStream fileOut = new FileOutputStream(file);
+                 ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+
+                // Serializar el template en el archivo .ser
+                out.writeObject(template.serialize());
+
+                statusLabel.setText("Template guardado exitosamente en " + file.getAbsolutePath());
+            } catch (Exception e) {
+                statusLabel.setText("Error al guardar el template: " + e.getMessage());
+            }
+        }
     }
 
     @FXML
@@ -217,5 +232,4 @@ public class EnrollmentFormController {
         Stage stage = (Stage) stopButton.getScene().getWindow();
         stage.close();
     }
-
 }

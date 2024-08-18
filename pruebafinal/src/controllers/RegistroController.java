@@ -1,6 +1,7 @@
 package controllers;
 
 import Lector.EnrollmentFormController;
+import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -57,7 +58,7 @@ public class RegistroController {
     @FXML
     private ImageView fingerprintImageView;
 
-    private byte[] huellaDigital; // Variable para almacenar la huella digital
+    private DPFPTemplate template; // Variable para almacenar el template de la huella digital
 
     @FXML
     private void initialize() {
@@ -65,8 +66,8 @@ public class RegistroController {
         cargarPuestos();
     }
 
-    public void setHuellaDigital(byte[] huellaDigital) {
-        this.huellaDigital = huellaDigital;
+    public void setTemplate(DPFPTemplate template) {
+        this.template = template;
     }
 
     private void cargarDepartamentos() {
@@ -139,15 +140,19 @@ public class RegistroController {
             }
 
             // Serialize the DPFPTemplate
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-                oos.writeObject(huellaDigital);
-                oos.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;  // Early return on serialization failure
+            byte[] serializedTemplate = null;
+            if (template != null) {
+                try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                     ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+
+                    oos.writeObject(template.serialize()); // Serializar el template
+                    oos.flush();
+                    serializedTemplate = bos.toByteArray();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;  // Early return on serialization failure
+                }
             }
-            byte[] serializedTemplate = bos.toByteArray();
 
             // Insertar los datos del empleado incluyendo la huella digital serializada
             String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, huella) " +
