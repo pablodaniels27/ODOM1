@@ -20,9 +20,12 @@
               </AnchorPane>
               <AnchorPane>
                   <children>
-                      <VBox alignment="CENTER" layoutX="87.0" prefHeight="148.0" prefWidth="186.0" style="-fx-border-color: black; -fx-padding: 10; -fx-border-width: 2;">
-                          <ImageView fx:id="fingerprintImageView" fitHeight="100" fitWidth="128.0" />
-                      </VBox>
+                  <Pane layoutX="87.0">
+                     <children>
+                            <VBox alignment="CENTER" prefHeight="148.0" prefWidth="186.0" style="-fx-border-color: black; -fx-padding: 10; -fx-border-width: 2;" />
+                             <ImageView fx:id="fingerprintImageView" fitHeight="133.0" fitWidth="173.0" layoutX="6.0" layoutY="7.0" />
+                     </children>
+                  </Pane>
                   </children>
               </AnchorPane>
          </children>
