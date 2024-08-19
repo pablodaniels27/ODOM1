@@ -3,11 +3,15 @@ package controllers;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
@@ -21,10 +25,7 @@ public class InicioController {
     private Label currentDate;
 
     @FXML
-    private ListView<VBox> employeeListView;
-
-    @FXML
-    private VBox calendarContainer;
+    private ListView<Employee> employeeListView;
 
     @FXML
     private Label employeeNameLabel;
@@ -49,6 +50,10 @@ public class InicioController {
 
     @FXML
     private void initialize() {
+        // Asegurar que el ListView es visible y gestionado
+        employeeListView.setVisible(true);
+        employeeListView.setManaged(true);
+
         // Mostrar la fecha y hora actuales
         currentDate.setText(LocalDate.now().toString()); // Simplificado para ejemplo
 
@@ -74,31 +79,40 @@ public class InicioController {
     // Método para cargar empleados desde la base de datos
     private void loadEmployeesFromDatabase() {
         employees = getEmployeesFromDatabase();
+        System.out.println("Number of employees loaded: " + employees.size());
 
-        for (Employee employee : employees) {
-            VBox employeeBox = new VBox();
-            Label nameLabel = new Label(employee.getFullName());
-            nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-            employeeBox.getChildren().add(nameLabel);
-            employeeListView.getItems().add(employeeBox);
-        }
+        // Añadir todos los empleados al ListView
+        employeeListView.getItems().addAll(employees);
+
+        // Configurar cómo se muestra cada empleado en la lista
+        employeeListView.setCellFactory(listView -> new ListCell<Employee>() {
+            @Override
+            protected void updateItem(Employee employee, boolean empty) {
+                super.updateItem(employee, empty);
+                if (empty || employee == null) {
+                    setText(null);
+                    setStyle(null);  // Asegúrate de no aplicar ningún estilo aquí
+                } else {
+                    setText(employee.fullName() + " - " + employee.profession());
+                    setStyle("-fx-font-size: 14px;");  // Estilo básico para asegurarte de que se vea
+                }
+            }
+        });
     }
 
     // Método que maneja la selección de un empleado en la lista
     @FXML
     private void handleEmployeeSelection(MouseEvent event) {
-        int selectedIndex = employeeListView.getSelectionModel().getSelectedIndex();
-        if (selectedIndex >= 0) {
-            Employee selectedEmployee = employees.get(selectedIndex);
+        Employee selectedEmployee = employeeListView.getSelectionModel().getSelectedItem();
+        if (selectedEmployee != null) {
             updateCalendarForEmployee(selectedEmployee);
         }
     }
 
-
     // Método para actualizar el calendario con los datos del empleado seleccionado
     private void updateCalendarForEmployee(Employee employee) {
-        employeeNameLabel.setText(employee.getFullName());
-        visitsInfoLabel.setText("Este mes " + employee.getFullName() + " tiene " + employee.getVisits() + " visitas a realizar");
+        employeeNameLabel.setText(employee.fullName());
+        visitsInfoLabel.setText("Este mes " + employee.fullName() + " tiene visitas a realizar");
         updateCalendar(); // Actualiza el calendario según el mes actual
     }
 
@@ -130,36 +144,29 @@ public class InicioController {
         }
     }
 
-    // Ejemplo de método para obtener los empleados desde la base de datos
+    // Método para obtener los empleados desde la base de datos
     private List<Employee> getEmployeesFromDatabase() {
         List<Employee> employees = new ArrayList<>();
-        employees.add(new Employee("Hugo Contreras", "Programador: Va a reprogramar una máquina", 3));
-        employees.add(new Employee("Britton Grajales", "Técnico de campo: Mantenimiento de computadoras", 5));
+        String query = "SELECT CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno) AS full_name, profesion FROM empleados";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                String fullName = resultSet.getString("full_name");
+                String profession = resultSet.getString("profesion");
+
+                employees.add(new Employee(fullName, profession));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return employees;
     }
 
     // Clase para representar un empleado
-    public static class Employee {
-        private final String fullName;
-        private final String taskDescription;
-        private final int visits;
-
-        public Employee(String fullName, String taskDescription, int visits) {
-            this.fullName = fullName;
-            this.taskDescription = taskDescription;
-            this.visits = visits;
-        }
-
-        public String getFullName() {
-            return fullName;
-        }
-
-        public String getTaskDescription() {
-            return taskDescription;
-        }
-
-        public int getVisits() {
-            return visits;
-        }
+    public record Employee(String fullName, String profession) {
     }
 }
