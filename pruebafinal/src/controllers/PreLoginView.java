@@ -60,8 +60,22 @@ public class PreLoginView {
             Stage popupStage = new Stage();
             popupStage.initModality(Modality.APPLICATION_MODAL);  // Bloquea la ventana principal hasta que se cierre el popup
             popupStage.setTitle("Identificación de Usuario");
-            popupStage.setScene(new Scene(root));
-            popupStage.showAndWait();  // Muestra y espera a que el popup se cierre
+
+            // Crear la escena y establecerla en el stage
+            Scene scene = new Scene(root);
+            popupStage.setScene(scene);
+
+            // Establecer tamaño máximo y mínimo de la ventana emergente
+            popupStage.setMaxHeight(450);
+            popupStage.setMaxWidth(450);
+            popupStage.setMinHeight(350);
+            popupStage.setMinWidth(350);
+
+            // Desactivar la capacidad de cambiar el tamaño de la ventana
+            popupStage.setResizable(false);
+
+            // Mostrar y esperar a que el popup se cierre
+            popupStage.showAndWait();
         } catch (Exception e) {
             e.printStackTrace();
         }

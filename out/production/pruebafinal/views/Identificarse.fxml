@@ -1,14 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.*?>
-<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.IdentificarseController" spacing="10" alignment="CENTER" prefWidth="300" prefHeight="300">
-    <Label fx:id="statusLabel" text="Identifíquese con su huella por favor" />
-    <VBox alignment="CENTER" style="-fx-border-color: black; -fx-padding: 10; -fx-border-width: 2;">
-        <ImageView fx:id="fingerprintImageView" fitWidth="100" fitHeight="100" />
-    </VBox>
-    <Label fx:id="timerLabel" text="" visible="false" /> <!-- Nuevo Label para el temporizador -->
-    <Label fx:id="fileCountLabel" text="Archivos de huellas: 0" />
-</VBox>
+<AnchorPane maxHeight="350" maxWidth="350" minHeight="350.0" minWidth="350.0" prefHeight="350.0" prefWidth="350.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.IdentificarseController">
+    <children>
+        <ImageView fitHeight="350.0" fitWidth="350.0" preserveRatio="false">
+            <image>
+                <Image url="@../resources/pexels-codioful-7130563.jpg" />
+            </image>
+        </ImageView>
+      <VBox prefHeight="350.0" prefWidth="350.0">
+         <children>
+              <AnchorPane>
+                  <children>
+                      <Label fx:id="statusLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="157.0" prefWidth="350.0" text="Identifiquese utilizando el sensor" textAlignment="CENTER" />
+                  </children>
+              </AnchorPane>
+              <AnchorPane>
+                  <children>
+                      <VBox alignment="CENTER" layoutX="87.0" prefHeight="148.0" prefWidth="186.0" style="-fx-border-color: black; -fx-padding: 10; -fx-border-width: 2;">
+                          <ImageView fx:id="fingerprintImageView" fitHeight="100" fitWidth="128.0" />
+                      </VBox>
+                  </children>
+              </AnchorPane>
+         </children>
+      </VBox>
+    </children>
+</AnchorPane>
