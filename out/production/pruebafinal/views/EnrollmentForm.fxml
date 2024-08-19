@@ -1,32 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="Lector.EnrollmentFormController">
-    <VBox alignment="CENTER" spacing="20" prefWidth="300.0" prefHeight="400.0" style="-fx-background-color: white; -fx-border-color: lightgray; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;">
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.2-ea" fx:controller="Lector.EnrollmentFormController">
+    <VBox alignment="CENTER" spacing="20" style="-fx-background-color: white; -fx-border-color: lightgray; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
         <!-- Definición correcta de padding usando Insets -->
         <padding>
-            <Insets top="10" right="10" bottom="10" left="10"/>
+            <Insets bottom="10" left="10" right="10" top="10" />
         </padding>
 
         <!-- Etiqueta para mostrar el estado del proceso -->
-        <Label fx:id="statusLabel" text="Por favor ingresar huella dactilar" style="-fx-font-size: 16px; -fx-text-fill: gray;" />
+        <Label fx:id="statusLabel" style="-fx-font-size: 16px; -fx-text-fill: gray;" text="Por favor ingresar huella dactilar" />
 
         <!-- Vista de la imagen de la huella -->
         <ImageView fx:id="fingerprintImageView" fitHeight="150.0" fitWidth="150.0" preserveRatio="true" style="-fx-background-color: #e6e6e6; -fx-border-radius: 10;" />
 
         <!-- Etiqueta para mostrar el ID único generado -->
-        <Label fx:id="idLabel" text="ID" style="-fx-font-size: 14px; -fx-text-fill: gray;" />
+        <Label fx:id="idLabel" style="-fx-font-size: 14px; -fx-text-fill: gray;" text="ID" />
 
-        <!-- Contenedor para los botones de acción -->
-        <VBox spacing="10">
-            <Button fx:id="saveTemplateButton" text="REGISTRAR" style="-fx-background-color: black; -fx-text-fill: white; -fx-font-size: 14px;" onAction="#handleSaveTemplateButtonAction" />
-            <Button fx:id="stopButton" text="CANCELAR" style="-fx-background-color: red; -fx-text-fill: white; -fx-font-size: 14px;" onAction="#stopCapture" />
-        </VBox>
+        <!-- HBox para contener los botones y asegurarse de que se ajusten correctamente -->
+        <HBox alignment="CENTER" spacing="20">
+            <Button fx:id="saveTemplateButton" onAction="#handleSaveTemplateButtonAction" prefHeight="31.0" prefWidth="96.0" style="-fx-background-color: black; -fx-text-fill: white; -fx-font-size: 14px;" text="REGISTRAR" />
+            <Button fx:id="stopButton" onAction="#stopCapture" style="-fx-background-color: red; -fx-text-fill: white; -fx-font-size: 14px;" text="CANCELAR" />
+        </HBox>
     </VBox>
 </AnchorPane>
