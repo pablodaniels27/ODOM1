@@ -96,6 +96,9 @@ public class LoginController {
 
             primaryStage.setScene(scene);
             primaryStage.setTitle("ODOM. SA DE CV");
+            primaryStage.setMinWidth(1040);
+            primaryStage.setMinHeight(480);
+
             primaryStage.show();
         } catch (Exception e) {
             e.printStackTrace();
