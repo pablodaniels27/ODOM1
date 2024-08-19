@@ -5,29 +5,28 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1" fx:controller="Lector.EnrollmentFormController">
-    <children>
+    <VBox alignment="CENTER" spacing="20" prefWidth="300.0" prefHeight="400.0" style="-fx-background-color: white; -fx-border-color: lightgray; -fx-border-width: 2; -fx-background-radius: 10; -fx-border-radius: 10;">
+        <!-- Definición correcta de padding usando Insets -->
+        <padding>
+            <Insets top="10" right="10" bottom="10" left="10"/>
+        </padding>
+
         <!-- Etiqueta para mostrar el estado del proceso -->
-        <Label fx:id="statusLabel" layoutX="20.0" layoutY="20.0" text="Status: Waiting for fingerprint..." />
+        <Label fx:id="statusLabel" text="Por favor ingresar huella dactilar" style="-fx-font-size: 16px; -fx-text-fill: gray;" />
 
         <!-- Vista de la imagen de la huella -->
-        <ImageView fx:id="fingerprintImageView" fitHeight="150.0" fitWidth="150.0" layoutX="20.0" layoutY="50.0" preserveRatio="true" />
+        <ImageView fx:id="fingerprintImageView" fitHeight="150.0" fitWidth="150.0" preserveRatio="true" style="-fx-background-color: #e6e6e6; -fx-border-radius: 10;" />
 
         <!-- Etiqueta para mostrar el ID único generado -->
-        <Label fx:id="idLabel" layoutX="20.0" layoutY="220.0" text="ID: " />
+        <Label fx:id="idLabel" text="ID" style="-fx-font-size: 14px; -fx-text-fill: gray;" />
 
-        <!-- Botón para guardar la plantilla -->
-        <Button fx:id="saveTemplateButton" layoutX="20.0" layoutY="250.0" mnemonicParsing="false" onAction="#handleSaveTemplateButtonAction" text="Save Template" />
-
-
-        <!-- Botón para detener la captura -->
-        <Button fx:id="stopButton" layoutX="130.0" layoutY="250.0" mnemonicParsing="false" onAction="#stopCapture" text="Stop Capture" />
-
-        <!-- Botón para cerrar la ventana -->
-        <Button layoutX="240.0" layoutY="250.0" mnemonicParsing="false" onAction="#closeWindow" text="Close" />
-    </children>
-    <padding>
-        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-    </padding>
+        <!-- Contenedor para los botones de acción -->
+        <VBox spacing="10">
+            <Button fx:id="saveTemplateButton" text="REGISTRAR" style="-fx-background-color: black; -fx-text-fill: white; -fx-font-size: 14px;" onAction="#handleSaveTemplateButtonAction" />
+            <Button fx:id="stopButton" text="CANCELAR" style="-fx-background-color: red; -fx-text-fill: white; -fx-font-size: 14px;" onAction="#stopCapture" />
+        </VBox>
+    </VBox>
 </AnchorPane>

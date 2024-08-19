@@ -17,6 +17,10 @@
     -fx-padding: 5px;
     -fx-alignment: center;
 }
+.table-column .label {
+    -fx-alignment: CENTER_LEFT;
+}
+
 
 /* Otros estilos */
 .hbox {
