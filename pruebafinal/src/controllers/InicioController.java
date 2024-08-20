@@ -3,10 +3,10 @@ package controllers;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -25,7 +25,7 @@ public class InicioController {
     private Label currentDate;
 
     @FXML
-    private ListView<Employee> employeeListView;
+    private VBox employeeListContainer;
 
     @FXML
     private Label employeeNameLabel;
@@ -50,12 +50,8 @@ public class InicioController {
 
     @FXML
     private void initialize() {
-        // Asegurar que el ListView es visible y gestionado
-        employeeListView.setVisible(true);
-        employeeListView.setManaged(true);
-
-        // Mostrar la fecha y hora actuales
-        currentDate.setText(LocalDate.now().toString()); // Simplificado para ejemplo
+        // Mostrar la fecha actual
+        currentDate.setText(LocalDate.now().toString());
 
         // Inicializar el mes actual
         currentYearMonth = YearMonth.now();
@@ -81,31 +77,39 @@ public class InicioController {
         employees = getEmployeesFromDatabase();
         System.out.println("Number of employees loaded: " + employees.size());
 
-        // Añadir todos los empleados al ListView
-        employeeListView.getItems().addAll(employees);
+        // Limpiar el contenedor de empleados antes de agregar nuevos elementos
+        employeeListContainer.getChildren().clear();
 
-        // Configurar cómo se muestra cada empleado en la lista
-        employeeListView.setCellFactory(listView -> new ListCell<Employee>() {
-            @Override
-            protected void updateItem(Employee employee, boolean empty) {
-                super.updateItem(employee, empty);
-                if (empty || employee == null) {
-                    setText(null);
-                    setStyle(null);  // Asegúrate de no aplicar ningún estilo aquí
-                } else {
-                    setText(employee.fullName() + " - " + employee.profession());
-                    setStyle("-fx-font-size: 14px;");  // Estilo básico para asegurarte de que se vea
-                }
-            }
-        });
+        // Añadir todos los empleados al VBox
+        for (Employee employee : employees) {
+            VBox employeeBox = createEmployeeVBox(employee);
+            employeeListContainer.getChildren().add(employeeBox);
+        }
+    }
+
+    // Crear un VBox para representar a un empleado
+    private VBox createEmployeeVBox(Employee employee) {
+        VBox vbox = new VBox(5); // Espaciado de 5 entre elementos
+        vbox.setStyle("-fx-padding: 10; -fx-border-color: lightgray; -fx-background-color: white; -fx-background-radius: 10; -fx-border-radius: 10;");
+
+        Label nameLabel = new Label(employee.fullName());
+        nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
+        Label professionLabel = new Label(employee.profession());
+        professionLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: gray;");
+
+        // Añadir evento de clic al VBox
+        vbox.setOnMouseClicked(event -> handleEmployeeSelection(event, employee));
+
+        vbox.getChildren().addAll(nameLabel, professionLabel);
+
+        return vbox;
     }
 
     // Método que maneja la selección de un empleado en la lista
-    @FXML
-    private void handleEmployeeSelection(MouseEvent event) {
-        Employee selectedEmployee = employeeListView.getSelectionModel().getSelectedItem();
-        if (selectedEmployee != null) {
-            updateCalendarForEmployee(selectedEmployee);
+    private void handleEmployeeSelection(MouseEvent event, Employee employee) {
+        if (employee != null) {
+            updateCalendarForEmployee(employee);
         }
     }
 
