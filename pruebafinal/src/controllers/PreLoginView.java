@@ -27,7 +27,7 @@ public class PreLoginView {
     @FXML
     public void initialize() {
         // Cargar el GIF desde el directorio de recursos
-        Image gifImage = new Image(getClass().getResourceAsStream("/resources/Gif.GIF"));
+        Image gifImage = new Image(getClass().getResourceAsStream("/resources/gifi.GIF"));
         gifImageView.setImage(gifImage);
     }
 

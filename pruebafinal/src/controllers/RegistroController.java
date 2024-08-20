@@ -1,6 +1,7 @@
 package controllers;
 
 import Lector.EnrollmentFormController;
+import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -12,6 +13,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -52,9 +56,9 @@ public class RegistroController {
     private ChoiceBox<String> puestoChoiceBox;
 
     @FXML
-    private ImageView imageView;
+    private ImageView fingerprintImageView;
 
-    private byte[] huellaDigital; // Variable para almacenar la huella digital
+    private DPFPTemplate template; // Variable para almacenar el template de la huella digital
 
     @FXML
     private void initialize() {
@@ -62,8 +66,8 @@ public class RegistroController {
         cargarPuestos();
     }
 
-    public void setHuellaDigital(byte[] huellaDigital) {
-        this.huellaDigital = huellaDigital;
+    public void setTemplate(DPFPTemplate template) {
+        this.template = template;
     }
 
     private void cargarDepartamentos() {
@@ -93,12 +97,9 @@ public class RegistroController {
     }
 
     @FXML
-    private ImageView fingerprintImageView;
-
     public void updateFingerprintImage(javafx.scene.image.Image image) {
         fingerprintImageView.setImage(image);
     }
-
 
     @FXML
     private void enviarDatos() {
@@ -138,7 +139,22 @@ public class RegistroController {
                 jerarquiaId = puestoResult.getInt("id");
             }
 
-            // Insertar los datos del empleado incluyendo la huella digital
+            // Serialize the DPFPTemplate
+            byte[] serializedTemplate = null;
+            if (template != null) {
+                try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                     ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+
+                    oos.writeObject(template.serialize()); // Serializar el template
+                    oos.flush();
+                    serializedTemplate = bos.toByteArray();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return;  // Early return on serialization failure
+                }
+            }
+
+            // Insertar los datos del empleado incluyendo la huella digital serializada
             String sql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, huella) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement statement = connection.prepareStatement(sql);
@@ -156,7 +172,7 @@ public class RegistroController {
             statement.setString(12, profesion);
             statement.setInt(13, departamentoId);
             statement.setInt(14, jerarquiaId);
-            statement.setBytes(15, huellaDigital); // Guardar la huella digital
+            statement.setBytes(15, serializedTemplate); // Guardar la huella digital serializada
 
             statement.executeUpdate();
         } catch (SQLException e) {

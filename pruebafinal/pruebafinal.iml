@@ -9,8 +9,10 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="javafx-swt" level="application" />
     <orderEntry type="library" exported="" name="Lector" level="application" />
-    <orderEntry type="library" name="dpotapi" level="application" />
-    <orderEntry type="library" exported="" name="digitalpersona" level="application" />
-    <orderEntry type="library" name="mysql-connector-j-9.0.0" level="application" />
+    <orderEntry type="library" exported="" name="dpotapi" level="application" />
+    <orderEntry type="library" name="digitalpersona" level="application" />
+    <orderEntry type="library" exported="" name="Lectorhuella" level="application" />
+    <orderEntry type="library" name="javafx-swt1" level="application" />
+    <orderEntry type="library" exported="" name="mysql-connector-j-9.0.0" level="application" />
   </component>
 </module>

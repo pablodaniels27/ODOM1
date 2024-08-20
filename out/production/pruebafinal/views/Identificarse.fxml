@@ -10,4 +10,5 @@
         <ImageView fx:id="fingerprintImageView" fitWidth="100" fitHeight="100" />
     </VBox>
     <Label fx:id="timerLabel" text="" visible="false" /> <!-- Nuevo Label para el temporizador -->
+    <Label fx:id="fileCountLabel" text="Archivos de huellas: 0" />
 </VBox>
