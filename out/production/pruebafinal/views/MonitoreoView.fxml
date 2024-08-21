@@ -10,25 +10,25 @@
 
         <!-- Parte superior: Título y contenido superior -->
         <top>
-             <VBox alignment="TOP_CENTER" spacing="10">
-                 <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Monitoreo General de Empleados" />
+            <VBox alignment="TOP_CENTER" spacing="10">
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Monitoreo General de Empleados" />
 
-                 <!-- Pane para contenido superior -->
-                 <Pane>
-                     <Label layoutX="10" layoutY="10" text="Zona de trabajo" />
-                     <ComboBox fx:id="zonaTrabajoComboBox" layoutX="150" layoutY="10" prefWidth="200" />
-                     <Label layoutX="370" layoutY="10" text="Supervisores" />
-                     <ComboBox fx:id="supervisoresComboBox" layoutX="500" layoutY="10" prefWidth="200" />
-                     <Label layoutX="10" layoutY="50" text="Fecha Inicio" />
-                     <DatePicker fx:id="fechaInicioPicker" layoutX="150" layoutY="50" prefWidth="200" />
-                     <Label layoutX="370" layoutY="50" text="Fecha Fin" />
-                     <DatePicker fx:id="fechaFinPicker" layoutX="500" layoutY="50" prefWidth="200" />
-                     <Button layoutX="720" layoutY="10" prefWidth="150" text="Sólo Supervisores" />
-                     <Button layoutX="720" layoutY="50" prefWidth="150" text="Sólo Empleados" />
-                     <Label layoutX="10" layoutY="90" text="Nombre, Apellido, Sucursal..." />
-                     <TextField fx:id="searchField" layoutX="150" layoutY="90" prefWidth="720" />
-                 </Pane>
-             </VBox>
+                <!-- Pane para contenido superior -->
+                <Pane>
+                    <Label layoutX="10" layoutY="10" text="Zona de trabajo" />
+                    <ComboBox fx:id="zonaTrabajoComboBox" layoutX="150" layoutY="10" prefWidth="200" />
+                    <Label layoutX="370" layoutY="10" text="Supervisores" />
+                    <ComboBox fx:id="supervisoresComboBox" layoutX="500" layoutY="10" prefWidth="200" />
+                    <Label layoutX="10" layoutY="50" text="Fecha Inicio" />
+                    <DatePicker fx:id="fechaInicioPicker" layoutX="150" layoutY="50" prefWidth="200" />
+                    <Label layoutX="370" layoutY="50" text="Fecha Fin" />
+                    <DatePicker fx:id="fechaFinPicker" layoutX="500" layoutY="50" prefWidth="200" />
+                    <Button layoutX="720" layoutY="10" prefWidth="150" text="Sólo Supervisores" />
+                    <Button layoutX="720" layoutY="50" prefWidth="150" text="Sólo Empleados" />
+                    <Label layoutX="10" layoutY="90" text="Nombre, Apellido, Sucursal..." />
+                    <TextField fx:id="searchField" layoutX="150" layoutY="90" prefWidth="720" />
+                </Pane>
+            </VBox>
         </top>
 
         <!-- Parte central: Tabla de empleados -->
@@ -38,7 +38,7 @@
                     <columns>
                         <TableColumn fx:id="nombreColumn" style="-fx-alignment: CENTER_LEFT;" text="Nombre completo" />
                         <TableColumn fx:id="idColumn" style="-fx-alignment: CENTER_LEFT;" text="ID" />
-                        <TableColumn fx:id="fechaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="Fecha" />
+                        <TableColumn fx:id="fechaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="Fecha de entrada" />
                         <TableColumn fx:id="horaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="H.de entrada" />
                         <TableColumn fx:id="horaSalidaColumn" style="-fx-alignment: CENTER_LEFT;" text="H.de salida" />
                         <TableColumn fx:id="tiempoLaboradoColumn" style="-fx-alignment: CENTER_LEFT;" text="Tiempo laborado" />
