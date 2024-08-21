@@ -3,16 +3,93 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" spacing="10" HBox.hgrow="ALWAYS">
-    <VBox spacing="10" VBox.vgrow="ALWAYS">
-        <Label text="Lista de empleados" />
-        <ListView fx:id="employeeListView" prefHeight="600" VBox.vgrow="ALWAYS"/>
-    </VBox>
-    <VBox spacing="10">
-        <Label text="Calendario" />
-        <DatePicker fx:id="calendarDatePicker" />
-    </VBox>
-</HBox>
+<AnchorPane prefHeight="589.0" prefWidth="416.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.InicioController">
+    <children>
+        <SplitPane dividerPositions="0.5" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+            <items>
+                <!-- Cuadrante 1: Lista de empleados (ocupa la mitad izquierda) -->
+                <VBox fx:id="employeeListSection" alignment="TOP_LEFT" spacing="10" styleClass="employee-section">
+                    <Label styleClass="header-label" text="Lista de empleados" />
+                    <Label fx:id="locationLabel" styleClass="location-label" />
+                    <Label fx:id="currentDate" styleClass="date-label" />
+                    <ListView fx:id="employeeListView" styleClass="employee-list" onMouseClicked="#handleEmployeeSelection"/>
+                </VBox>
+                <SplitPane dividerPositions="0.5" orientation="VERTICAL">
+                    <items>
+                        <!-- Cuadrante 2: Calendario (parte superior derecha) -->
+                        <VBox fx:id="calendarContainer" alignment="TOP_CENTER" spacing="10" styleClass="calendar-section" VBox.vgrow="ALWAYS">
+                            <!-- Información del empleado seleccionado -->
+                            <Label fx:id="employeeNameLabel" styleClass="header-label" />
+                            <Label fx:id="visitsInfoLabel" styleClass="info-label" />
+                            <HBox alignment="CENTER" spacing="10">
+                                <Button fx:id="prevMonthButton" text="&lt;" />
+                                <Label fx:id="currentMonthLabel" styleClass="header-label" />
+                                <Button fx:id="nextMonthButton" text="&gt;" />
+                            </HBox>
+                            <!-- Aseguramos que el GridPane crezca para llenar el espacio disponible -->
+                            <GridPane fx:id="calendarGrid" alignment="CENTER" hgap="10" vgap="10" VBox.vgrow="ALWAYS">
+                                <columnConstraints>
+                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                </columnConstraints>
+                                <rowConstraints>
+                                    <RowConstraints vgrow="ALWAYS"/>
+                                    <RowConstraints vgrow="ALWAYS"/>
+                                    <RowConstraints vgrow="ALWAYS"/>
+                                    <RowConstraints vgrow="ALWAYS"/>
+                                    <RowConstraints vgrow="ALWAYS"/>
+                                    <RowConstraints vgrow="ALWAYS"/>
+                                </rowConstraints>
+                            </GridPane>
+                        </VBox>
 
+                        <!-- Cuadrante 3: Asistencias semanales (parte inferior derecha) -->
+                        <VBox alignment="CENTER_LEFT" style="-fx-padding: 10;">
+                            <GridPane fx:id="attendanceGrid" alignment="CENTER_LEFT" hgap="10" maxWidth="200" vgap="10" VBox.vgrow="NEVER"> <!-- Limitar el ancho del GridPane -->
+                                <!-- Días de la semana -->
+                                <Label text="Lunes" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label fx:id="mondayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="0" />
 
+                                <Label text="Martes" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label fx:id="tuesdayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
 
+                                <Label text="Miércoles" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <Label fx:id="wednesdayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                                <Label text="Jueves" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                <Label fx:id="thursdayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+                                <Label text="Viernes" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                                <Label fx:id="fridayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+                                <Label text="Sábado" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                                <Label fx:id="saturdayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+
+                                <Label text="Domingo" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                                <Label fx:id="sundayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                <columnConstraints>
+                                    <ColumnConstraints />
+                                    <ColumnConstraints />
+                                </columnConstraints>
+                                <rowConstraints>
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                    <RowConstraints />
+                                </rowConstraints>
+                            </GridPane>
+                        </VBox>
+                    </items>
+                </SplitPane>
+            </items>
+        </SplitPane>
+    </children>
+</AnchorPane>

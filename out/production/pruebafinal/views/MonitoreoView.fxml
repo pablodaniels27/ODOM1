@@ -3,64 +3,50 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="1351.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
-
-    <!-- Contenedor principal que se ajustará a la pantalla -->
-    <BorderPane style="-fx-background-color: transparent; -fx-padding: 10; -fx-border-width: 10;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-
-        <!-- Parte superior: Título y contenido superior -->
-        <top>
-             <VBox alignment="TOP_CENTER" spacing="10">
-                 <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Monitoreo General de Empleados" />
-
-                 <!-- Pane para contenido superior -->
-                 <Pane>
-                     <Label layoutX="10" layoutY="10" text="Zona de trabajo" />
-                     <ComboBox fx:id="zonaTrabajoComboBox" layoutX="150" layoutY="10" prefWidth="200" />
-                     <Label layoutX="370" layoutY="10" text="Supervisores" />
-                     <ComboBox fx:id="supervisoresComboBox" layoutX="500" layoutY="10" prefWidth="200" />
-                     <Label layoutX="10" layoutY="50" text="Fecha Inicio" />
-                     <DatePicker fx:id="fechaInicioPicker" layoutX="150" layoutY="50" prefWidth="200" />
-                     <Label layoutX="370" layoutY="50" text="Fecha Fin" />
-                     <DatePicker fx:id="fechaFinPicker" layoutX="500" layoutY="50" prefWidth="200" />
-                     <Button layoutX="720" layoutY="10" prefWidth="150" text="Sólo Supervisores" />
-                     <Button layoutX="720" layoutY="50" prefWidth="150" text="Sólo Empleados" />
-                     <Label layoutX="10" layoutY="90" text="Nombre, Apellido, Sucursal..." />
-                     <TextField fx:id="searchField" layoutX="150" layoutY="90" prefWidth="720" />
-                 </Pane>
-             </VBox>
-        </top>
-
-        <!-- Parte central: Tabla de empleados -->
-        <center>
-            <AnchorPane>
-                <TableView fx:id="employeeTableView" prefHeight="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController" alignment="TOP_CENTER" spacing="10" style="-fx-background-color: transparent; -fx-padding: 0;">
+    <ScrollPane fitToHeight="true" fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+        <VBox alignment="TOP_CENTER" spacing="10" style="-fx-background-color: transparent;">
+            <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Monitoreo General de Empleados" />
+            <GridPane hgap="10" vgap="10">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="100"/>
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="100"/>
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="100"/>
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="100"/>
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="100"/>
+                </columnConstraints>
+                <Label text="Zona de trabajo" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                <ComboBox fx:id="zonaTrabajoComboBox" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/>
+                <Label text="Supervisores" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                <ComboBox fx:id="supervisoresComboBox" GridPane.columnIndex="3" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/>
+                <Label text="Fecha Inicio" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                <DatePicker fx:id="fechaInicioPicker" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
+                <Label text="Fecha Fin" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                <DatePicker fx:id="fechaFinPicker" GridPane.columnIndex="3" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
+                <Button text="Sólo Supervisores" GridPane.columnIndex="4" GridPane.rowIndex="0" GridPane.hgrow="ALWAYS"/>
+                <Button text="Sólo Empleados" GridPane.columnIndex="4" GridPane.rowIndex="1" GridPane.hgrow="ALWAYS"/>
+                <Label text="Nombre, Apellido, Sucursal..." GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                <TextField fx:id="searchField" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.rowIndex="2" GridPane.hgrow="ALWAYS"/>
+                <TableView fx:id="employeeTableView" GridPane.columnIndex="0" GridPane.columnSpan="5" GridPane.rowIndex="3" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
                     <columns>
-                        <TableColumn fx:id="nombreColumn" style="-fx-alignment: CENTER_LEFT;" text="Nombre completo" />
-                        <TableColumn fx:id="idColumn" style="-fx-alignment: CENTER_LEFT;" text="ID" />
-                        <TableColumn fx:id="fechaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="Fecha de entrada" />
-                        <TableColumn fx:id="horaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="H.de entrada" />
-                        <TableColumn fx:id="horaSalidaColumn" style="-fx-alignment: CENTER_LEFT;" text="H.de salida" />
-                        <TableColumn fx:id="tiempoLaboradoColumn" style="-fx-alignment: CENTER_LEFT;" text="Tiempo laborado" />
-                        <TableColumn fx:id="infoColumn" style="-fx-alignment: CENTER_LEFT;" text="Info." />
+                        <TableColumn text="Nombre completo" />
+                        <TableColumn text="ID" />
+                        <TableColumn text="Fecha de entrada" />
+                        <TableColumn text="H.de entrada" />
+                        <TableColumn text="H.de salida" />
+                        <TableColumn text="Tiempo laborado" />
+                        <TableColumn text="Info." />
                     </columns>
                 </TableView>
-            </AnchorPane>
-        </center>
-
-        <!-- Parte inferior: Botones de navegación -->
-        <bottom>
-            <AnchorPane minHeight="25.0">
-                <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10">
-                    <ChoiceBox fx:id="itemsPerPageChoiceBox" prefWidth="100.0" />
-                    <Button fx:id="previousButton" text="Previous" />
-                    <Button fx:id="page1Button" text="1" />
-                    <Button fx:id="page2Button" prefWidth="23.0" text="2" />
-                    <Button fx:id="page3Button" text="3" />
-                    <Button fx:id="nextButton" text="Next" />
+                <HBox alignment="CENTER" spacing="10" GridPane.columnIndex="0" GridPane.columnSpan="5" GridPane.rowIndex="4">
+                    <Button text="Previous" />
+                    <Button text="1" />
+                    <Button text="2" />
+                    <Button text="3" />
+                    <Button text="..." />
+                    <Button text="Next" />
                 </HBox>
-            </AnchorPane>
-        </bottom>
-
-    </BorderPane>
-</AnchorPane>
+            </GridPane>
+        </VBox>
+    </ScrollPane>
+</VBox>
