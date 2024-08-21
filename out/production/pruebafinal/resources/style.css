@@ -21,7 +21,6 @@
     -fx-alignment: CENTER_LEFT;
 }
 
-
 /* Otros estilos */
 .hbox {
     -fx-spacing: 10px;
@@ -56,6 +55,26 @@
 .button {
     -fx-background-color: #FF6F3F;
     -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+/* Botón negro */
+.button-black {
+    -fx-background-color: #333333;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+/* Botón claro */
+.button-light {
+    -fx-background-color: #D3D3D3;
+    -fx-text-fill: black;
     -fx-font-size: 14px;
     -fx-background-radius: 10;
     -fx-padding: 10 20 10 20;

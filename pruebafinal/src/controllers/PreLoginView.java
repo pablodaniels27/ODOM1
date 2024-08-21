@@ -27,7 +27,7 @@ public class PreLoginView {
     @FXML
     public void initialize() {
         // Cargar el GIF desde el directorio de recursos
-        Image gifImage = new Image(getClass().getResourceAsStream("/resources/Gif.GIF"));
+        Image gifImage = new Image(getClass().getResourceAsStream("/resources/speed.GIF"));
         gifImageView.setImage(gifImage);
     }
 
@@ -66,8 +66,7 @@ public class PreLoginView {
             popupStage.setScene(scene);
 
             // Establecer tamaño máximo y mínimo de la ventana emergente
-            popupStage.setMaxHeight(450);
-            popupStage.setMaxWidth(450);
+
             popupStage.setMinHeight(350);
             popupStage.setMinWidth(350);
 

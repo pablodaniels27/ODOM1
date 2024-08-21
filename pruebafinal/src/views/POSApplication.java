@@ -28,13 +28,13 @@ public class POSApplication extends Application {
         primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/ODOM.jpg"))));
         primaryStage.setWidth(1280);
         primaryStage.setHeight(720);
-
         // Establecer el tamaño mínimo de la ventana principal
         primaryStage.setMinWidth(500);
         primaryStage.setMinHeight(480);
 
         primaryStage.show();
     }
+
 
     public static void main(String[] args) {
         launch(args);

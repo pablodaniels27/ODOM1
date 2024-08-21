@@ -134,7 +134,7 @@ public class IdentificarseController {
         timerLabel.setVisible(true);
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
-            int countdown = 5;
+            int countdown = 3;
 
             @Override
             public void run() {
