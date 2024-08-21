@@ -13,27 +13,27 @@
         <!-- StackPane para agregar el fondo semitransparente -->
         <StackPane alignment="CENTER" style="-fx-background-color: #efeded; -fx-padding: 5;">
             <HBox alignment="CENTER_LEFT" prefHeight="51.0" prefWidth="1050.0" spacing="10">
-                <Button onAction="#showInicio" text="Inicio">
+                <Button onAction="#showInicio" text="Inicio" styleClass="responsive-button">
                     <HBox.margin>
                         <Insets bottom="5" left="0" right="10" top="5" />
                     </HBox.margin>
                 </Button>
-                <Button onAction="#showRegistro" text="Registro">
+                <Button onAction="#showRegistro" text="Registro" styleClass="responsive-button">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-                <Button onAction="#showRegistroSucursal" text="Gestión de empleados">
+                <Button onAction="#showRegistroSucursal" text="Gestión de empleados" styleClass="responsive-button">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-                <Button onAction="#showMonitoreo" text="Monitoreo">
+                <Button onAction="#showMonitoreo" text="Monitoreo" styleClass="responsive-button">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-                <Button onAction="#showTerminacion" text="Asistencia">
+                <Button onAction="#showTerminacion" text="Asistencia" styleClass="responsive-button">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
@@ -43,14 +43,14 @@
                 <Pane HBox.hgrow="ALWAYS" />
 
                 <!-- Botón Configuración con margen -->
-                <Button onAction="#showConfiguración" text="Configuración">
+                <Button onAction="#showConfiguración" text="Configuración" styleClass="responsive-button">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
 
                 <!-- Botón Ayuda con margen en el lado derecho -->
-                <Button onAction="#showAyuda" text="Ayuda">
+                <Button onAction="#showAyuda" text="Ayuda" styleClass="responsive-button">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="20" top="10" />
                     </HBox.margin>
