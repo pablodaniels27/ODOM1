@@ -21,7 +21,6 @@
     -fx-alignment: CENTER_LEFT;
 }
 
-
 /* Otros estilos */
 .hbox {
     -fx-spacing: 10px;
@@ -62,6 +61,26 @@
     -fx-cursor: hand;
 }
 
+/* Botón negro */
+.button-black {
+    -fx-background-color: #333333;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+/* Botón claro */
+.button-light {
+    -fx-background-color: #D3D3D3;
+    -fx-text-fill: black;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
 .hyperlink {
     -fx-text-fill: blue;
     -fx-font-size: 12px;
@@ -74,4 +93,15 @@
     -fx-background-color: #FFFFFF;
     -fx-border-color: lightgrey;
     -fx-border-width: 1px;
+}
+.attendance-box {
+    -fx-background-color: lightgray;
+    -fx-alignment: CENTER;
+    -fx-padding: 10;
+    -fx-border-color: darkgray;
+    -fx-border-width: 1;
+    -fx-min-width: 80px; /* Ancho mínimo ajustado */
+    -fx-max-width: 100px; /* Ancho máximo ajustado */
+    -fx-min-height: 25px;
+    -fx-max-height: 30px; /* Altura máxima ajustada */
 }
