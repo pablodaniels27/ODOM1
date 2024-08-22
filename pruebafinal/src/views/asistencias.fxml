@@ -21,8 +21,8 @@
 
     <!-- Botones de registro -->
     <HBox spacing="10" alignment="CENTER">
-        <Button fx:id="registerEntryButton" text="Registrar entrada" style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 10; -fx-padding: 10 20 10 20; -fx-cursor: hand;" />
-        <Button fx:id="registerExitButton" text="Registrar salida" style="-fx-background-color: #EFEFEF; -fx-text-fill: black; -fx-font-size: 14px; -fx-background-radius: 10; -fx-padding: 10 20 10 20; -fx-cursor: hand;" />
+        <Button fx:id="registerEntryButton" text="Registrar entrada" style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 10; -fx-padding: 10 20 10 20; -fx-cursor: hand;" onAction="#registerEntry"/>
+        <Button fx:id="registerExitButton" text="Registrar salida" style="-fx-background-color: #EFEFEF; -fx-text-fill: black; -fx-font-size: 14px; -fx-background-radius: 10; -fx-padding: 10 20 10 20; -fx-cursor: hand;" onAction="#registerExit"/>
     </HBox>
 
     <!-- Entradas/Salidas recientes -->

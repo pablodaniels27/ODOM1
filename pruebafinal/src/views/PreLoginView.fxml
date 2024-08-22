@@ -5,19 +5,20 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="1351.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PreLoginView">
+<AnchorPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PreLoginView">
+
+    <!-- Anclar el ImageView para que se ajuste automáticamente -->
+    <ImageView fx:id="gifImageView" fitHeight="2000.0" fitWidth="2000.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" preserveRatio="false" />
+
     <!-- Anclar el botón Check-in/Check-out para que se ajuste automáticamente -->
-    <Button fx:id="registerEntryButton" onAction="#popup" alignment="CENTER" contentDisplay="CENTER" AnchorPane.topAnchor="200.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.bottomAnchor="100.0" text="Check-in/Check-out" textFill="#2215e1">
+    <Button fx:id="registerEntryButton" alignment="CENTER" contentDisplay="CENTER" onAction="#popup" prefHeight="736.0" prefWidth="990.0" text="Check-in/Check-out" textFill="#2215e1" AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="200.0">
         <font>
             <Font name="Bodoni MT Italic" size="24.0" />
         </font>
     </Button>
 
-    <!-- Anclar el ImageView para mantener su posición -->
-    <ImageView fx:id="gifImageView" fitHeight="150.0" fitWidth="150.0" layoutX="348.0" layoutY="25.0" />
-
     <!-- Anclar el botón Login para que se mantenga en la esquina superior derecha -->
-    <Button fx:id="loginButton" onAction="#handleLoginAction" AnchorPane.topAnchor="36.0" AnchorPane.rightAnchor="50.0" prefHeight="22.0" prefWidth="74.0" text="Login">
+    <Button fx:id="loginButton" onAction="#handleLoginAction" prefHeight="22.0" prefWidth="74.0" text="Login" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="36.0">
         <font>
             <Font name="Bodoni MT Italic" size="18.0" />
         </font>
