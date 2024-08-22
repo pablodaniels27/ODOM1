@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-        <?import javafx.scene.control.*?>
-        <?import javafx.scene.image.ImageView?>
-        <?import javafx.scene.layout.*?>
-        <?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PreLoginView">
-    <!-- Botón Check-in/Check-out -->
-    <Button fx:id="registerEntryButton" onAction="#popup" alignment="CENTER" contentDisplay="CENTER" layoutX="171.0" layoutY="106.0" prefHeight="51.0" prefWidth="274.0" text="Check-in/Check-out" textFill="#2215e1" AnchorPane.leftAnchor="171.0" AnchorPane.rightAnchor="155.0" AnchorPane.topAnchor="106.0">
+<AnchorPane prefHeight="1351.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PreLoginView">
+    <!-- Anclar el botón Check-in/Check-out para que se ajuste automáticamente -->
+    <Button fx:id="registerEntryButton" onAction="#popup" alignment="CENTER" contentDisplay="CENTER" AnchorPane.topAnchor="200.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.bottomAnchor="100.0" text="Check-in/Check-out" textFill="#2215e1">
         <font>
             <Font name="Bodoni MT Italic" size="24.0" />
         </font>
     </Button>
 
-    <!-- ImageView para el GIF más abajo y centrado a la derecha -->
-    <ImageView fx:id="gifImageView" fitWidth="150.0" fitHeight="150.0" AnchorPane.topAnchor="200.0" AnchorPane.rightAnchor="550.0" />
+    <!-- Anclar el ImageView para mantener su posición -->
+    <ImageView fx:id="gifImageView" fitHeight="150.0" fitWidth="150.0" layoutX="348.0" layoutY="25.0" />
 
-    <!-- Botón Login -->
-    <Button fx:id="loginButton" onAction="#handleLoginAction" text="Login" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="250.0" AnchorPane.rightAnchor="250.0">
+    <!-- Anclar el botón Login para que se mantenga en la esquina superior derecha -->
+    <Button fx:id="loginButton" onAction="#handleLoginAction" AnchorPane.topAnchor="36.0" AnchorPane.rightAnchor="50.0" prefHeight="22.0" prefWidth="74.0" text="Login">
         <font>
             <Font name="Bodoni MT Italic" size="18.0" />
         </font>
