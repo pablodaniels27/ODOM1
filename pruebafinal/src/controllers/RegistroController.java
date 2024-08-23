@@ -7,16 +7,19 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RegistroController {
 
@@ -59,6 +62,7 @@ public class RegistroController {
     private void initialize() {
         cargarDepartamentos();
         cargarPuestos();
+        configurarDatePicker();
     }
 
     public void setTemplate(DPFPTemplate template) {
@@ -91,6 +95,37 @@ public class RegistroController {
         }
     }
 
+    private void configurarDatePicker() {
+        LocalDate today = LocalDate.now();
+        LocalDate maxDate = today.minus(15, ChronoUnit.YEARS); // Limitar a fechas anteriores a 15 años
+        LocalDate minDate = today.minus(100, ChronoUnit.YEARS); // Limitar a fechas de hace 100 años
+
+        // Preconfigurar la fecha del DatePicker al mínimo valor disponible
+        fechaNacimientoPicker.setValue(maxDate);
+
+        // Fijar el enfoque en el DatePicker para que el calendario empiece en el borde más bajo
+        fechaNacimientoPicker.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                fechaNacimientoPicker.show();
+            }
+        });
+
+        fechaNacimientoPicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
+            @Override
+            public DateCell call(DatePicker param) {
+                return new DateCell() {
+                    @Override
+                    public void updateItem(LocalDate date, boolean empty) {
+                        super.updateItem(date, empty);
+                        if (date.isAfter(maxDate) || date.isBefore(minDate)) {
+                            setDisable(true); // Deshabilitar fechas fuera de rango
+                        }
+                    }
+                };
+            }
+        });
+    }
+
     @FXML
     public void updateFingerprintImage(javafx.scene.image.Image image) {
         fingerprintImageView.setImage(image);
@@ -98,6 +133,12 @@ public class RegistroController {
 
     @FXML
     private void enviarDatos() {
+        // Validar si la huella digital ha sido ingresada
+        if (template == null) {
+            mostrarError("No se ha ingresado la huella digital. Por favor, regístrela antes de continuar.");
+            return;
+        }
+
         String nombre = nombreField.getText();
         String apellidoMaterno = apellidoMaternoField.getText();
         String apellidoPaterno = apellidoPaternoField.getText();
@@ -110,6 +151,10 @@ public class RegistroController {
         String rfc = rfcField.getText();
         String curp = curpField.getText();
         String profesion = profesionField.getText();
+
+        if (!validarCampos()) {
+            return; // No se enviarán datos si la validación falla
+        }
 
         String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
         String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
@@ -135,9 +180,9 @@ public class RegistroController {
                 jerarquiaId = puestoResult.getInt("id");
             }
 
-            // Insertar los datos del empleado sin huella aún
-            String empleadoSql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            // Insertar los datos del empleado sin huella aún, incluyendo el estatus activo
+            String empleadoSql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, estatus_id) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
             PreparedStatement statement = connection.prepareStatement(empleadoSql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, nombre);
             statement.setString(2, apellidoMaterno);
@@ -225,5 +270,70 @@ public class RegistroController {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean validarCampos() {
+        // Validación de Lada
+        String lada = ladaField.getText();
+        if (!lada.matches("\\d{2,3}")) {
+            mostrarError("Lada inválida. Debe tener entre 2 a 3 dígitos.");
+            return false;
+        }
+
+        // Validación de Teléfono
+        String telefono = telefonoField.getText();
+        if (!telefono.matches("\\d{7,8}")) {
+            mostrarError("Teléfono inválido. Debe tener 7 u 8 dígitos.");
+            return false;
+        }
+
+        // Validación de RFC
+        String rfc = rfcField.getText();
+        if (!rfc.matches("[A-ZÑ&]{3,4}\\d{6}[A-Z0-9]{3}")) {
+            mostrarError("RFC inválido. Debe cumplir con el formato estándar de 4 letras y 9 dígitos.");
+            return false;
+        }
+
+        // Validación de CURP
+        String curp = curpField.getText();
+        if (!curp.matches("[A-Z][AEIOU][A-Z]{2}\\d{6}[HM][A-Z]{5}[A-Z0-9]{2}")) {
+            mostrarError("CURP inválido. Debe cumplir con el formato estándar de 18 caracteres alfanuméricos.");
+            return false;
+        }
+
+        // Validación de correo electrónico
+        String email = emailField.getText();
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$");
+        Matcher matcher = pattern.matcher(email);
+        if (!matcher.find()) {
+            mostrarError("Correo electrónico inválido. Ingrese un correo válido.");
+            return false;
+        }
+
+        return true; // Validaciones exitosas
+    }
+
+    private void mostrarError(String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error de validación");
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+    }
+
+    @FXML
+    private void rellenarCampos() {
+        nombreField.setText("Juan");
+        apellidoMaternoField.setText("Pérez");
+        apellidoPaternoField.setText("García");
+        fechaNacimientoPicker.setValue(LocalDate.of(1990, 1, 1));
+        emailField.setText("juan.perez@example.com");
+        ladaField.setText("55");
+        telefonoField.setText("1234567");
+        rfcField.setText("PEGA900101ABC");
+        curpField.setText("PEGA901101HMCRRL00");
+        profesionField.setText("Ingeniero");
+        departamentoChoiceBox.getSelectionModel().selectFirst();
+        puestoChoiceBox.getSelectionModel().selectFirst();
     }
 }
