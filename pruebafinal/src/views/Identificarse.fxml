@@ -15,7 +15,7 @@
             <children>
                 <AnchorPane>
                     <children>
-                        <Label fx:id="statusLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="157.0" prefWidth="350.0" text="Identifiquese utilizando el sensor" textAlignment="CENTER" />
+                        <Label fx:id="statusLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="157.0" prefWidth="350.0" text="Identifíquese utilizando el sensor" textAlignment="CENTER" />
                     </children>
                 </AnchorPane>
                 <AnchorPane>
@@ -29,8 +29,9 @@
                         </Pane>
                     </children>
                 </AnchorPane>
-                <!-- Label para mostrar el temporizador -->
+                <!-- Label para mostrar el temporizador y mensaje de bienvenida -->
                 <Label fx:id="timerLabel" alignment="CENTER" layoutY="330.0" prefHeight="20.0" prefWidth="350.0" text="" visible="false" />
+                <Label fx:id="welcomeLabel" alignment="CENTER" layoutY="300.0" prefHeight="20.0" prefWidth="350.0" text="" visible="false" />
             </children>
         </VBox>
     </children>

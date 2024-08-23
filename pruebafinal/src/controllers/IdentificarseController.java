@@ -37,6 +37,9 @@ public class IdentificarseController {
     @FXML
     private Label timerLabel;  // Nuevo Label para el temporizador
 
+    @FXML
+    private Label welcomeLabel; // Nuevo Label para el mensaje de bienvenida
+
     private DPFPCapture capturer;
     private BufferedImage bufferedImage;
     private DPFPVerification verifier;
@@ -76,16 +79,17 @@ public class IdentificarseController {
 
         if (features != null) {
             try (Connection connection = DatabaseConnection.getConnection()) {
-                String sql = "SELECT huella FROM empleados";
+                String sql = "SELECT h.huella, e.id, e.nombres, e.apellido_paterno FROM huellas h JOIN empleados e ON h.empleado_id = e.id";
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet resultSet = statement.executeQuery();
 
                 boolean found = false;
+                int empleadoId = -1;
+
                 while (resultSet.next()) {
                     byte[] templateBytes = resultSet.getBytes("huella");
 
                     if (templateBytes != null) {
-                        // Deserializa el template desde los bytes recuperados de la base de datos
                         try (ByteArrayInputStream bais = new ByteArrayInputStream(templateBytes);
                              ObjectInputStream ois = new ObjectInputStream(bais)) {
 
@@ -95,9 +99,16 @@ public class IdentificarseController {
                             DPFPVerificationResult result = verifier.verify(features, template);
 
                             if (result.isVerified()) {
+                                String nombreEmpleado = resultSet.getString("nombres");
+                                String apellidoPaterno = resultSet.getString("apellido_paterno");
+                                empleadoId = resultSet.getInt("id");  // Obtener el ID del empleado
+
+                                int finalEmpleadoId = empleadoId;
                                 Platform.runLater(() -> {
+                                    welcomeLabel.setText("Bienvenido, " + nombreEmpleado + " " + apellidoPaterno);
+                                    welcomeLabel.setVisible(true);
                                     statusLabel.setText("Verificación exitosa.");
-                                    startRedirectTimer();  // Iniciar el temporizador después de la verificación exitosa
+                                    startRedirectTimer(finalEmpleadoId);  // Iniciar el temporizador con el ID del empleado
                                 });
                                 stopCapture();
                                 found = true;
@@ -130,7 +141,7 @@ public class IdentificarseController {
         }
     }
 
-    private void startRedirectTimer() {
+    private void startRedirectTimer(int empleadoId) {
         timerLabel.setVisible(true);
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -144,17 +155,22 @@ public class IdentificarseController {
                         countdown--;
                     } else {
                         timer.cancel();
-                        redirectToAsistencias();  // Redirigir después de que el temporizador llegue a 0
+                        redirectToAsistencias(empleadoId);  // Redirigir pasando el ID del empleado
                     }
                 });
             }
         }, 0, 1000);
     }
 
-    private void redirectToAsistencias() {
+    private void redirectToAsistencias(int empleadoId) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/asistencias.fxml"));
             Parent root = loader.load();
+
+            // Obtener el controlador de la nueva vista y pasar el ID del empleado
+            asistenciasController asistenciasController = loader.getController();
+            asistenciasController.setEmpleadoId(empleadoId);  // Pasar el ID del empleado al controlador
+
             Stage stage = (Stage) statusLabel.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("Asistencias");
