@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -35,10 +36,10 @@ public class IdentificarseController {
     private Label statusLabel;
 
     @FXML
-    private Label timerLabel;  // Nuevo Label para el temporizador
+    private Label timerLabel;
 
     @FXML
-    private Label welcomeLabel; // Nuevo Label para el mensaje de bienvenida
+    private Label welcomeLabel;
 
     private DPFPCapture capturer;
     private BufferedImage bufferedImage;
@@ -101,14 +102,14 @@ public class IdentificarseController {
                             if (result.isVerified()) {
                                 String nombreEmpleado = resultSet.getString("nombres");
                                 String apellidoPaterno = resultSet.getString("apellido_paterno");
-                                empleadoId = resultSet.getInt("id");  // Obtener el ID del empleado
+                                empleadoId = resultSet.getInt("id");
 
                                 int finalEmpleadoId = empleadoId;
                                 Platform.runLater(() -> {
                                     welcomeLabel.setText("Bienvenido, " + nombreEmpleado + " " + apellidoPaterno);
                                     welcomeLabel.setVisible(true);
                                     statusLabel.setText("Verificación exitosa.");
-                                    startRedirectTimer(finalEmpleadoId);  // Iniciar el temporizador con el ID del empleado
+                                    startRedirectTimer(finalEmpleadoId);
                                 });
                                 stopCapture();
                                 found = true;
@@ -155,7 +156,7 @@ public class IdentificarseController {
                         countdown--;
                     } else {
                         timer.cancel();
-                        redirectToAsistencias(empleadoId);  // Redirigir pasando el ID del empleado
+                        redirectToAsistencias(empleadoId);
                     }
                 });
             }
@@ -167,12 +168,15 @@ public class IdentificarseController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/asistencias.fxml"));
             Parent root = loader.load();
 
-            // Obtener el controlador de la nueva vista y pasar el ID del empleado
             asistenciasController asistenciasController = loader.getController();
-            asistenciasController.setEmpleadoId(empleadoId);  // Pasar el ID del empleado al controlador
+            asistenciasController.setEmpleadoId(empleadoId);
 
+            Scene scene = new Scene(root);
             Stage stage = (Stage) statusLabel.getScene().getWindow();
-            stage.setScene(new Scene(root));
+            stage.setScene(scene);
+
+            stage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/ODOM.jpg"))));
+
             stage.setTitle("Asistencias");
             stage.show();
         } catch (Exception e) {
@@ -187,6 +191,5 @@ public class IdentificarseController {
 
     public void closeWindow() {
         stopCapture();
-        // Código para cerrar la ventana si es necesario
     }
 }

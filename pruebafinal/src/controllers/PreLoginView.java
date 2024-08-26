@@ -10,6 +10,8 @@ import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.util.Objects;
+
 public class PreLoginView {
 
     @FXML
@@ -43,6 +45,7 @@ public class PreLoginView {
             Scene scene = new Scene(root);
             primaryStage.setScene(scene);
             primaryStage.setTitle("Login - ODOM. SA DE CV");
+
             primaryStage.show();
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,12 +64,21 @@ public class PreLoginView {
             popupStage.initModality(Modality.APPLICATION_MODAL);  // Bloquea la ventana principal hasta que se cierre el popup
             popupStage.setTitle("Identificación de Usuario");
 
+            popupStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/ODOM.jpg"))));
+
             // Crear la escena y establecerla en el stage
             Scene scene = new Scene(root);
             popupStage.setScene(scene);
 
-            // Establecer tamaño máximo y mínimo de la ventana emergente
+            // Obtener el controlador del popup
+            IdentificarseController identificarseController = loader.getController();
 
+            // Añadir un evento de cierre para asegurarse de que los recursos se liberen
+            popupStage.setOnHidden(event -> {
+                identificarseController.closeWindow();  // Asegúrate de liberar los recursos en este método
+            });
+
+            // Establecer tamaño máximo y mínimo de la ventana emergente
             popupStage.setMinHeight(350);
             popupStage.setMinWidth(350);
 

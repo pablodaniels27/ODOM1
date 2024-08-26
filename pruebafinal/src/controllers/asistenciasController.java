@@ -4,10 +4,12 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.sql.Connection;
@@ -18,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Objects;
 
 public class asistenciasController {
@@ -55,13 +58,21 @@ public class asistenciasController {
     public void initialize() {
         startDateTimeUpdater();  // Actualiza la fecha y hora en tiempo real
         loadFingerprintImage();  // Cargar la imagen de huella
+
     }
 
     private void startDateTimeUpdater() {
         Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
             LocalDateTime currentTime = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            dateTimeLabel.setText(currentTime.format(formatter));
+
+            // Formatear la fecha y hora de manera amigable
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "MX"));
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+
+            String formattedDate = currentTime.format(dateFormatter);
+            String formattedTime = currentTime.format(timeFormatter);
+
+            dateTimeLabel.setText(formattedDate + " - " + formattedTime);
         }), new KeyFrame(Duration.seconds(1)));
         clock.setCycleCount(Animation.INDEFINITE);
         clock.play();
@@ -82,10 +93,12 @@ public class asistenciasController {
                 LocalTime entrada = resultSet.getTime("hora_entrada").toLocalTime();
                 LocalTime salida = resultSet.getTime("hora_salida") != null ? resultSet.getTime("hora_salida").toLocalTime() : null;
 
-                entryTimeLabel.setText("Te registraste a las: " + entrada.toString());
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+
+                entryTimeLabel.setText("Te registraste a las: " + entrada.format(timeFormatter));
 
                 if (salida != null) {
-                    exitTimeLabel.setText("Saliste a las: " + salida.toString());
+                    exitTimeLabel.setText("Saliste a las: " + salida.format(timeFormatter));
                 } else {
                     exitTimeLabel.setText("Aún no has registrado tu salida.");
                 }
@@ -172,4 +185,6 @@ public class asistenciasController {
             e.printStackTrace();
         }
     }
+
+
 }
