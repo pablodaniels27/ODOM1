@@ -3,44 +3,60 @@ package controllers;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Control;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.*;
+import javafx.util.Callback;
+
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
+
+import javafx.beans.value.ObservableValue;
+import javafx.beans.property.SimpleStringProperty;
 
 public class MonitoreoController {
 
     @FXML
-    private TableView<Employee> employeeTableView;
+    private TableView<Map<String, Object>> employeeTableView;
 
     @FXML
-    private TableColumn<Employee, String> nombreColumn;
+    private TableColumn<Map<String, Object>, String> nombreColumn;
 
     @FXML
-    private TableColumn<Employee, String> idColumn;
+    private TableColumn<Map<String, Object>, String> idColumn;
 
     @FXML
-    private TableColumn<Employee, String> fechaEntradaColumn;
+    private TableColumn<Map<String, Object>, String> fechaEntradaColumn;
 
     @FXML
-    private TableColumn<Employee, String> horaEntradaColumn;
+    private TableColumn<Map<String, Object>, String> horaEntradaColumn;
 
     @FXML
-    private TableColumn<Employee, String> horaSalidaColumn;
+    private TableColumn<Map<String, Object>, String> horaSalidaColumn;
 
     @FXML
-    private TableColumn<Employee, String> tiempoLaboradoColumn;
+    private TableColumn<Map<String, Object>, String> tiempoLaboradoColumn;
 
     @FXML
-    private TableColumn<Employee, String> tipoAsistenciaColumn;
+    private TableColumn<Map<String, Object>, String> tipoAsistenciaColumn;
 
     @FXML
-    private TableColumn<Employee, String> tipoSalidaColumn;
+    private TableColumn<Map<String, Object>, String> tipoSalidaColumn;
 
     @FXML
-    private TableColumn<Employee, String> estadoColumn;
+    private TableColumn<Map<String, Object>, String> estadoColumn;
+
+    @FXML
+    private DatePicker fechaInicioPicker;
+
+    @FXML
+    private DatePicker fechaFinPicker;
+
+    @FXML
+    private Button searchButton;
 
     @FXML
     private Button previousButton;
@@ -60,7 +76,7 @@ public class MonitoreoController {
     @FXML
     private ChoiceBox<Integer> itemsPerPageChoiceBox;
 
-    private final ObservableList<Employee> employees = FXCollections.observableArrayList();
+    private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
 
     private int itemsPerPage = 10;
     private int currentPage = 1;
@@ -68,41 +84,41 @@ public class MonitoreoController {
 
     @FXML
     public void initialize() {
-        // Configurar las columnas con los nombres de las propiedades
-        nombreColumn.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
-        idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
-        fechaEntradaColumn.setCellValueFactory(new PropertyValueFactory<>("fechaEntrada"));
-        horaEntradaColumn.setCellValueFactory(new PropertyValueFactory<>("horaEntrada"));
-        horaSalidaColumn.setCellValueFactory(new PropertyValueFactory<>("horaSalida"));
-        tiempoLaboradoColumn.setCellValueFactory(new PropertyValueFactory<>("tiempoLaborado"));
-        tipoAsistenciaColumn.setCellValueFactory(new PropertyValueFactory<>("tipoAsistencia"));
-        tipoSalidaColumn.setCellValueFactory(new PropertyValueFactory<>("tipoSalida"));
-        estadoColumn.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        System.out.println("Inicializando controlador...");
 
-        // Agregar empleados de ejemplo
-        for (int i = 1; i <= 50; i++) {
-            employees.add(new Employee(
-                    "Empleado " + i,
-                    String.format("%03d", i),
-                    "2024-08-20",
-                    "08:00",
-                    "17:00",
-                    "8h",
-                    "Asistencia",
-                    "Salió a tiempo",
-                    "Activo"
-            ));
-        }
+        // Configurar las columnas con los Callbacks
+        nombreColumn.setCellValueFactory(createCellValueFactory("nombreCompleto"));
+        idColumn.setCellValueFactory(createCellValueFactory("id"));
+        fechaEntradaColumn.setCellValueFactory(createCellValueFactory("fechaEntrada"));
+        horaEntradaColumn.setCellValueFactory(createCellValueFactory("horaEntrada"));
+        horaSalidaColumn.setCellValueFactory(createCellValueFactory("horaSalida"));
+        tiempoLaboradoColumn.setCellValueFactory(createCellValueFactory("tiempoLaborado"));
+        tipoAsistenciaColumn.setCellValueFactory(createCellValueFactory("tipoAsistencia"));
+        tipoSalidaColumn.setCellValueFactory(createCellValueFactory("tipoSalida"));
+        estadoColumn.setCellValueFactory(createCellValueFactory("estado"));
+
+        employeeTableView.setItems(employees);
 
         // Configurar el ChoiceBox de cantidad de datos por página
         itemsPerPageChoiceBox.setItems(FXCollections.observableArrayList(10, 20, 50, 100, 200));
         itemsPerPageChoiceBox.setValue(itemsPerPage);
         itemsPerPageChoiceBox.setOnAction(event -> {
+            System.out.println("Cambio en items por página");
             itemsPerPage = itemsPerPageChoiceBox.getValue();
             currentPage = 1;
             totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
             showPage(currentPage);
             updatePaginationButtons();
+        });
+
+        // Configurar el botón de búsqueda
+        searchButton.setOnAction(event -> {
+            System.out.println("Botón de búsqueda presionado");
+            try {
+                searchByDate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         });
 
         // Calcular el total de páginas
@@ -116,15 +132,102 @@ public class MonitoreoController {
 
         // Ajustar el ancho de las columnas al contenido
         adjustColumnWidths();
+
+        System.out.println("Inicialización completada");
+    }
+
+    private Callback<TableColumn.CellDataFeatures<Map<String, Object>, String>, ObservableValue<String>> createCellValueFactory(String key) {
+        return cellData -> {
+            Map<String, Object> row = cellData.getValue();
+            Object value = row.get(key);
+            return new SimpleStringProperty(value != null ? value.toString() : "");  // Manejo de valores nulos
+        };
+    }
+
+    private void searchByDate() throws SQLException {
+        System.out.println("Iniciando búsqueda por fecha...");
+        LocalDate fechaInicio = fechaInicioPicker.getValue();
+        LocalDate fechaFin = fechaFinPicker.getValue();
+
+        if (fechaInicio != null && fechaFin != null) {
+            System.out.println("Fechas seleccionadas: " + fechaInicio + " a " + fechaFin);
+
+            // Limpiar la lista actual de empleados
+            employees.clear();
+
+            // Convertir las fechas a formato SQL
+            String fechaInicioSQL = fechaInicio.toString();
+            String fechaFinSQL = fechaFin.toString();
+
+            DatabaseConnection connectNow = new DatabaseConnection();
+            Connection connectDB = connectNow.getConnection();
+
+            String query = "SELECT e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
+                    "dias.fecha, es.id as estado_id, en.hora_entrada, en.hora_salida, t.nombre as tipo_asistencia, ts.nombre as tipo_salida " +
+                    "FROM entradas_salidas en " +
+                    "JOIN empleados e ON en.empleado_id = e.id " +
+                    "JOIN dias ON en.dia_id = dias.id " +
+                    "JOIN estatus_empleado es ON e.estatus_id = es.id " +
+                    "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                    "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
+                    "WHERE dias.fecha BETWEEN '" + fechaInicioSQL + "' AND '" + fechaFinSQL + "'";
+
+            System.out.println("Ejecutando consulta SQL: " + query);
+
+            try {
+                Statement statement = connectDB.createStatement();
+                ResultSet resultSet = statement.executeQuery(query);
+
+                int totalRegistros = 0;
+
+                while (resultSet.next()) {
+                    totalRegistros++;
+                    System.out.println("Resultado obtenido de la base de datos");
+
+                    Map<String, Object> employeeData = new HashMap<>();
+                    employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno"));
+                    employeeData.put("id", resultSet.getInt("estado_id") != 0 ? String.valueOf(resultSet.getInt("estado_id")) : "");
+                    employeeData.put("fechaEntrada", resultSet.getString("fecha") != null ? resultSet.getString("fecha") : "");
+                    employeeData.put("horaEntrada", resultSet.getString("hora_entrada") != null ? resultSet.getString("hora_entrada") : "");
+                    employeeData.put("horaSalida", resultSet.getString("hora_salida") != null ? resultSet.getString("hora_salida") : "");
+                    employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia") != null ? resultSet.getString("tipo_asistencia") : "");
+                    employeeData.put("tipoSalida", resultSet.getString("tipo_salida") != null ? resultSet.getString("tipo_salida") : "");
+                    employeeData.put("estado", resultSet.getString("estado") != null ? resultSet.getString("estado") : "");
+
+                    employees.add(employeeData);
+                }
+
+                System.out.println("Número total de registros obtenidos: " + totalRegistros);
+
+                connectDB.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // Mostrar la primera página de resultados
+            showPage(1);
+            updatePaginationButtons();
+        } else {
+            System.out.println("Fechas no seleccionadas");
+            // Si no se seleccionan fechas, mostrar un mensaje de error o advertencia
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Advertencia");
+            alert.setHeaderText("Fechas no seleccionadas");
+            alert.setContentText("Por favor, selecciona un rango de fechas válido.");
+            alert.showAndWait();
+        }
     }
 
     private void showPage(int pageNumber) {
+        System.out.println("Mostrando página: " + pageNumber);
         int fromIndex = (pageNumber - 1) * itemsPerPage;
         int toIndex = Math.min(fromIndex + itemsPerPage, employees.size());
+        System.out.println("Mostrando registros desde " + fromIndex + " hasta " + toIndex);
         employeeTableView.setItems(FXCollections.observableArrayList(employees.subList(fromIndex, toIndex)));
     }
 
     private void adjustColumnWidths() {
+        System.out.println("Ajustando ancho de columnas");
         employeeTableView.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         employeeTableView.getColumns().forEach(column -> {
             column.setMinWidth(column.getText().length() * 13);
@@ -179,66 +282,6 @@ public class MonitoreoController {
             });
         } else {
             page3Button.setVisible(false);
-        }
-    }
-
-    public static class Employee {
-        private final String nombreCompleto;
-        private final String id;
-        private final String fechaEntrada;
-        private final String horaEntrada;
-        private final String horaSalida;
-        private final String tiempoLaborado;
-        private final String tipoAsistencia;
-        private final String tipoSalida;
-        private final String estado;
-
-        public Employee(String nombreCompleto, String id, String fechaEntrada, String horaEntrada, String horaSalida, String tiempoLaborado, String tipoAsistencia, String tipoSalida, String estado) {
-            this.nombreCompleto = nombreCompleto;
-            this.id = id;
-            this.fechaEntrada = fechaEntrada;
-            this.horaEntrada = horaEntrada;
-            this.horaSalida = horaSalida;
-            this.tiempoLaborado = tiempoLaborado;
-            this.tipoAsistencia = tipoAsistencia;
-            this.tipoSalida = tipoSalida;
-            this.estado = estado;
-        }
-
-        public String getNombreCompleto() {
-            return nombreCompleto;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getFechaEntrada() {
-            return fechaEntrada;
-        }
-
-        public String getHoraEntrada() {
-            return horaEntrada;
-        }
-
-        public String getHoraSalida() {
-            return horaSalida;
-        }
-
-        public String getTiempoLaborado() {
-            return tiempoLaborado;
-        }
-
-        public String getTipoAsistencia() {
-            return tipoAsistencia;
-        }
-
-        public String getTipoSalida() {
-            return tipoSalida;
-        }
-
-        public String getEstado() {
-            return estado;
         }
     }
 }
