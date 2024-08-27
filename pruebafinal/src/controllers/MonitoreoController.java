@@ -34,7 +34,13 @@ public class MonitoreoController {
     private TableColumn<Employee, String> tiempoLaboradoColumn;
 
     @FXML
-    private TableColumn<Employee, String> infoColumn;
+    private TableColumn<Employee, String> tipoAsistenciaColumn;
+
+    @FXML
+    private TableColumn<Employee, String> tipoSalidaColumn;
+
+    @FXML
+    private TableColumn<Employee, String> estadoColumn;
 
     @FXML
     private Button previousButton;
@@ -52,13 +58,13 @@ public class MonitoreoController {
     private Button nextButton;
 
     @FXML
-    private ChoiceBox<Integer> itemsPerPageChoiceBox; // ChoiceBox para seleccionar la cantidad de datos
+    private ChoiceBox<Integer> itemsPerPageChoiceBox;
 
     private final ObservableList<Employee> employees = FXCollections.observableArrayList();
 
-    private int itemsPerPage = 10;  // Número de elementos por página (valor por defecto)
-    private int currentPage = 1;    // Página actual
-    private int totalPages = 1;     // Total de páginas
+    private int itemsPerPage = 10;
+    private int currentPage = 1;
+    private int totalPages = 1;
 
     @FXML
     public void initialize() {
@@ -69,9 +75,11 @@ public class MonitoreoController {
         horaEntradaColumn.setCellValueFactory(new PropertyValueFactory<>("horaEntrada"));
         horaSalidaColumn.setCellValueFactory(new PropertyValueFactory<>("horaSalida"));
         tiempoLaboradoColumn.setCellValueFactory(new PropertyValueFactory<>("tiempoLaborado"));
-        infoColumn.setCellValueFactory(new PropertyValueFactory<>("info"));
+        tipoAsistenciaColumn.setCellValueFactory(new PropertyValueFactory<>("tipoAsistencia"));
+        tipoSalidaColumn.setCellValueFactory(new PropertyValueFactory<>("tipoSalida"));
+        estadoColumn.setCellValueFactory(new PropertyValueFactory<>("estado"));
 
-        // Agregar 50 empleados de ejemplo
+        // Agregar empleados de ejemplo
         for (int i = 1; i <= 50; i++) {
             employees.add(new Employee(
                     "Empleado " + i,
@@ -80,16 +88,18 @@ public class MonitoreoController {
                     "08:00",
                     "17:00",
                     "8h",
-                    "Info " + i
+                    "Asistencia",
+                    "Salió a tiempo",
+                    "Activo"
             ));
         }
 
         // Configurar el ChoiceBox de cantidad de datos por página
         itemsPerPageChoiceBox.setItems(FXCollections.observableArrayList(10, 20, 50, 100, 200));
-        itemsPerPageChoiceBox.setValue(itemsPerPage); // Valor inicial
+        itemsPerPageChoiceBox.setValue(itemsPerPage);
         itemsPerPageChoiceBox.setOnAction(event -> {
             itemsPerPage = itemsPerPageChoiceBox.getValue();
-            currentPage = 1;  // Reiniciar a la primera página al cambiar la cantidad de elementos por página
+            currentPage = 1;
             totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
             showPage(currentPage);
             updatePaginationButtons();
@@ -108,26 +118,22 @@ public class MonitoreoController {
         adjustColumnWidths();
     }
 
-    // Método para mostrar una página específica
     private void showPage(int pageNumber) {
         int fromIndex = (pageNumber - 1) * itemsPerPage;
         int toIndex = Math.min(fromIndex + itemsPerPage, employees.size());
         employeeTableView.setItems(FXCollections.observableArrayList(employees.subList(fromIndex, toIndex)));
     }
 
-    // Método para ajustar el ancho de las columnas
     private void adjustColumnWidths() {
         employeeTableView.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
         employeeTableView.getColumns().forEach(column -> {
-            column.setMinWidth(column.getText().length() * 13); // Ajustar el ancho mínimo de la columna
+            column.setMinWidth(column.getText().length() * 13);
             column.setPrefWidth(Control.USE_COMPUTED_SIZE);
-            column.setResizable(true); // Asegurar que la columna sea redimensionable
+            column.setResizable(true);
         });
     }
 
-    // Configurar los botones de paginación
     private void configurePaginationButtons() {
-        // Configurar el botón "Previous"
         previousButton.setOnAction(event -> {
             if (currentPage > 1) {
                 currentPage--;
@@ -136,7 +142,6 @@ public class MonitoreoController {
             }
         });
 
-        // Configurar el botón "Next"
         nextButton.setOnAction(event -> {
             if (currentPage < totalPages) {
                 currentPage++;
@@ -145,11 +150,9 @@ public class MonitoreoController {
             }
         });
 
-        // Configurar los botones de página
         updatePaginationButtons();
     }
 
-    // Actualizar los botones de paginación según la página actual
     private void updatePaginationButtons() {
         page1Button.setText(String.valueOf(currentPage));
         page1Button.setOnAction(event -> showPage(currentPage));
@@ -179,7 +182,6 @@ public class MonitoreoController {
         }
     }
 
-    // Clase interna para representar a un empleado
     public static class Employee {
         private final String nombreCompleto;
         private final String id;
@@ -187,16 +189,20 @@ public class MonitoreoController {
         private final String horaEntrada;
         private final String horaSalida;
         private final String tiempoLaborado;
-        private final String info;
+        private final String tipoAsistencia;
+        private final String tipoSalida;
+        private final String estado;
 
-        public Employee(String nombreCompleto, String id, String fechaEntrada, String horaEntrada, String horaSalida, String tiempoLaborado, String info) {
+        public Employee(String nombreCompleto, String id, String fechaEntrada, String horaEntrada, String horaSalida, String tiempoLaborado, String tipoAsistencia, String tipoSalida, String estado) {
             this.nombreCompleto = nombreCompleto;
             this.id = id;
             this.fechaEntrada = fechaEntrada;
             this.horaEntrada = horaEntrada;
             this.horaSalida = horaSalida;
             this.tiempoLaborado = tiempoLaborado;
-            this.info = info;
+            this.tipoAsistencia = tipoAsistencia;
+            this.tipoSalida = tipoSalida;
+            this.estado = estado;
         }
 
         public String getNombreCompleto() {
@@ -223,8 +229,16 @@ public class MonitoreoController {
             return tiempoLaborado;
         }
 
-        public String getInfo() {
-            return info;
+        public String getTipoAsistencia() {
+            return tipoAsistencia;
+        }
+
+        public String getTipoSalida() {
+            return tipoSalida;
+        }
+
+        public String getEstado() {
+            return estado;
         }
     }
 }

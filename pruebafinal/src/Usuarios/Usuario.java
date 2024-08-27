@@ -4,6 +4,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import controllers.DatabaseConnection;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 
 public class Usuario {
@@ -24,8 +26,39 @@ public class Usuario {
     private int jerarquiaId;
     private int huellaId;  // Atributo para almacenar el ID de la huella
 
+    public String getTipoAsistencia() {
+        return tipoAsistencia;
+    }
+
+    public void setTipoAsistencia(String tipoAsistencia) {
+        this.tipoAsistencia = tipoAsistencia;
+    }
+
+    public String getTipoSalida() {
+        return tipoSalida;
+    }
+
+    public void setTipoSalida(String tipoSalida) {
+        this.tipoSalida = tipoSalida;
+    }
+
+    public String getEstadoEmpleado() {
+        return estadoEmpleado;
+    }
+
+    public void setEstadoEmpleado(String estadoEmpleado) {
+        this.estadoEmpleado = estadoEmpleado;
+    }
+
+    private String tipoAsistencia;  // Nuevo apartado: Tipo de Asistencia
+    private String tipoSalida;      // Nuevo apartado: Tipo de Salida
+    private String estadoEmpleado;  // Nuevo apartado: Estado del Empleado
+
     // Constructor completo
-    public Usuario(int id, String nombres, String apellidoMaterno, String apellidoPaterno, String fechaNacimiento, String pais, String ciudad, String correoElectronico, String lada, String telefono, String rfc, String curp, String profesion, int departamentoId, int jerarquiaId, int huellaId) {
+    public Usuario(int id, String nombres, String apellidoMaterno, String apellidoPaterno, String fechaNacimiento,
+                   String pais, String ciudad, String correoElectronico, String lada, String telefono, String rfc,
+                   String curp, String profesion, int departamentoId, int jerarquiaId, int huellaId,
+                   String tipoAsistencia, String tipoSalida, String estadoEmpleado) {
         this.id = id;
         this.nombres = nombres;
         this.apellidoMaterno = apellidoMaterno;
@@ -42,6 +75,9 @@ public class Usuario {
         this.departamentoId = departamentoId;
         this.jerarquiaId = jerarquiaId;
         this.huellaId = huellaId;
+        this.tipoAsistencia = tipoAsistencia;  // Asigna el nuevo apartado
+        this.tipoSalida = tipoSalida;          // Asigna el nuevo apartado
+        this.estadoEmpleado = estadoEmpleado;  // Asigna el nuevo apartado
     }
 
     // Getters y setters
@@ -187,4 +223,7 @@ public class Usuario {
             }
         }
     }
+
+
+
 }
