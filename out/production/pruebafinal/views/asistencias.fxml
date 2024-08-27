@@ -9,12 +9,12 @@
 <VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.asistenciasController" alignment="CENTER" spacing="20" style="-fx-padding: 20; -fx-background-color: #F5F5F5; -fx-font-family: 'Arial';">
 
     <!-- Título -->
-    <Label text="Registro de huella entrada/salida" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #333;" />
+    <Label text="Registro de entrada/salida" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #333;" />
 
     <!-- Fecha y hora -->
-    <Label fx:id="dateTimeLabel" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #333;" />
+    <Label fx:id="dateTimeLabel" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #333;" />
 
-    <Label text="Utiliza la huella para ingresar de manera segura" style="-fx-font-size: 16px; -fx-text-fill: #333;" />
+    <Label text="Seleccione el botón correspondiente a su registro" style="-fx-font-size: 16px; -fx-text-fill: #333;" />
 
     <!-- Imagen de huella -->
     <ImageView fx:id="fingerprintImageView" fitWidth="150" fitHeight="150" />
@@ -27,9 +27,9 @@
 
     <!-- Entradas/Salidas recientes -->
     <VBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
-        <Label text="Últimas acciones" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;" />
-        <Label fx:id="entryTimeLabel" text="Te registraste a las: 9:00 AM" style="-fx-font-size: 14px; -fx-text-fill: #333;" />
-        <Label fx:id="exitTimeLabel" text="Saliste a las: 6:00 PM" style="-fx-font-size: 14px; -fx-text-fill: #333;" />
+        <Label text="Últimas acciones" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #333;" />
+        <Label fx:id="entryTimeLabel" text="Te registraste a las: 9:00 AM" style="-fx-font-size: 16px; -fx-text-fill: #333;" />
+        <Label fx:id="exitTimeLabel" text="Saliste a las: 6:00 PM" style="-fx-font-size: 16px; -fx-text-fill: #333;" />
     </VBox>
 
     <!-- Status label -->
