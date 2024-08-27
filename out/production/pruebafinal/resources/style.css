@@ -53,7 +53,7 @@
 }
 
 .button {
-    -fx-background-color: #FF6F3F;
+    -fx-background-color: #2A87CA;
     -fx-text-fill: white;
     -fx-font-size: 14px;
     -fx-background-radius: 10;
@@ -104,4 +104,37 @@
     -fx-max-width: 100px; /* Ancho máximo ajustado */
     -fx-min-height: 25px;
     -fx-max-height: 30px; /* Altura máxima ajustada */
+}
+.responsive-button {
+    -fx-background-color: #2A87CA; /* Color inicial */
+    -fx-text-fill: white; /* Color del texto */
+}
+
+.responsive-button:pressed {
+    -fx-background-color: #219D01; /* Color cuando se presiona el botón */
+}
+
+.responsive-button:selected {
+    -fx-background-color: #FF4080; /* Color cuando el botón está seleccionado */
+}
+
+.responsive-button:hover {
+    -fx-background-color: #0056b3; /* Color cuando el ratón pasa sobre el botón */
+}
+/* Estilo por defecto */
+.employee-box {
+    -fx-background-color: #ffffff;
+    -fx-border-color: lightgrey;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+}
+
+/* Efecto hover */
+.employee-box:hover {
+    -fx-background-color: #f0f8ff; /* Cambia a un color más claro al pasar el mouse */
+}
+
+/* Efecto seleccionado */
+.employee-box:focused {
+    -fx-background-color: #d1e7dd; /* Cambia a un color distinto cuando se selecciona */
 }
