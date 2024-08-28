@@ -28,8 +28,12 @@
                     <CheckBox fx:id="supervisoresCheckBox" layoutX="720" layoutY="10" text="Sólo Supervisores" />
                     <CheckBox fx:id="empleadosCheckBox" layoutX="720" layoutY="50" text="Sólo Empleados" />
 
-                    <Label layoutX="10" layoutY="90" text="Nombre, Apellido, Sucursal..." />
-                    <TextField fx:id="searchField" layoutX="150" layoutY="90" prefWidth="720" />
+                    <!-- buscar nombre  -->
+                    <HBox spacing="10" layoutX="10" layoutY="90">
+                        <Label text="Nombre, Apellido" />
+                        <TextField fx:id="searchField" prefWidth="250" />
+                    </HBox>
+                    <!-- boton buscar -->
                     <Button fx:id="searchButton" layoutX="720" layoutY="130" prefWidth="150" text="Buscar" />
                 </Pane>
             </VBox>
