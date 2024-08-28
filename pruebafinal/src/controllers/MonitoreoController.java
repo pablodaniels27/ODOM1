@@ -59,22 +59,13 @@ public class MonitoreoController {
     private Button searchButton;
 
     @FXML
-    private Button previousButton;
+    private ChoiceBox<String> departamentoChoiceBox;
 
     @FXML
-    private Button page1Button;
+    private CheckBox supervisoresCheckBox;
 
     @FXML
-    private Button page2Button;
-
-    @FXML
-    private Button page3Button;
-
-    @FXML
-    private Button nextButton;
-
-    @FXML
-    private ChoiceBox<Integer> itemsPerPageChoiceBox;
+    private CheckBox empleadosCheckBox;
 
     private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
 
@@ -84,8 +75,6 @@ public class MonitoreoController {
 
     @FXML
     public void initialize() {
-        System.out.println("Inicializando controlador...");
-
         // Configurar las columnas con los Callbacks
         nombreColumn.setCellValueFactory(createCellValueFactory("nombreCompleto"));
         idColumn.setCellValueFactory(createCellValueFactory("id"));
@@ -99,23 +88,13 @@ public class MonitoreoController {
 
         employeeTableView.setItems(employees);
 
-        // Configurar el ChoiceBox de cantidad de datos por página
-        itemsPerPageChoiceBox.setItems(FXCollections.observableArrayList(10, 20, 50, 100, 200));
-        itemsPerPageChoiceBox.setValue(itemsPerPage);
-        itemsPerPageChoiceBox.setOnAction(event -> {
-            System.out.println("Cambio en items por página");
-            itemsPerPage = itemsPerPageChoiceBox.getValue();
-            currentPage = 1;
-            totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
-            showPage(currentPage);
-            updatePaginationButtons();
-        });
+        cargarDepartamentos(); // Cargar los departamentos en el ChoiceBox
 
         // Configurar el botón de búsqueda
         searchButton.setOnAction(event -> {
             System.out.println("Botón de búsqueda presionado");
             try {
-                searchByDate();
+                searchByDateAndDepartment(); // Buscar por fecha y departamento
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -126,42 +105,41 @@ public class MonitoreoController {
 
         // Mostrar la primera página
         showPage(currentPage);
-
-        // Configurar los botones de paginación
-        configurePaginationButtons();
-
-        // Ajustar el ancho de las columnas al contenido
-        adjustColumnWidths();
-
-        System.out.println("Inicialización completada");
     }
 
-    private Callback<TableColumn.CellDataFeatures<Map<String, Object>, String>, ObservableValue<String>> createCellValueFactory(String key) {
-        return cellData -> {
-            Map<String, Object> row = cellData.getValue();
-            Object value = row.get(key);
-            return new SimpleStringProperty(value != null ? value.toString() : "");  // Manejo de valores nulos
-        };
+    private void cargarDepartamentos() {
+        departamentoChoiceBox.getItems().add("Todos los departamentos"); // Agregar opción para todos los departamentos
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            String query = "SELECT nombre FROM departamentos";
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            while (resultSet.next()) {
+                departamentoChoiceBox.getItems().add(resultSet.getString("nombre"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // Seleccionar la opción "Todos los departamentos" por defecto
+        departamentoChoiceBox.getSelectionModel().selectFirst();
     }
 
-    private void searchByDate() throws SQLException {
-        System.out.println("Iniciando búsqueda por fecha...");
+
+    private void searchByDateAndDepartment() throws SQLException {
         LocalDate fechaInicio = fechaInicioPicker.getValue();
         LocalDate fechaFin = fechaFinPicker.getValue();
+        String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
 
         if (fechaInicio != null && fechaFin != null) {
-            System.out.println("Fechas seleccionadas: " + fechaInicio + " a " + fechaFin);
-
-            // Limpiar la lista actual de empleados
             employees.clear();
 
-            // Convertir las fechas a formato SQL
             String fechaInicioSQL = fechaInicio.toString();
             String fechaFinSQL = fechaFin.toString();
 
             DatabaseConnection connectNow = new DatabaseConnection();
             Connection connectDB = connectNow.getConnection();
 
+            // Base de la consulta
             String query = "SELECT e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
                     "dias.fecha, es.id as estado_id, en.hora_entrada, en.hora_salida, t.nombre as tipo_asistencia, ts.nombre as tipo_salida " +
                     "FROM entradas_salidas en " +
@@ -169,8 +147,35 @@ public class MonitoreoController {
                     "JOIN dias ON en.dia_id = dias.id " +
                     "JOIN estatus_empleado es ON e.estatus_id = es.id " +
                     "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                    "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
-                    "WHERE dias.fecha BETWEEN '" + fechaInicioSQL + "' AND '" + fechaFinSQL + "'";
+                    "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id ";
+
+            // Filtros de departamento, supervisores y empleados
+            boolean filtroDepartamento = !departamentoSeleccionado.equals("Todos los departamentos");
+            boolean filtroSupervisores = supervisoresCheckBox.isSelected();
+            boolean filtroEmpleados = empleadosCheckBox.isSelected();
+
+            if (filtroDepartamento || filtroSupervisores || filtroEmpleados) {
+                query += "WHERE ";
+
+                if (filtroDepartamento) {
+                    query += "e.departamento_id IN (SELECT id FROM departamentos WHERE nombre = '" + departamentoSeleccionado + "') ";
+                }
+
+                if (filtroSupervisores) {
+                    if (filtroDepartamento) query += "AND ";
+                    query += "e.jerarquia_id = 2 ";  // ID de Supervisores
+                }
+
+                if (filtroEmpleados) {
+                    if (filtroDepartamento || filtroSupervisores) query += "AND ";
+                    query += "e.jerarquia_id = 3 ";  // ID de Empleados
+                }
+
+                query += "AND dias.fecha BETWEEN '" + fechaInicioSQL + "' AND '" + fechaFinSQL + "'";
+            } else {
+                // Sin filtro de departamento, supervisores o empleados
+                query += "WHERE dias.fecha BETWEEN '" + fechaInicioSQL + "' AND '" + fechaFinSQL + "'";
+            }
 
             System.out.println("Ejecutando consulta SQL: " + query);
 
@@ -178,12 +183,7 @@ public class MonitoreoController {
                 Statement statement = connectDB.createStatement();
                 ResultSet resultSet = statement.executeQuery(query);
 
-                int totalRegistros = 0;
-
                 while (resultSet.next()) {
-                    totalRegistros++;
-                    System.out.println("Resultado obtenido de la base de datos");
-
                     Map<String, Object> employeeData = new HashMap<>();
                     employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno"));
                     employeeData.put("id", resultSet.getInt("estado_id") != 0 ? String.valueOf(resultSet.getInt("estado_id")) : "");
@@ -197,8 +197,6 @@ public class MonitoreoController {
                     employees.add(employeeData);
                 }
 
-                System.out.println("Número total de registros obtenidos: " + totalRegistros);
-
                 connectDB.close();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -206,82 +204,27 @@ public class MonitoreoController {
 
             // Mostrar la primera página de resultados
             showPage(1);
-            updatePaginationButtons();
         } else {
-            System.out.println("Fechas no seleccionadas");
-            // Si no se seleccionan fechas, mostrar un mensaje de error o advertencia
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Advertencia");
-            alert.setHeaderText("Fechas no seleccionadas");
-            alert.setContentText("Por favor, selecciona un rango de fechas válido.");
+            alert.setHeaderText("Datos incompletos");
+            alert.setContentText("Por favor, selecciona un rango de fechas.");
             alert.showAndWait();
         }
     }
 
+
+    private Callback<TableColumn.CellDataFeatures<Map<String, Object>, String>, ObservableValue<String>> createCellValueFactory(String key) {
+        return cellData -> {
+            Map<String, Object> row = cellData.getValue();
+            Object value = row.get(key);
+            return new SimpleStringProperty(value != null ? value.toString() : "");
+        };
+    }
+
     private void showPage(int pageNumber) {
-        System.out.println("Mostrando página: " + pageNumber);
         int fromIndex = (pageNumber - 1) * itemsPerPage;
         int toIndex = Math.min(fromIndex + itemsPerPage, employees.size());
-        System.out.println("Mostrando registros desde " + fromIndex + " hasta " + toIndex);
         employeeTableView.setItems(FXCollections.observableArrayList(employees.subList(fromIndex, toIndex)));
-    }
-
-    private void adjustColumnWidths() {
-        System.out.println("Ajustando ancho de columnas");
-        employeeTableView.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
-        employeeTableView.getColumns().forEach(column -> {
-            column.setMinWidth(column.getText().length() * 13);
-            column.setPrefWidth(Control.USE_COMPUTED_SIZE);
-            column.setResizable(true);
-        });
-    }
-
-    private void configurePaginationButtons() {
-        previousButton.setOnAction(event -> {
-            if (currentPage > 1) {
-                currentPage--;
-                showPage(currentPage);
-                updatePaginationButtons();
-            }
-        });
-
-        nextButton.setOnAction(event -> {
-            if (currentPage < totalPages) {
-                currentPage++;
-                showPage(currentPage);
-                updatePaginationButtons();
-            }
-        });
-
-        updatePaginationButtons();
-    }
-
-    private void updatePaginationButtons() {
-        page1Button.setText(String.valueOf(currentPage));
-        page1Button.setOnAction(event -> showPage(currentPage));
-
-        if (currentPage + 1 <= totalPages) {
-            page2Button.setText(String.valueOf(currentPage + 1));
-            page2Button.setVisible(true);
-            page2Button.setOnAction(event -> {
-                currentPage++;
-                showPage(currentPage);
-                updatePaginationButtons();
-            });
-        } else {
-            page2Button.setVisible(false);
-        }
-
-        if (currentPage + 2 <= totalPages) {
-            page3Button.setText(String.valueOf(currentPage + 2));
-            page3Button.setVisible(true);
-            page3Button.setOnAction(event -> {
-                currentPage += 2;
-                showPage(currentPage);
-                updatePaginationButtons();
-            });
-        } else {
-            page3Button.setVisible(false);
-        }
     }
 }
