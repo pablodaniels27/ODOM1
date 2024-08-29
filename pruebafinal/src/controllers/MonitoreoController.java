@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.Pane;
 import javafx.util.Callback;
 
 import java.sql.Connection;
@@ -16,6 +17,11 @@ import java.util.Map;
 
 import javafx.beans.value.ObservableValue;
 import javafx.beans.property.SimpleStringProperty;
+
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 
 public class MonitoreoController {
 
@@ -70,6 +76,11 @@ public class MonitoreoController {
     @FXML
     private TextField searchField;
 
+    @FXML
+    private Button graphViewButton;
+
+    @FXML
+    private Pane chartPane;
 
     private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
 
@@ -93,6 +104,9 @@ public class MonitoreoController {
         employeeTableView.setItems(employees);
 
         cargarDepartamentos(); // Cargar los departamentos en el ChoiceBox
+
+        // Configurar comportamiento del botón de gráficos
+        graphViewButton.setOnAction(event -> toggleGraphView());
 
         // Cargar entradas más recientes por defecto
         try {
@@ -283,4 +297,127 @@ public class MonitoreoController {
         // Mostrar la primera página de resultados
         showPage(1);
     }
+
+    private void toggleGraphView() {
+        boolean isTableVisible = employeeTableView.isVisible();
+
+        // Ocultar la tabla y mostrar el gráfico, o viceversa
+        employeeTableView.setVisible(!isTableVisible);
+        employeeTableView.setManaged(!isTableVisible);
+
+        chartPane.setVisible(isTableVisible);
+        chartPane.setManaged(isTableVisible);
+
+        // Cambiar el estilo del botón según la vista actual
+        if (isTableVisible) {
+            loadChart(); // Si estamos cambiando a la vista de gráficos, cargar el gráfico
+            highlightButton(graphViewButton); // Resaltar el botón de gráficos
+        } else {
+            unhighlightButton(graphViewButton); // Desactivar el resaltado del botón
+        }
+    }
+
+    private void highlightButton(Button button) {
+        button.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
+    }
+
+    private void unhighlightButton(Button button) {
+        button.setStyle(""); // Restaurar el estilo predeterminado
+    }
+
+    private void loadChart() {
+        // Limpiar el Pane del gráfico
+        chartPane.getChildren().clear();
+
+        // Crear los ejes del gráfico
+        CategoryAxis xAxis = new CategoryAxis();
+        xAxis.setLabel("Tipo de Asistencia");
+
+        NumberAxis yAxis = new NumberAxis(0, 5, 1); // Establecer mínimo, máximo y tick unit
+        yAxis.setLabel("Cantidad");
+        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis) {
+            @Override
+            public String toString(Number object) {
+                return String.format("%d", object.intValue());
+            }
+        });
+
+        // Crear el gráfico de barras
+        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
+        barChart.setTitle("Conteo de Tipos de Asistencia");
+
+        // Deshabilitar la leyenda predeterminada
+        barChart.setLegendVisible(false);
+
+        // Crear la serie de datos
+        XYChart.Series<String, Number> dataSeries = new XYChart.Series<>();
+
+        // Cargar datos desde la base de datos
+        try {
+            DatabaseConnection connectNow = new DatabaseConnection();
+            Connection connectDB = connectNow.getConnection();
+
+            String query = "SELECT t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
+                    "FROM entradas_salidas en " +
+                    "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                    "JOIN dias d ON en.dia_id = d.id ";
+
+            // Añadir filtros de fecha si están definidos
+            boolean filtroFechas = fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null;
+            if (filtroFechas) {
+                String fechaInicioSQL = fechaInicioPicker.getValue().toString();
+                String fechaFinSQL = fechaFinPicker.getValue().toString();
+                query += "WHERE d.fecha BETWEEN '" + fechaInicioSQL + "' AND '" + fechaFinSQL + "' ";
+            }
+
+            query += "GROUP BY t.nombre";
+
+            Statement statement = connectDB.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            // Añadir datos al gráfico
+            while (resultSet.next()) {
+                String tipoAsistencia = resultSet.getString("tipo_asistencia");
+                int cantidad = resultSet.getInt("cantidad");
+
+                // Crear un nuevo dato
+                XYChart.Data<String, Number> data = new XYChart.Data<>(tipoAsistencia, cantidad);
+                dataSeries.getData().add(data);
+
+                // Añadir un listener para asegurarse de que el nodo esté listo antes de aplicar el estilo
+                data.nodeProperty().addListener((observable, oldValue, newValue) -> {
+                    if (newValue != null) {
+                        // Aplicar estilos personalizados basados en el tipo de asistencia
+                        switch (tipoAsistencia) {
+                            case "Asistencia":
+                                newValue.setStyle("-fx-bar-fill: green;");
+                                break;
+                            case "Justificación":
+                                newValue.setStyle("-fx-bar-fill: blue;");
+                                break;
+                            case "No Asistencia":
+                                newValue.setStyle("-fx-bar-fill: red;");
+                                break;
+                            case "Retardo":
+                                newValue.setStyle("-fx-bar-fill: yellow;");
+                                break;
+                        }
+                    }
+                });
+            }
+
+            connectDB.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // Añadir la serie de datos al gráfico
+        barChart.getData().add(dataSeries);
+
+        // Añadir el gráfico al Pane
+        chartPane.getChildren().add(barChart);
+    }
+
+
+
 }

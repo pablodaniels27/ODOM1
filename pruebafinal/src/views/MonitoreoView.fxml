@@ -35,6 +35,10 @@
                     </HBox>
                     <!-- boton buscar -->
                     <Button fx:id="searchButton" layoutX="720" layoutY="130" prefWidth="150" text="Buscar" />
+
+                    <Button fx:id="graphViewButton" layoutX="500" layoutY="130" prefWidth="150" text="Vista de Gráficos" />
+                    <Pane fx:id="chartPane" layoutX="10" layoutY="180" prefWidth="870" prefHeight="600" visible="false" managed="false"/>
+
                 </Pane>
             </VBox>
         </top>
