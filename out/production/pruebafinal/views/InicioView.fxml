@@ -5,7 +5,7 @@
 
 <AnchorPane prefHeight="589.0" prefWidth="416.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.InicioController">
     <children>
-        <SplitPane dividerPositions="0.5" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <SplitPane dividerPositions="0.5" style="-fx-border-color: transparent;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <items>
                 <!-- Cuadrante 1: Mensajes y lista de empleados -->
                 <VBox alignment="TOP_LEFT" spacing="10" style="-fx-padding: 10;">
@@ -18,12 +18,12 @@
                     <VBox fx:id="employeeListContainer" alignment="TOP_LEFT" spacing="10" styleClass="employee-section" />
                 </VBox>
 
-                <SplitPane dividerPositions="0.5" orientation="VERTICAL">
+                <SplitPane dividerPositions="0.5" orientation="VERTICAL" style="-fx-border-color: transparent;">
                     <items>
                         <!-- Cuadrante 2: Calendario -->
-                        <VBox fx:id="calendarContainer" alignment="TOP_CENTER" spacing="3" styleClass="calendar-section" VBox.vgrow="ALWAYS" style="-fx-padding: 0 0 10 0;">
+                        <VBox fx:id="calendarContainer" alignment="TOP_CENTER" spacing="3" style="-fx-padding: 0 0 10 0;" styleClass="calendar-section" VBox.vgrow="ALWAYS">
                             <!-- Reducir el espacio entre los elementos -->
-                            <Label text="Calendario" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                            <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Calendario" />
                             <Label fx:id="employeeNameLabel" styleClass="header-label" />
                             <Label fx:id="visitsInfoLabel" styleClass="info-label" />
                             <HBox alignment="CENTER" spacing="10">
@@ -34,23 +34,26 @@
                             <!-- Añadir fila con los días de la semana -->
                             <GridPane fx:id="calendarGrid" alignment="CENTER" hgap="10" vgap="10" VBox.vgrow="ALWAYS">
                                 <columnConstraints>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
                                 </columnConstraints>
 
                                 <!-- Fila para los nombres de los días de la semana -->
-                                <Label text="Lunes" GridPane.columnIndex="0" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                                <Label text="Martes" GridPane.columnIndex="1" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                                <Label text="Miércoles" GridPane.columnIndex="2" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                                <Label text="Jueves" GridPane.columnIndex="3" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                                <Label text="Viernes" GridPane.columnIndex="4" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                                <Label text="Sábado" GridPane.columnIndex="5" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
-                                <Label text="Domingo" GridPane.columnIndex="6" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                                <Label ellipsisString="" textOverrun="CENTER_ELLIPSIS" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="CENTER_ELLIPSIS" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="CENTER_ELLIPSIS" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="LEADING_WORD_ELLIPSIS" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="LEADING_WORD_ELLIPSIS" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="LEADING_WORD_ELLIPSIS" GridPane.columnIndex="5" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="LEADING_WORD_ELLIPSIS" GridPane.columnIndex="6" GridPane.rowIndex="0" />
+                                <rowConstraints>
+                                    <RowConstraints />
+                                </rowConstraints>
                             </GridPane>
                         </VBox>
 
@@ -58,18 +61,18 @@
                         <VBox alignment="CENTER_LEFT" style="-fx-padding: 10;">
                             <GridPane fx:id="attendanceGrid" alignment="CENTER_LEFT" hgap="10" maxWidth="400" vgap="10" VBox.vgrow="NEVER">
                                 <columnConstraints>
-                                    <ColumnConstraints minWidth="100" prefWidth="120"/> <!-- Ajuste para los días de la semana -->
-                                    <ColumnConstraints minWidth="130" prefWidth="160"/> <!-- Ajuste para la hora de entrada -->
-                                    <ColumnConstraints minWidth="130" prefWidth="160"/> <!-- Ajuste para la hora de salida -->
+                                    <ColumnConstraints minWidth="100" prefWidth="120" /> <!-- Ajuste para los días de la semana -->
+                                    <ColumnConstraints minWidth="130" prefWidth="160" /> <!-- Ajuste para la hora de entrada -->
+                                    <ColumnConstraints minWidth="130" prefWidth="160" /> <!-- Ajuste para la hora de salida -->
                                 </columnConstraints>
                                 <rowConstraints>
-                                    <RowConstraints minHeight="30" prefHeight="40"/>
-                                    <RowConstraints minHeight="30" prefHeight="40"/>
-                                    <RowConstraints minHeight="30" prefHeight="40"/>
-                                    <RowConstraints minHeight="30" prefHeight="40"/>
-                                    <RowConstraints minHeight="30" prefHeight="40"/>
-                                    <RowConstraints minHeight="30" prefHeight="40"/>
-                                    <RowConstraints minHeight="30" prefHeight="40"/>
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
                                 </rowConstraints>
 
                                 <Label text="Lunes" GridPane.columnIndex="0" GridPane.rowIndex="0" />
