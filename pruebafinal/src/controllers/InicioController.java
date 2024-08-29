@@ -163,22 +163,9 @@ public class InicioController {
             LocalDate date = currentYearMonth.atDay(day);
 
             Label dayLabel = new Label(String.valueOf(day));
-            dayLabel.setStyle(
-                    "-fx-background-color: transparent;" +  // Fondo transparente
-                            "-fx-text-fill: #2196F3;" +             // Texto azul
-                            "-fx-alignment: center;" +              // Centrar texto
-                            "-fx-border-color: #2196F3;" +          // Color del borde azul
-                            "-fx-border-width: 2px;" +              // Ancho del borde
-                            "-fx-border-radius: 50%;" +             // Bordes redondeados
-                            "-fx-background-radius: 50%;" +         // Fondo redondeado
-                            "-fx-min-width: 35px;" +                // Ancho mínimo para centrar los dígitos
-                            "-fx-min-height: 35px;" +               // Altura mínima para mantener tamaño uniforme
-                            "-fx-max-width: 35px;" +                // Ancho máximo para mantener tamaño uniforme
-                            "-fx-max-height: 35px;" +               // Altura máxima para mantener tamaño uniforme
-                            "-fx-font-size: 14px;"                  // Tamaño de fuente consistente
-            );
-
+            dayLabel.getStyleClass().add("day-label"); // Aplica la clase CSS
             dayLabel.setOnMouseClicked(event -> handleWeekSelection(date));
+
             calendarGrid.add(dayLabel, column, row);
 
             column++;
@@ -188,6 +175,7 @@ public class InicioController {
             }
         }
     }
+
 
 
 
