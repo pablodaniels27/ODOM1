@@ -1,6 +1,7 @@
 package controllers;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -140,8 +141,15 @@ public class InicioController {
         // Limpiar el calendario anterior
         calendarGrid.getChildren().clear();
 
-        // Configurar el título del mes
-        currentMonthLabel.setText(currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()) + " " + currentYearMonth.getYear());
+        // Configurar el título del mes con la primera letra en mayúscula
+        String month = currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault());
+        String formattedMonth = month.substring(0, 1).toUpperCase() + month.substring(1).toLowerCase();
+        String monthYear = formattedMonth + " " + currentYearMonth.getYear();
+
+        currentMonthLabel.setText(monthYear);
+        currentMonthLabel.setMinWidth(150);  // Incrementa el ancho mínimo
+        currentMonthLabel.setMaxWidth(150);  // Incrementa el ancho máximo
+        currentMonthLabel.setAlignment(Pos.CENTER);  // Centrar el texto
 
         // Añadir los días de la semana en la primera fila, usando abreviaciones de dos letras
         String[] daysOfWeek = {"Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"};
@@ -175,6 +183,10 @@ public class InicioController {
             }
         }
     }
+
+
+
+
 
 
 
