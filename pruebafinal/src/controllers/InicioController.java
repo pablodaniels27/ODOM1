@@ -6,7 +6,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.sql.Connection;
@@ -144,8 +143,8 @@ public class InicioController {
         // Configurar el título del mes
         currentMonthLabel.setText(currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()) + " " + currentYearMonth.getYear());
 
-        // Añadir los días de la semana en la primera fila
-        String[] daysOfWeek = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
+        // Añadir los días de la semana en la primera fila, usando abreviaciones de dos letras
+        String[] daysOfWeek = {"Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"};
         for (int i = 0; i < daysOfWeek.length; i++) {
             Label dayLabel = new Label(daysOfWeek[i]);
             dayLabel.setStyle("-fx-font-weight: bold;");
@@ -164,8 +163,22 @@ public class InicioController {
             LocalDate date = currentYearMonth.atDay(day);
 
             Label dayLabel = new Label(String.valueOf(day));
-            dayLabel.setOnMouseClicked(event -> handleWeekSelection(date));
+            dayLabel.setStyle(
+                    "-fx-background-color: transparent;" +  // Fondo transparente
+                            "-fx-text-fill: #2196F3;" +             // Texto azul
+                            "-fx-alignment: center;" +              // Centrar texto
+                            "-fx-border-color: #2196F3;" +          // Color del borde azul
+                            "-fx-border-width: 2px;" +              // Ancho del borde
+                            "-fx-border-radius: 50%;" +             // Bordes redondeados
+                            "-fx-background-radius: 50%;" +         // Fondo redondeado
+                            "-fx-min-width: 35px;" +                // Ancho mínimo para centrar los dígitos
+                            "-fx-min-height: 35px;" +               // Altura mínima para mantener tamaño uniforme
+                            "-fx-max-width: 35px;" +                // Ancho máximo para mantener tamaño uniforme
+                            "-fx-max-height: 35px;" +               // Altura máxima para mantener tamaño uniforme
+                            "-fx-font-size: 14px;"                  // Tamaño de fuente consistente
+            );
 
+            dayLabel.setOnMouseClicked(event -> handleWeekSelection(date));
             calendarGrid.add(dayLabel, column, row);
 
             column++;
@@ -175,6 +188,8 @@ public class InicioController {
             }
         }
     }
+
+
 
     // Método para manejar la selección de una semana en el calendario
     private void handleWeekSelection(LocalDate selectedDate) {
@@ -195,7 +210,7 @@ public class InicioController {
                         try {
                             int day = Integer.parseInt(text);
                             if (currentDay.getDayOfMonth() == day) {
-                                node.setStyle("-fx-background-color: lightblue;"); // Cambia el color de fondo
+                                node.getStyleClass().add("selected-day");
                             }
                         } catch (NumberFormatException e) {
                             // Ignorar, ya que este nodo no es un número (es un día de la semana)
@@ -213,10 +228,11 @@ public class InicioController {
         // Limpiar cualquier selección previa
         for (Node node : calendarGrid.getChildren()) {
             if (GridPane.getRowIndex(node) != null && GridPane.getRowIndex(node) > 0) { // No limpiar la primera fila (días de la semana)
-                node.setStyle(""); // Resetear el estilo
+                node.getStyleClass().remove("selected-day"); // Remover la clase de día seleccionado
             }
         }
     }
+
 
     // Método para cargar las asistencias de la semana seleccionada
     private void loadWeekAttendance(LocalDate startOfWeek) {
@@ -242,7 +258,6 @@ public class InicioController {
                 LocalDate date = resultSet.getDate("fecha").toLocalDate();
                 String horaEntrada = resultSet.getString("hora_entrada");
                 String horaSalida = resultSet.getString("hora_salida");
-                System.out.println("Día: " + date + " Entrada: " + horaEntrada + " Salida: " + horaSalida);  // Agrega esta línea para depurar
 
                 // Asignar las horas de entrada y salida a los labels correspondientes
                 switch (date.getDayOfWeek()) {
@@ -325,5 +340,4 @@ public class InicioController {
     // Clase para representar un empleado
     public record Employee(int id, String fullName, String profession) {
     }
-
 }
