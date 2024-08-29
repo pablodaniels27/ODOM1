@@ -53,7 +53,7 @@
 }
 
 .button {
-    -fx-background-color: #FF6F3F;
+    -fx-background-color: #2A87CA;
     -fx-text-fill: white;
     -fx-font-size: 14px;
     -fx-background-radius: 10;
@@ -105,3 +105,61 @@
     -fx-min-height: 25px;
     -fx-max-height: 30px; /* Altura máxima ajustada */
 }
+.responsive-button {
+    -fx-background-color: #2A87CA; /* Color inicial */
+    -fx-text-fill: white; /* Color del texto */
+}
+
+.responsive-button:pressed {
+    -fx-background-color: #219D01; /* Color cuando se presiona el botón */
+}
+
+.responsive-button:selected {
+    -fx-background-color: #FF4080; /* Color cuando el botón está seleccionado */
+}
+
+.responsive-button:hover {
+    -fx-background-color: #0056b3; /* Color cuando el ratón pasa sobre el botón */
+}
+/* Estilo por defecto */
+.employee-box {
+    -fx-background-color: #ffffff;
+    -fx-border-color: lightgrey;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+}
+
+/* Efecto hover */
+.employee-box:hover {
+    -fx-background-color: #f0f8ff; /* Cambia a un color más claro al pasar el mouse */
+}
+
+/* Efecto seleccionado */
+.employee-box:focused {
+    -fx-background-color: #d1e7dd; /* Cambia a un color distinto cuando se selecciona */
+}
+
+.day-label {
+    -fx-background-color: transparent;  /* Fondo transparente */
+    -fx-text-fill: #2196F3;              /* Texto azul */
+    -fx-alignment: center;               /* Centrar texto */
+    -fx-border-color: #2196F3;           /* Color del borde azul */
+    -fx-border-width: 2px;               /* Ancho del borde */
+    -fx-border-radius: 50%;              /* Bordes redondeados */
+    -fx-background-radius: 50%;          /* Fondo redondeado */
+    -fx-min-width: 35px;                 /* Ancho mínimo */
+    -fx-min-height: 35px;                /* Altura mínima */
+    -fx-max-width: 35px;                 /* Ancho máximo */
+    -fx-max-height: 35px;                /* Altura máxima */
+    -fx-font-size: 14px;                 /* Tamaño de fuente consistente */
+}
+
+.selected-day {
+    -fx-background-color: lightblue;  /* Fondo azul claro para resaltar */
+    -fx-text-fill: #2196F3;           /* Mantener el texto en azul */
+    -fx-border-color: #2196F3;        /* Mantener el borde azul */
+}
+
+
+
+

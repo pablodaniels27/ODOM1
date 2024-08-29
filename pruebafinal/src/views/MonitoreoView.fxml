@@ -38,11 +38,13 @@
                     <columns>
                         <TableColumn fx:id="nombreColumn" style="-fx-alignment: CENTER_LEFT;" text="Nombre completo" />
                         <TableColumn fx:id="idColumn" style="-fx-alignment: CENTER_LEFT;" text="ID" />
-                        <TableColumn fx:id="fechaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="Fecha de entrada" />
+                        <TableColumn fx:id="fechaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="Fecha" />
                         <TableColumn fx:id="horaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="H.de entrada" />
                         <TableColumn fx:id="horaSalidaColumn" style="-fx-alignment: CENTER_LEFT;" text="H.de salida" />
                         <TableColumn fx:id="tiempoLaboradoColumn" style="-fx-alignment: CENTER_LEFT;" text="Tiempo laborado" />
-                        <TableColumn fx:id="infoColumn" style="-fx-alignment: CENTER_LEFT;" text="Info." />
+                        <TableColumn fx:id="tipoAsistenciaColumn" style="-fx-alignment: CENTER_LEFT;" text="Tipo de Asistencia" />
+                        <TableColumn fx:id="tipoSalidaColumn" style="-fx-alignment: CENTER_LEFT;" text="Tipo de Salida" />
+                        <TableColumn fx:id="estadoColumn" style="-fx-alignment: CENTER_LEFT;" text="Estado" />
                     </columns>
                 </TableView>
             </AnchorPane>

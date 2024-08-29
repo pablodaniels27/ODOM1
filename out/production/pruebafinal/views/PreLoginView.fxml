@@ -18,7 +18,7 @@
     </Button>
 
     <!-- Anclar el botón Login para que se mantenga en la esquina superior derecha -->
-    <Button fx:id="loginButton" onAction="#handleLoginAction" prefHeight="22.0" prefWidth="74.0" text="Login" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="36.0">
+    <Button fx:id="loginButton" styleClass="responsive-button" onAction="#handleLoginAction" prefHeight="22.0" prefWidth="74.0" text="Login" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="36.0">
         <font>
             <Font name="Bodoni MT Italic" size="18.0" />
         </font>

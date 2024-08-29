@@ -81,7 +81,7 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
-        if (username.equals("admin") && password.equals("1234")) {
+        if (username.equals("") && password.equals("")) {
             showMainView();
         } else {
             // Manejar error de login

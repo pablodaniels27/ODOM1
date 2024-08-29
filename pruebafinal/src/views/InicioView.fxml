@@ -5,20 +5,25 @@
 
 <AnchorPane prefHeight="589.0" prefWidth="416.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.InicioController">
     <children>
-        <SplitPane dividerPositions="0.5" AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <SplitPane dividerPositions="0.5" style="-fx-border-color: transparent;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <items>
-                <!-- Cuadrante 1: Lista de empleados (ocupa la mitad izquierda) -->
-                <VBox fx:id="employeeListSection" alignment="TOP_LEFT" spacing="10" styleClass="employee-section">
+                <!-- Cuadrante 1: Mensajes y lista de empleados -->
+                <VBox alignment="TOP_LEFT" spacing="10" style="-fx-padding: 10;">
+                    <!-- Mensajes -->
                     <Label styleClass="header-label" text="Lista de empleados" />
-                    <Label fx:id="locationLabel" styleClass="location-label" />
+                    <Label text="Aeropuerto internacional de la Ciudad de México" />
                     <Label fx:id="currentDate" styleClass="date-label" />
-                    <ListView fx:id="employeeListView" styleClass="employee-list" onMouseClicked="#handleEmployeeSelection"/>
+
+                    <!-- Lista de empleados -->
+                    <VBox fx:id="employeeListContainer" alignment="TOP_LEFT" spacing="10" styleClass="employee-section" />
                 </VBox>
-                <SplitPane dividerPositions="0.5" orientation="VERTICAL">
+
+                <SplitPane dividerPositions="0.5" orientation="VERTICAL" style="-fx-border-color: transparent;">
                     <items>
-                        <!-- Cuadrante 2: Calendario (parte superior derecha) -->
-                        <VBox fx:id="calendarContainer" alignment="TOP_CENTER" spacing="10" styleClass="calendar-section" VBox.vgrow="ALWAYS">
-                            <!-- Información del empleado seleccionado -->
+                        <!-- Cuadrante 2: Calendario -->
+                        <VBox fx:id="calendarContainer" alignment="TOP_CENTER" spacing="3" style="-fx-padding: 0 0 10 0;" styleClass="calendar-section" VBox.vgrow="ALWAYS">
+                            <!-- Reducir el espacio entre los elementos -->
+                            <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Calendario" />
                             <Label fx:id="employeeNameLabel" styleClass="header-label" />
                             <Label fx:id="visitsInfoLabel" styleClass="info-label" />
                             <HBox alignment="CENTER" spacing="10">
@@ -26,65 +31,77 @@
                                 <Label fx:id="currentMonthLabel" styleClass="header-label" />
                                 <Button fx:id="nextMonthButton" text="&gt;" />
                             </HBox>
-                            <!-- Aseguramos que el GridPane crezca para llenar el espacio disponible -->
+                            <!-- Añadir fila con los días de la semana -->
                             <GridPane fx:id="calendarGrid" alignment="CENTER" hgap="10" vgap="10" VBox.vgrow="ALWAYS">
                                 <columnConstraints>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
-                                    <ColumnConstraints hgrow="ALWAYS"/>
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
+                                    <ColumnConstraints hgrow="ALWAYS" />
                                 </columnConstraints>
+
+                                <!-- Fila para los nombres de los días de la semana -->
+                                <Label ellipsisString="" textOverrun="CENTER_ELLIPSIS" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="CENTER_ELLIPSIS" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="CENTER_ELLIPSIS" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="LEADING_WORD_ELLIPSIS" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="LEADING_WORD_ELLIPSIS" GridPane.columnIndex="4" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="LEADING_WORD_ELLIPSIS" GridPane.columnIndex="5" GridPane.rowIndex="0" />
+                                <Label ellipsisString="" textOverrun="LEADING_WORD_ELLIPSIS" GridPane.columnIndex="6" GridPane.rowIndex="0" />
                                 <rowConstraints>
-                                    <RowConstraints vgrow="ALWAYS"/>
-                                    <RowConstraints vgrow="ALWAYS"/>
-                                    <RowConstraints vgrow="ALWAYS"/>
-                                    <RowConstraints vgrow="ALWAYS"/>
-                                    <RowConstraints vgrow="ALWAYS"/>
-                                    <RowConstraints vgrow="ALWAYS"/>
+                                    <RowConstraints />
                                 </rowConstraints>
                             </GridPane>
                         </VBox>
 
-                        <!-- Cuadrante 3: Asistencias semanales (parte inferior derecha) -->
+                        <!-- Cuadrante 3: Asistencias semanales -->
                         <VBox alignment="CENTER_LEFT" style="-fx-padding: 10;">
-                            <GridPane fx:id="attendanceGrid" alignment="CENTER_LEFT" hgap="10" maxWidth="200" vgap="10" VBox.vgrow="NEVER"> <!-- Limitar el ancho del GridPane -->
-                                <!-- Días de la semana -->
-                                <Label text="Lunes" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                                <Label fx:id="mondayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-
-                                <Label text="Martes" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                                <Label fx:id="tuesdayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-
-                                <Label text="Miércoles" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                                <Label fx:id="wednesdayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-
-                                <Label text="Jueves" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                                <Label fx:id="thursdayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-
-                                <Label text="Viernes" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                                <Label fx:id="fridayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-
-                                <Label text="Sábado" GridPane.columnIndex="0" GridPane.rowIndex="5" />
-                                <Label fx:id="saturdayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-
-                                <Label text="Domingo" GridPane.columnIndex="0" GridPane.rowIndex="6" />
-                                <Label fx:id="sundayAttendance" maxWidth="100" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                            <GridPane fx:id="attendanceGrid" alignment="CENTER_LEFT" hgap="10" maxWidth="400" vgap="10" VBox.vgrow="NEVER">
                                 <columnConstraints>
-                                    <ColumnConstraints />
-                                    <ColumnConstraints />
+                                    <ColumnConstraints minWidth="100" prefWidth="120" /> <!-- Ajuste para los días de la semana -->
+                                    <ColumnConstraints minWidth="130" prefWidth="160" /> <!-- Ajuste para la hora de entrada -->
+                                    <ColumnConstraints minWidth="130" prefWidth="160" /> <!-- Ajuste para la hora de salida -->
                                 </columnConstraints>
                                 <rowConstraints>
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                    <RowConstraints />
-                                    <RowConstraints />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
+                                    <RowConstraints minHeight="30" prefHeight="40" />
                                 </rowConstraints>
+
+                                <Label text="Lunes" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                                <Label fx:id="mondayEntryLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                                <Label fx:id="mondayExitLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+
+                                <Label text="Martes" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                                <Label fx:id="tuesdayEntryLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label fx:id="tuesdayExitLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+
+                                <Label text="Miércoles" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                                <Label fx:id="wednesdayEntryLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <Label fx:id="wednesdayExitLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+
+                                <Label text="Jueves" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                                <Label fx:id="thursdayEntryLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                                <Label fx:id="thursdayExitLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="2" GridPane.rowIndex="3" />
+
+                                <Label text="Viernes" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+                                <Label fx:id="fridayEntryLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                                <Label fx:id="fridayExitLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="2" GridPane.rowIndex="4" />
+
+                                <Label text="Sábado" GridPane.columnIndex="0" GridPane.rowIndex="5" />
+                                <Label fx:id="saturdayEntryLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                                <Label fx:id="saturdayExitLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="2" GridPane.rowIndex="5" />
+
+                                <Label text="Domingo" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+                                <Label fx:id="sundayEntryLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                                <Label fx:id="sundayExitLabel" style="-fx-font-size: 12px; -fx-padding: 5px;" styleClass="attendance-box" text="" GridPane.columnIndex="2" GridPane.rowIndex="6" />
                             </GridPane>
                         </VBox>
                     </items>
