@@ -11,7 +11,8 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -160,7 +161,7 @@ public class MonitoreoController {
         Connection connectDB = connectNow.getConnection();
 
         // Base de la consulta
-        String query = "SELECT e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
                 "dias.fecha, es.id as estado_id, en.hora_entrada, en.hora_salida, t.nombre as tipo_asistencia, ts.nombre as tipo_salida " +
                 "FROM entradas_salidas en " +
                 "JOIN empleados e ON en.empleado_id = e.id " +
@@ -175,34 +176,43 @@ public class MonitoreoController {
         boolean filtroEmpleados = empleadosCheckBox.isSelected();
         boolean filtroFechas = fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null;
 
-        if (filtroDepartamento || filtroSupervisores || filtroEmpleados || !searchQuery.isEmpty() || filtroFechas) {
-            query += "WHERE ";
+        // Agregar las condiciones en función de los filtros seleccionados
+        StringBuilder conditions = new StringBuilder();
 
-            if (filtroDepartamento) {
-                query += "e.departamento_id IN (SELECT id FROM departamentos WHERE nombre = '" + departamentoSeleccionado + "') ";
-            }
+        if (filtroDepartamento) {
+            conditions.append("e.departamento_id IN (SELECT id FROM departamentos WHERE nombre = '").append(departamentoSeleccionado).append("') ");
+        }
 
+        if (filtroSupervisores || filtroEmpleados) {
+            if (conditions.length() > 0) conditions.append("AND ");
+            conditions.append("(");
             if (filtroSupervisores) {
-                if (filtroDepartamento) query += "AND ";
-                query += "e.jerarquia_id = 2 ";  // ID de Supervisores
+                conditions.append("e.jerarquia_id = 2 ");  // ID de Supervisores
             }
-
+            if (filtroSupervisores && filtroEmpleados) {
+                conditions.append("OR ");
+            }
             if (filtroEmpleados) {
-                if (filtroDepartamento || filtroSupervisores) query += "AND ";
-                query += "e.jerarquia_id = 3 ";  // ID de Empleados
+                conditions.append("e.jerarquia_id = 3 ");  // ID de Empleados
             }
+            conditions.append(") ");
+        }
 
-            if (!searchQuery.isEmpty()) {
-                if (filtroDepartamento || filtroSupervisores || filtroEmpleados) query += "AND ";
-                query += "(e.nombres LIKE '%" + searchQuery + "%' OR e.apellido_paterno LIKE '%" + searchQuery + "%' OR e.apellido_materno LIKE '%" + searchQuery + "%') ";
-            }
+        if (!searchQuery.isEmpty()) {
+            if (conditions.length() > 0) conditions.append("AND ");
+            conditions.append("(e.nombres LIKE '%").append(searchQuery).append("%' OR e.apellido_paterno LIKE '%").append(searchQuery).append("%' OR e.apellido_materno LIKE '%").append(searchQuery).append("%') ");
+        }
 
-            if (filtroFechas) {
-                if (filtroDepartamento || filtroSupervisores || filtroEmpleados || !searchQuery.isEmpty()) query += "AND ";
-                String fechaInicioSQL = fechaInicioPicker.getValue().toString();
-                String fechaFinSQL = fechaFinPicker.getValue().toString();
-                query += "dias.fecha BETWEEN '" + fechaInicioSQL + "' AND '" + fechaFinSQL + "'";
-            }
+        if (filtroFechas) {
+            if (conditions.length() > 0) conditions.append("AND ");
+            String fechaInicioSQL = fechaInicioPicker.getValue().toString();
+            String fechaFinSQL = fechaFinPicker.getValue().toString();
+            conditions.append("dias.fecha BETWEEN '").append(fechaInicioSQL).append("' AND '").append(fechaFinSQL).append("' ");
+        }
+
+        // Si hay condiciones, agregarlas a la consulta
+        if (conditions.length() > 0) {
+            query += "WHERE " + conditions.toString();
         }
 
         System.out.println("Ejecutando consulta SQL: " + query);
@@ -213,11 +223,26 @@ public class MonitoreoController {
 
             while (resultSet.next()) {
                 Map<String, Object> employeeData = new HashMap<>();
+                employeeData.put("id", String.valueOf(resultSet.getInt("id")));
                 employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno"));
-                employeeData.put("id", resultSet.getInt("estado_id") != 0 ? String.valueOf(resultSet.getInt("estado_id")) : "");
                 employeeData.put("fechaEntrada", resultSet.getString("fecha") != null ? resultSet.getString("fecha") : "");
                 employeeData.put("horaEntrada", resultSet.getString("hora_entrada") != null ? resultSet.getString("hora_entrada") : "");
                 employeeData.put("horaSalida", resultSet.getString("hora_salida") != null ? resultSet.getString("hora_salida") : "");
+
+                // Cálculo del tiempo laborado
+                String horaEntrada = resultSet.getString("hora_entrada");
+                String horaSalida = resultSet.getString("hora_salida");
+                if (horaEntrada != null && horaSalida != null) {
+                    LocalTime entrada = LocalTime.parse(horaEntrada);
+                    LocalTime salida = LocalTime.parse(horaSalida);
+                    Duration tiempoLaborado = Duration.between(entrada, salida);
+                    employeeData.put("tiempoLaborado", String.format("%d:%02d",
+                            tiempoLaborado.toHours(),
+                            tiempoLaborado.toMinutes() % 60));
+                } else {
+                    employeeData.put("tiempoLaborado", "N/A");
+                }
+
                 employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia") != null ? resultSet.getString("tipo_asistencia") : "");
                 employeeData.put("tipoSalida", resultSet.getString("tipo_salida") != null ? resultSet.getString("tipo_salida") : "");
                 employeeData.put("estado", resultSet.getString("estado") != null ? resultSet.getString("estado") : "");
@@ -233,8 +258,6 @@ public class MonitoreoController {
         // Mostrar la primera página de resultados
         showPage(1);
     }
-
-
 
 
     private Callback<TableColumn.CellDataFeatures<Map<String, Object>, String>, ObservableValue<String>> createCellValueFactory(String key) {
@@ -258,7 +281,7 @@ public class MonitoreoController {
         Connection connectDB = connectNow.getConnection();
 
         // Consulta SQL para obtener las entradas más recientes sin importar el día
-        String query = "SELECT e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
                 "dias.fecha, es.id as estado_id, en.hora_entrada, en.hora_salida, t.nombre as tipo_asistencia, ts.nombre as tipo_salida " +
                 "FROM entradas_salidas en " +
                 "JOIN empleados e ON en.empleado_id = e.id " +
@@ -277,11 +300,26 @@ public class MonitoreoController {
 
             while (resultSet.next()) {
                 Map<String, Object> employeeData = new HashMap<>();
+                employeeData.put("id", String.valueOf(resultSet.getInt("id")));
                 employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno"));
-                employeeData.put("id", resultSet.getInt("estado_id") != 0 ? String.valueOf(resultSet.getInt("estado_id")) : "");
                 employeeData.put("fechaEntrada", resultSet.getString("fecha") != null ? resultSet.getString("fecha") : "");
                 employeeData.put("horaEntrada", resultSet.getString("hora_entrada") != null ? resultSet.getString("hora_entrada") : "");
                 employeeData.put("horaSalida", resultSet.getString("hora_salida") != null ? resultSet.getString("hora_salida") : "");
+
+                // Cálculo del tiempo laborado
+                String horaEntrada = resultSet.getString("hora_entrada");
+                String horaSalida = resultSet.getString("hora_salida");
+                if (horaEntrada != null && horaSalida != null) {
+                    LocalTime entrada = LocalTime.parse(horaEntrada);
+                    LocalTime salida = LocalTime.parse(horaSalida);
+                    Duration tiempoLaborado = Duration.between(entrada, salida);
+                    employeeData.put("tiempoLaborado", String.format("%d:%02d",
+                            tiempoLaborado.toHours(),
+                            tiempoLaborado.toMinutes() % 60));
+                } else {
+                    employeeData.put("tiempoLaborado", "N/A");
+                }
+
                 employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia") != null ? resultSet.getString("tipo_asistencia") : "");
                 employeeData.put("tipoSalida", resultSet.getString("tipo_salida") != null ? resultSet.getString("tipo_salida") : "");
                 employeeData.put("estado", resultSet.getString("estado") != null ? resultSet.getString("estado") : "");
@@ -333,7 +371,14 @@ public class MonitoreoController {
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Tipo de Asistencia");
 
-        NumberAxis yAxis = new NumberAxis(0, 5, 1); // Establecer mínimo, máximo y tick unit
+        // Calcula el número de días en el rango seleccionado
+        long totalDias = 0;
+        if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
+            totalDias = Duration.between(fechaInicioPicker.getValue().atStartOfDay(), fechaFinPicker.getValue().atStartOfDay()).toDays() + 1;
+        }
+
+        // Configura el eje Y para reflejar el número total de días
+        NumberAxis yAxis = new NumberAxis(0, totalDias, 1);
         yAxis.setLabel("Cantidad");
         yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis) {
             @Override
@@ -417,7 +462,4 @@ public class MonitoreoController {
         // Añadir el gráfico al Pane
         chartPane.getChildren().add(barChart);
     }
-
-
-
 }

@@ -53,7 +53,7 @@
                         <TableColumn fx:id="fechaEntradaColumn" text="Fecha" minWidth="80" />
                         <TableColumn fx:id="horaEntradaColumn" text="H.de entrada" minWidth="150" />
                         <TableColumn fx:id="horaSalidaColumn" text="H.de salida" minWidth="150" />
-                        <TableColumn fx:id="tiempoLaboradoColumn" text="Tiempo laborado" minWidth="150" />
+                        <TableColumn fx:id="tiempoLaboradoColumn" text="Tiempo laborado en horas" minWidth="250" />
                         <TableColumn fx:id="tipoAsistenciaColumn" text="Tipo de Asistencia" minWidth="170" />
                         <TableColumn fx:id="tipoSalidaColumn" text="Tipo de Salida" minWidth="150" />
                         <TableColumn fx:id="estadoColumn" text="Estado" minWidth="100" />
