@@ -35,16 +35,18 @@ public class RegistroSucursalController {
         empleadosContainer.getChildren().clear();
 
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT nombres, profesion, estatus_id FROM empleados WHERE jerarquia_id = 3";
+            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 3";
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
 
             while (resultSet.next()) {
+                int empleadoId = resultSet.getInt("id");
                 String nombre = resultSet.getString("nombres");
+                String apellidoPaterno = resultSet.getString("apellido_paterno");
                 String profesion = resultSet.getString("profesion");
                 int estatusId = resultSet.getInt("estatus_id");
 
-                HBox empleadoBox = crearEmpleadoBox(nombre, profesion, estatusId);
+                HBox empleadoBox = crearEmpleadoBox(empleadoId, nombre, apellidoPaterno, profesion, estatusId);
                 empleadosContainer.getChildren().add(empleadoBox);
             }
         } catch (SQLException e) {
@@ -56,16 +58,18 @@ public class RegistroSucursalController {
         supervisoresContainer.getChildren().clear();
 
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT nombres, profesion, estatus_id FROM empleados WHERE jerarquia_id = 2";
+            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 2";
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
 
             while (resultSet.next()) {
+                int empleadoId = resultSet.getInt("id");
                 String nombre = resultSet.getString("nombres");
+                String apellidoPaterno = resultSet.getString("apellido_paterno");
                 String profesion = resultSet.getString("profesion");
                 int estatusId = resultSet.getInt("estatus_id");
 
-                HBox supervisorBox = crearEmpleadoBox(nombre, profesion, estatusId);
+                HBox supervisorBox = crearEmpleadoBox(empleadoId, nombre, apellidoPaterno, profesion, estatusId);
                 supervisoresContainer.getChildren().add(supervisorBox);
             }
         } catch (SQLException e) {
@@ -73,7 +77,7 @@ public class RegistroSucursalController {
         }
     }
 
-    private HBox crearEmpleadoBox(String nombre, String profesion, int estatusId) {
+    private HBox crearEmpleadoBox(int empleadoId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
         HBox empleadoBox = new HBox();
         empleadoBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;");
         empleadoBox.setSpacing(10);
@@ -107,15 +111,18 @@ public class RegistroSucursalController {
         VBox textContainer = new VBox();
         textContainer.setSpacing(5);
 
-        Label nombreLabel = new Label(nombre.toUpperCase());
-        nombreLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label nombreCompletoLabel = new Label((nombre + " " + apellidoPaterno).toUpperCase());
+        nombreCompletoLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        nombreCompletoLabel.setWrapText(true);
+
         Label profesionLabel = new Label(profesion != null ? profesion : "Profesión no especificada");
         profesionLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: grey;");
+        profesionLabel.setWrapText(true);
 
-        textContainer.getChildren().addAll(nombreLabel, profesionLabel);
+        textContainer.getChildren().addAll(nombreCompletoLabel, profesionLabel);
 
         Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS); // Esto permite que el Region ocupe todo el espacio disponible
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
         VBox botonesContainer = new VBox();
         botonesContainer.setSpacing(5);
@@ -153,5 +160,4 @@ public class RegistroSucursalController {
 
         return empleadoBox;
     }
-
 }
