@@ -371,21 +371,9 @@ public class MonitoreoController {
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Tipo de Asistencia");
 
-        // Calcula el número de días en el rango seleccionado
-        long totalDias = 0;
-        if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
-            totalDias = Duration.between(fechaInicioPicker.getValue().atStartOfDay(), fechaFinPicker.getValue().atStartOfDay()).toDays() + 1;
-        }
-
-        // Configura el eje Y para reflejar el número total de días
-        NumberAxis yAxis = new NumberAxis(0, totalDias, 1);
+        // Deja que el eje Y se ajuste automáticamente según los datos
+        NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Cantidad");
-        yAxis.setTickLabelFormatter(new NumberAxis.DefaultFormatter(yAxis) {
-            @Override
-            public String toString(Number object) {
-                return String.format("%d", object.intValue());
-            }
-        });
 
         // Crear el gráfico de barras
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
@@ -462,4 +450,5 @@ public class MonitoreoController {
         // Añadir el gráfico al Pane
         chartPane.getChildren().add(barChart);
     }
+
 }
