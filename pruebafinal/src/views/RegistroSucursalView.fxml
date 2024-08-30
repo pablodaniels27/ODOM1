@@ -9,7 +9,7 @@
     <VBox alignment="TOP_CENTER" spacing="20">
         <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Supervisores" />
         <HBox spacing="10">
-            <TextField promptText="Buscar supervisor..." style="-fx-font-size: 14px;" />
+            <TextField fx:id="searchSupervisoresField" promptText="Buscar supervisor..." style="-fx-font-size: 14px;" />
         </HBox>
 
         <VBox fx:id="supervisoresContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
@@ -21,7 +21,7 @@
     <VBox alignment="TOP_CENTER" spacing="20">
         <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Empleados" />
         <HBox spacing="10">
-            <TextField promptText="Buscar empleados..." style="-fx-font-size: 14px;" />
+            <TextField fx:id="searchEmpleadosField" promptText="Buscar empleados..." style="-fx-font-size: 14px;" />
         </HBox>
 
         <VBox fx:id="empleadosContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
