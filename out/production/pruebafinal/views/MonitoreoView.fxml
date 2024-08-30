@@ -15,18 +15,30 @@
 
                 <!-- Pane para contenido superior -->
                 <Pane>
-                    <Label layoutX="10" layoutY="10" text="Zona de trabajo" />
-                    <ComboBox fx:id="zonaTrabajoComboBox" layoutX="150" layoutY="10" prefWidth="200" />
-                    <Label layoutX="370" layoutY="10" text="Supervisores" />
-                    <ComboBox fx:id="supervisoresComboBox" layoutX="500" layoutY="10" prefWidth="200" />
+                    <HBox spacing="10" layoutX="10" layoutY="10">
+                        <Label text="Departamento" />
+                        <ChoiceBox fx:id="departamentoChoiceBox" minWidth="200" prefWidth="250" style="-fx-font-size: 12px;" />
+                    </HBox>
                     <Label layoutX="10" layoutY="50" text="Fecha Inicio" />
                     <DatePicker fx:id="fechaInicioPicker" layoutX="150" layoutY="50" prefWidth="200" />
                     <Label layoutX="370" layoutY="50" text="Fecha Fin" />
                     <DatePicker fx:id="fechaFinPicker" layoutX="500" layoutY="50" prefWidth="200" />
-                    <Button layoutX="720" layoutY="10" prefWidth="150" text="Sólo Supervisores" />
-                    <Button layoutX="720" layoutY="50" prefWidth="150" text="Sólo Empleados" />
-                    <Label layoutX="10" layoutY="90" text="Nombre, Apellido, Sucursal..." />
-                    <TextField fx:id="searchField" layoutX="150" layoutY="90" prefWidth="720" />
+
+                    <!-- Cambiar botones por CheckBox -->
+                    <CheckBox fx:id="supervisoresCheckBox" layoutX="720" layoutY="10" text="Sólo Supervisores" />
+                    <CheckBox fx:id="empleadosCheckBox" layoutX="720" layoutY="50" text="Sólo Empleados" />
+
+                    <!-- buscar nombre  -->
+                    <HBox spacing="10" layoutX="10" layoutY="90">
+                        <Label text="Nombre, Apellido" />
+                        <TextField fx:id="searchField" prefWidth="250" />
+                    </HBox>
+                    <!-- boton buscar -->
+                    <Button fx:id="searchButton" layoutX="720" layoutY="130" prefWidth="150" text="Buscar" />
+
+                    <Button fx:id="graphViewButton" layoutX="500" layoutY="130" prefWidth="150" text="Vista de Gráficos" />
+                    <Pane fx:id="chartPane" layoutX="10" layoutY="180" prefWidth="870" prefHeight="600" visible="false" managed="false"/>
+
                 </Pane>
             </VBox>
         </top>
@@ -36,15 +48,15 @@
             <AnchorPane>
                 <TableView fx:id="employeeTableView" prefHeight="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <columns>
-                        <TableColumn fx:id="nombreColumn" style="-fx-alignment: CENTER_LEFT;" text="Nombre completo" />
-                        <TableColumn fx:id="idColumn" style="-fx-alignment: CENTER_LEFT;" text="ID" />
-                        <TableColumn fx:id="fechaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="Fecha" />
-                        <TableColumn fx:id="horaEntradaColumn" style="-fx-alignment: CENTER_LEFT;" text="H.de entrada" />
-                        <TableColumn fx:id="horaSalidaColumn" style="-fx-alignment: CENTER_LEFT;" text="H.de salida" />
-                        <TableColumn fx:id="tiempoLaboradoColumn" style="-fx-alignment: CENTER_LEFT;" text="Tiempo laborado" />
-                        <TableColumn fx:id="tipoAsistenciaColumn" style="-fx-alignment: CENTER_LEFT;" text="Tipo de Asistencia" />
-                        <TableColumn fx:id="tipoSalidaColumn" style="-fx-alignment: CENTER_LEFT;" text="Tipo de Salida" />
-                        <TableColumn fx:id="estadoColumn" style="-fx-alignment: CENTER_LEFT;" text="Estado" />
+                        <TableColumn fx:id="nombreColumn" text="Nombre completo" minWidth="200" />
+                        <TableColumn fx:id="idColumn" text="ID" minWidth="20" />
+                        <TableColumn fx:id="fechaEntradaColumn" text="Fecha" minWidth="80" />
+                        <TableColumn fx:id="horaEntradaColumn" text="H.de entrada" minWidth="150" />
+                        <TableColumn fx:id="horaSalidaColumn" text="H.de salida" minWidth="150" />
+                        <TableColumn fx:id="tiempoLaboradoColumn" text="Tiempo laborado en horas" minWidth="250" />
+                        <TableColumn fx:id="tipoAsistenciaColumn" text="Tipo de Asistencia" minWidth="170" />
+                        <TableColumn fx:id="tipoSalidaColumn" text="Tipo de Salida" minWidth="150" />
+                        <TableColumn fx:id="estadoColumn" text="Estado" minWidth="100" />
                     </columns>
                 </TableView>
             </AnchorPane>
@@ -66,3 +78,4 @@
 
     </BorderPane>
 </AnchorPane>
+
