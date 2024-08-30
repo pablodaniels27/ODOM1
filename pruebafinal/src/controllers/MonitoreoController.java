@@ -4,7 +4,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 
 import java.sql.Connection;
@@ -83,6 +86,35 @@ public class MonitoreoController {
     @FXML
     private Pane chartPane;
 
+    @FXML
+    private ChoiceBox<Integer> itemsPerPageChoiceBox;
+
+    @FXML
+    private Button previousButton;
+
+    @FXML
+    private Button nextButton;
+
+    @FXML
+    private Button page1Button;
+
+    @FXML
+    private Button page2Button;
+
+    @FXML
+    private Button page3Button;
+
+    @FXML
+    private VBox detailsPane;
+
+    @FXML
+    private ListView<String> detailsListView;
+
+    @FXML
+    private HBox chartContainer;
+
+
+
     private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
 
     private int itemsPerPage = 10;
@@ -106,6 +138,15 @@ public class MonitoreoController {
 
         cargarDepartamentos(); // Cargar los departamentos en el ChoiceBox
 
+        // Configurar el ChoiceBox para la cantidad de ítems por página
+        itemsPerPageChoiceBox.setItems(FXCollections.observableArrayList(5, 10, 20, 50));
+        itemsPerPageChoiceBox.setValue(itemsPerPage);
+        itemsPerPageChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            itemsPerPage = newVal;
+            totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
+            showPage(1);
+        });
+
         // Configurar comportamiento del botón de gráficos
         graphViewButton.setOnAction(event -> toggleGraphView());
 
@@ -118,7 +159,6 @@ public class MonitoreoController {
 
         // Configurar el botón de búsqueda
         searchButton.setOnAction(event -> {
-            System.out.println("Botón de búsqueda presionado");
             try {
                 searchByDateAndDepartment(); // Buscar por fecha y departamento
             } catch (SQLException e) {
@@ -126,11 +166,30 @@ public class MonitoreoController {
             }
         });
 
+        // Configurar botones de paginación
+        previousButton.setOnAction(event -> {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        });
+
+        nextButton.setOnAction(event -> {
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage);
+            }
+        });
+
+        page1Button.setOnAction(event -> showPage(1));
+        page2Button.setOnAction(event -> showPage(2));
+        page3Button.setOnAction(event -> showPage(3));
+
         // Calcular el total de páginas
         totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
 
         // Mostrar la primera página
-        showPage(currentPage);
+        showPage(1);
     }
 
     private void cargarDepartamentos() {
@@ -269,9 +328,18 @@ public class MonitoreoController {
     }
 
     private void showPage(int pageNumber) {
+        currentPage = pageNumber;
         int fromIndex = (pageNumber - 1) * itemsPerPage;
         int toIndex = Math.min(fromIndex + itemsPerPage, employees.size());
         employeeTableView.setItems(FXCollections.observableArrayList(employees.subList(fromIndex, toIndex)));
+
+        // Actualizar botones de paginación
+        previousButton.setDisable(pageNumber == 1);
+        nextButton.setDisable(pageNumber == totalPages);
+
+        page1Button.setDisable(pageNumber == 1);
+        page2Button.setDisable(pageNumber == 2 || totalPages < 2);
+        page3Button.setDisable(pageNumber == 3 || totalPages < 3);
     }
 
     private void loadRecentEntries() throws SQLException {
@@ -343,8 +411,8 @@ public class MonitoreoController {
         employeeTableView.setVisible(!isTableVisible);
         employeeTableView.setManaged(!isTableVisible);
 
-        chartPane.setVisible(isTableVisible);
-        chartPane.setManaged(isTableVisible);
+        chartContainer.setVisible(isTableVisible);
+        chartContainer.setManaged(isTableVisible);
 
         // Cambiar el estilo del botón según la vista actual
         if (isTableVisible) {
@@ -354,6 +422,7 @@ public class MonitoreoController {
             unhighlightButton(graphViewButton); // Desactivar el resaltado del botón
         }
     }
+
 
     private void highlightButton(Button button) {
         button.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
@@ -371,72 +440,111 @@ public class MonitoreoController {
         CategoryAxis xAxis = new CategoryAxis();
         xAxis.setLabel("Tipo de Asistencia");
 
-        // Deja que el eje Y se ajuste automáticamente según los datos
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Cantidad");
 
         // Crear el gráfico de barras
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-        barChart.setTitle("Conteo de Tipos de Asistencia");
+        barChart.setTitle("Conteo de Tipos de Asistencia por Departamento");
+        barChart.setPrefWidth(600);  // Ajustar el ancho
+        barChart.setPrefHeight(800); // Ajustar la altura
 
-        // Deshabilitar la leyenda predeterminada
-        barChart.setLegendVisible(false);
+        // Crear un mapa para almacenar las series por departamento
+        Map<String, XYChart.Series<String, Number>> departmentSeriesMap = new HashMap<>();
 
-        // Crear la serie de datos
-        XYChart.Series<String, Number> dataSeries = new XYChart.Series<>();
-
-        // Cargar datos desde la base de datos
         try {
             DatabaseConnection connectNow = new DatabaseConnection();
             Connection connectDB = connectNow.getConnection();
 
-            String query = "SELECT t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
+            // Modificar la consulta para obtener datos agrupados por departamento y tipo de asistencia
+            String query = "SELECT d.nombre AS departamento, t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
                     "FROM entradas_salidas en " +
                     "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                    "JOIN dias d ON en.dia_id = d.id ";
-
-            // Añadir filtros de fecha si están definidos
-            boolean filtroFechas = fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null;
-            if (filtroFechas) {
-                String fechaInicioSQL = fechaInicioPicker.getValue().toString();
-                String fechaFinSQL = fechaFinPicker.getValue().toString();
-                query += "WHERE d.fecha BETWEEN '" + fechaInicioSQL + "' AND '" + fechaFinSQL + "' ";
-            }
-
-            query += "GROUP BY t.nombre";
+                    "JOIN empleados e ON en.empleado_id = e.id " +
+                    "JOIN departamentos d ON e.departamento_id = d.id " +
+                    "JOIN dias di ON en.dia_id = di.id " +
+                    "WHERE di.fecha BETWEEN '" + fechaInicioPicker.getValue() + "' AND '" + fechaFinPicker.getValue() + "' " +
+                    "GROUP BY d.nombre, t.nombre";
 
             Statement statement = connectDB.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
 
-            // Añadir datos al gráfico
+            // Recorrer los resultados y llenar las series correspondientes
             while (resultSet.next()) {
+                String departamento = resultSet.getString("departamento");
                 String tipoAsistencia = resultSet.getString("tipo_asistencia");
                 int cantidad = resultSet.getInt("cantidad");
 
-                // Crear un nuevo dato
-                XYChart.Data<String, Number> data = new XYChart.Data<>(tipoAsistencia, cantidad);
-                dataSeries.getData().add(data);
+                // Crear o actualizar la serie para el departamento actual
+                XYChart.Series<String, Number> series = departmentSeriesMap.computeIfAbsent(departamento, k -> {
+                    XYChart.Series<String, Number> newSeries = new XYChart.Series<>();
+                    newSeries.setName(k);
+                    barChart.getData().add(newSeries);
+                    return newSeries;
+                });
 
-                // Añadir un listener para asegurarse de que el nodo esté listo antes de aplicar el estilo
+                // Añadir los datos a la serie correspondiente
+                XYChart.Data<String, Number> data = new XYChart.Data<>(tipoAsistencia, cantidad);
+                series.getData().add(data);
+
+                // Asegurarse de que el nodo esté disponible antes de trabajar con él
                 data.nodeProperty().addListener((observable, oldValue, newValue) -> {
                     if (newValue != null) {
-                        // Aplicar estilos personalizados basados en el tipo de asistencia
-                        switch (tipoAsistencia) {
-                            case "Asistencia":
-                                newValue.setStyle("-fx-bar-fill: green;");
-                                break;
-                            case "Justificación":
-                                newValue.setStyle("-fx-bar-fill: blue;");
-                                break;
-                            case "No Asistencia":
-                                newValue.setStyle("-fx-bar-fill: red;");
-                                break;
-                            case "Retardo":
-                                newValue.setStyle("-fx-bar-fill: yellow;");
-                                break;
-                        }
+                        // Añadir la etiqueta dentro de la barra
+                        Tooltip.install(newValue, new Tooltip(String.valueOf(cantidad)));
+                        Label label = new Label(String.valueOf(cantidad));
+                        label.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+                        StackPane stackPane = (StackPane) newValue;
+                        stackPane.getChildren().add(label);
+
+                        // Añadir evento de clic en la barra
+                        newValue.setOnMouseClicked(event -> {
+                            showDetails(departamento, tipoAsistencia);
+                        });
                     }
                 });
+            }
+
+            // Crear una serie para el total general si se seleccionaron todos los departamentos
+            if ("Todos los departamentos".equals(departamentoChoiceBox.getValue())) {
+                XYChart.Series<String, Number> totalSeries = new XYChart.Series<>();
+                totalSeries.setName("Total General");
+
+                // Crear una consulta para el total general
+                String totalQuery = "SELECT t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
+                        "FROM entradas_salidas en " +
+                        "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                        "JOIN dias di ON en.dia_id = di.id " +
+                        "WHERE di.fecha BETWEEN '" + fechaInicioPicker.getValue() + "' AND '" + fechaFinPicker.getValue() + "' " +
+                        "GROUP BY t.nombre";
+
+                ResultSet totalResultSet = statement.executeQuery(totalQuery);
+                while (totalResultSet.next()) {
+                    String tipoAsistencia = totalResultSet.getString("tipo_asistencia");
+                    int cantidad = totalResultSet.getInt("cantidad");
+
+                    XYChart.Data<String, Number> totalData = new XYChart.Data<>(tipoAsistencia, cantidad);
+                    totalSeries.getData().add(totalData);
+
+                    // Asegurarse de que el nodo esté disponible antes de trabajar con él
+                    totalData.nodeProperty().addListener((observable, oldValue, newValue) -> {
+                        if (newValue != null) {
+                            // Añadir la etiqueta dentro de la barra
+                            Tooltip.install(newValue, new Tooltip(String.valueOf(cantidad)));
+                            Label label = new Label(String.valueOf(cantidad));
+                            label.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
+                            StackPane stackPane = (StackPane) newValue;
+                            stackPane.getChildren().add(label);
+
+                            // Añadir evento de clic en la barra
+                            newValue.setOnMouseClicked(event -> {
+                                showDetails("Todos los departamentos", tipoAsistencia);
+                            });
+                        }
+                    });
+                }
+
+                barChart.getData().add(totalSeries);
             }
 
             connectDB.close();
@@ -444,11 +552,55 @@ public class MonitoreoController {
             e.printStackTrace();
         }
 
-        // Añadir la serie de datos al gráfico
-        barChart.getData().add(dataSeries);
-
         // Añadir el gráfico al Pane
         chartPane.getChildren().add(barChart);
     }
+
+
+    private void showDetails(String departamento, String tipoAsistencia) {
+        detailsListView.getItems().clear(); // Limpiar detalles previos
+
+        // Consulta para obtener los detalles de las personas en la barra seleccionada
+        try {
+            DatabaseConnection connectNow = new DatabaseConnection();
+            Connection connectDB = connectNow.getConnection();
+
+            String query = "SELECT e.nombres, e.apellido_paterno, e.apellido_materno, en.fecha " +
+                    "FROM entradas_salidas en " +
+                    "JOIN empleados e ON en.empleado_id = e.id " +
+                    "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                    "JOIN departamentos d ON e.departamento_id = d.id " +
+                    "WHERE d.nombre = '" + departamento + "' AND t.nombre = '" + tipoAsistencia + "'";
+
+            Statement statement = connectDB.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            ObservableList<String> items = FXCollections.observableArrayList();
+
+            while (resultSet.next()) {
+                String nombreCompleto = resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno");
+                String fecha = resultSet.getString("fecha");
+                items.add(nombreCompleto + " - " + fecha);
+            }
+
+            detailsListView.setItems(items);
+
+            // Añadir evento de clic en la persona para mostrar detalles adicionales
+            detailsListView.setOnMouseClicked(event -> {
+                String selectedItem = detailsListView.getSelectionModel().getSelectedItem();
+                if (selectedItem != null) {
+                    System.out.println("Seleccionado: " + selectedItem);
+                    // Aquí puedes añadir más lógica para mostrar detalles adicionales si lo deseas
+                }
+            });
+
+            connectDB.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
 
 }
