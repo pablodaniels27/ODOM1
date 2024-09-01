@@ -1,6 +1,7 @@
 package controllers;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -140,8 +141,15 @@ public class InicioController {
         // Limpiar el calendario anterior
         calendarGrid.getChildren().clear();
 
-        // Configurar el título del mes
-        currentMonthLabel.setText(currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()) + " " + currentYearMonth.getYear());
+        // Configurar el título del mes con la primera letra en mayúscula
+        String month = currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault());
+        String formattedMonth = month.substring(0, 1).toUpperCase() + month.substring(1).toLowerCase();
+        String monthYear = formattedMonth + " " + currentYearMonth.getYear();
+
+        currentMonthLabel.setText(monthYear);
+        currentMonthLabel.setMinWidth(150);  // Incrementa el ancho mínimo
+        currentMonthLabel.setMaxWidth(150);  // Incrementa el ancho máximo
+        currentMonthLabel.setAlignment(Pos.CENTER);  // Centrar el texto
 
         // Añadir los días de la semana en la primera fila, usando abreviaciones de dos letras
         String[] daysOfWeek = {"Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"};
@@ -163,22 +171,9 @@ public class InicioController {
             LocalDate date = currentYearMonth.atDay(day);
 
             Label dayLabel = new Label(String.valueOf(day));
-            dayLabel.setStyle(
-                    "-fx-background-color: transparent;" +  // Fondo transparente
-                            "-fx-text-fill: #2196F3;" +             // Texto azul
-                            "-fx-alignment: center;" +              // Centrar texto
-                            "-fx-border-color: #2196F3;" +          // Color del borde azul
-                            "-fx-border-width: 2px;" +              // Ancho del borde
-                            "-fx-border-radius: 50%;" +             // Bordes redondeados
-                            "-fx-background-radius: 50%;" +         // Fondo redondeado
-                            "-fx-min-width: 35px;" +                // Ancho mínimo para centrar los dígitos
-                            "-fx-min-height: 35px;" +               // Altura mínima para mantener tamaño uniforme
-                            "-fx-max-width: 35px;" +                // Ancho máximo para mantener tamaño uniforme
-                            "-fx-max-height: 35px;" +               // Altura máxima para mantener tamaño uniforme
-                            "-fx-font-size: 14px;"                  // Tamaño de fuente consistente
-            );
-
+            dayLabel.getStyleClass().add("day-label"); // Aplica la clase CSS
             dayLabel.setOnMouseClicked(event -> handleWeekSelection(date));
+
             calendarGrid.add(dayLabel, column, row);
 
             column++;
@@ -188,6 +183,11 @@ public class InicioController {
             }
         }
     }
+
+
+
+
+
 
 
 

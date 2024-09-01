@@ -32,10 +32,10 @@
 
         <Label text="Nombre/s" GridPane.columnIndex="0" GridPane.rowIndex="0" />
         <TextField fx:id="nombreField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-        <Label text="Apellido Materno" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-        <TextField fx:id="apellidoMaternoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" GridPane.rowIndex="0" />
-        <Label text="Apellido Paterno" GridPane.columnIndex="4" GridPane.rowIndex="0" />
-        <TextField fx:id="apellidoPaternoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="5" GridPane.rowIndex="0" />
+        <Label text="Apellido Materno" GridPane.columnIndex="4" />
+        <TextField fx:id="apellidoMaternoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="5" />
+        <Label text="Apellido Paterno" GridPane.columnIndex="2" />
+        <TextField fx:id="apellidoPaternoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" />
         <Label text="Fecha de nacimiento" GridPane.columnIndex="0" GridPane.rowIndex="1" />
         <DatePicker fx:id="fechaNacimientoPicker" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
         <Label text="País" GridPane.columnIndex="2" GridPane.rowIndex="1" />
