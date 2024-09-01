@@ -4,12 +4,10 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.sql.Connection;
@@ -38,6 +36,9 @@ public class asistenciasController {
     private Label statusLabel;
 
     @FXML
+    private Label actionMessageLabel;  // Nuevo label para mostrar mensajes adicionales
+
+    @FXML
     private Button registerEntryButton;
 
     @FXML
@@ -58,7 +59,6 @@ public class asistenciasController {
     public void initialize() {
         startDateTimeUpdater();  // Actualiza la fecha y hora en tiempo real
         loadFingerprintImage();  // Cargar la imagen de huella
-
     }
 
     private void startDateTimeUpdater() {
@@ -121,21 +121,17 @@ public class asistenciasController {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
         try (Connection connection = DatabaseConnection.getConnection()) {
-            int diaId = getDiaId(connection, today);
-
             // Insertar entrada en la base de datos
             String sql = "INSERT INTO entradas_salidas (empleado_id, dia_id, hora_entrada, tipo_asistencia_id) " +
-                    "VALUES (?, ?, ?, 1)";
+                    "VALUES (?, (SELECT id FROM dias WHERE fecha = ?), ?, 1)";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setInt(1, empleadoId);
-            statement.setInt(2, diaId);
+            statement.setDate(2, java.sql.Date.valueOf(today));
             statement.setTime(3, java.sql.Time.valueOf(now));
             statement.executeUpdate();
 
-            // Formato 24 horas para la hora registrada
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-            statusLabel.setText("Entrada registrada: " + now.format(timeFormatter));
-
+            statusLabel.setText("Entrada registrada: " + now.format(DateTimeFormatter.ofPattern("hh:mm a")));
+            actionMessageLabel.setText("Entrada registrada correctamente.");  // Mostrar mensaje adicional
             loadUserRecords();  // Recargar los registros después de insertar
             checkButtonStatus();  // Actualizar el estado de los botones
         } catch (SQLException e) {
@@ -148,52 +144,23 @@ public class asistenciasController {
         LocalTime now = LocalTime.now();
         LocalDate today = LocalDate.now();
         try (Connection connection = DatabaseConnection.getConnection()) {
-            int diaId = getDiaId(connection, today);
-
             // Actualizar salida en la base de datos
             String sql = "UPDATE entradas_salidas SET hora_salida = ?, tipo_salida_id = 4 WHERE empleado_id = ? " +
-                    "AND dia_id = ?";
+                    "AND dia_id = (SELECT id FROM dias WHERE fecha = ?)";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setTime(1, java.sql.Time.valueOf(now));
             statement.setInt(2, empleadoId);
-            statement.setInt(3, diaId);
+            statement.setDate(3, java.sql.Date.valueOf(today));
             statement.executeUpdate();
 
-            // Formato 24 horas para la hora registrada
-            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-            statusLabel.setText("Salida registrada: " + now.format(timeFormatter));
-
+            statusLabel.setText("Salida registrada: " + now.format(DateTimeFormatter.ofPattern("hh:mm a")));
+            actionMessageLabel.setText("Salida registrada correctamente.");  // Mostrar mensaje adicional
             loadUserRecords();  // Recargar los registros después de actualizar
             checkButtonStatus();  // Actualizar el estado de los botones
         } catch (SQLException e) {
             statusLabel.setText("Error al registrar salida: " + e.getMessage());
         }
     }
-
-    private int getDiaId(Connection connection, LocalDate date) throws SQLException {
-        String selectDiaSql = "SELECT id FROM dias WHERE fecha = ?";
-        PreparedStatement selectDiaStatement = connection.prepareStatement(selectDiaSql);
-        selectDiaStatement.setDate(1, java.sql.Date.valueOf(date));
-        ResultSet resultSet = selectDiaStatement.executeQuery();
-
-        if (resultSet.next()) {
-            return resultSet.getInt("id");
-        } else {
-            // Insertar un nuevo registro en la tabla dias si no existe
-            String insertDiaSql = "INSERT INTO dias (fecha) VALUES (?)";
-            PreparedStatement insertDiaStatement = connection.prepareStatement(insertDiaSql, PreparedStatement.RETURN_GENERATED_KEYS);
-            insertDiaStatement.setDate(1, java.sql.Date.valueOf(date));
-            insertDiaStatement.executeUpdate();
-
-            ResultSet generatedKeys = insertDiaStatement.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                return generatedKeys.getInt(1);
-            } else {
-                throw new SQLException("Failed to insert or retrieve dia_id.");
-            }
-        }
-    }
-
 
     private void checkButtonStatus() {
         LocalDate today = LocalDate.now();
@@ -220,6 +187,4 @@ public class asistenciasController {
             e.printStackTrace();
         }
     }
-
-
 }
