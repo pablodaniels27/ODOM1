@@ -3,71 +3,76 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
-    <ScrollPane fitToWidth="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED">
-        <VBox spacing="10" style="-fx-padding: 10;" prefHeight="2000"> <!-- Se incrementa el prefHeight -->
-            <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Monitoreo General de Empleados" />
+<AnchorPane prefHeight="1351.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
 
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <Label text="Departamento" />
-                <ChoiceBox fx:id="departamentoChoiceBox" minWidth="200" prefWidth="250" style="-fx-font-size: 12px;" />
-                <Label text="Fecha Inicio" />
-                <DatePicker fx:id="fechaInicioPicker" prefWidth="200" />
-                <Label text="Fecha Fin" />
-                <DatePicker fx:id="fechaFinPicker" prefWidth="200" />
-            </HBox>
+        <BorderPane style="-fx-background-color: transparent; -fx-padding: 10; -fx-border-width: 10;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+            <top>
+                <VBox alignment="TOP_CENTER" spacing="10">
+                    <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Monitoreo General de Empleados" />
+                    <Pane>
+                        <HBox spacing="10" layoutX="10" layoutY="10">
+                            <Label text="Departamento" />
+                            <ChoiceBox fx:id="departamentoChoiceBox" minWidth="200" prefWidth="250" style="-fx-font-size: 12px;" />
+                        </HBox>
+                        <Label layoutX="10" layoutY="50" text="Fecha Inicio" />
+                        <DatePicker fx:id="fechaInicioPicker" layoutX="150" layoutY="50" prefWidth="200" />
+                        <Label layoutX="370" layoutY="50" text="Fecha Fin" />
+                        <DatePicker fx:id="fechaFinPicker" layoutX="500" layoutY="50" prefWidth="200" />
 
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <CheckBox fx:id="supervisoresCheckBox" text="Sólo Supervisores" />
-                <CheckBox fx:id="empleadosCheckBox" text="Sólo Empleados" />
-                <Label text="Nombre, Apellido" />
-                <TextField fx:id="searchField" prefWidth="250" />
-            </HBox>
+                        <CheckBox fx:id="supervisoresCheckBox" layoutX="720" layoutY="10" text="Sólo Supervisores" />
+                        <CheckBox fx:id="empleadosCheckBox" layoutX="720" layoutY="50" text="Sólo Empleados" />
 
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <Button fx:id="searchButton" prefWidth="150" text="Buscar" />
-                <Button fx:id="graphViewButton" prefWidth="150" text="Vista de Gráficos" />
-            </HBox>
+                        <HBox spacing="10" layoutX="10" layoutY="90">
+                            <Label text="Nombre, Apellido" />
+                            <TextField fx:id="searchField" prefWidth="250" />
+                        </HBox>
+                        <Button fx:id="searchButton" layoutX="720" layoutY="130" prefWidth="150" text="Buscar" />
+                        <Button fx:id="graphViewButton" layoutX="500" layoutY="130" prefWidth="150" text="Vista de Gráficos" />
 
-            <!-- Pane para el gráfico y el detalle a la derecha -->
-            <HBox spacing="10" alignment="CENTER_LEFT" visible="false" managed="false" fx:id="chartContainer">
-                <ScrollPane hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED">
-                    <Pane fx:id="chartPane" prefWidth="1200" prefHeight="1000"/> <!-- Se asegura el prefHeight -->
-                </ScrollPane>
-                <VBox fx:id="detailsPane" prefWidth="270" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
-                    <Label text="Detalles" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
-                    <ListView fx:id="detailsListView"/>
+                        <!-- Pane para el gráfico y el detalle a la derecha -->
+                        <HBox layoutX="10" layoutY="180" prefWidth="870" prefHeight="800" visible="false" managed="false" fx:id="chartContainer">
+                            <ScrollPane hbarPolicy="ALWAYS" vbarPolicy="NEVER" fitToHeight="true">
+                                <Pane fx:id="chartPane" prefWidth="1200" prefHeight="800"/> <!-- Ancho ajustado para permitir scroll -->
+                            </ScrollPane>
+                            <VBox fx:id="detailsPane" prefWidth="270" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
+                                <Label text="Detalles" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+                                <ListView fx:id="detailsListView"/>
+                            </VBox>
+                        </HBox>
+                    </Pane>
                 </VBox>
-            </HBox>
+            </top>
 
-            <!-- Tabla de empleados -->
-            <TableView fx:id="employeeTableView" prefHeight="600"> <!-- Asegura espacio suficiente -->
-                <columns>
-                    <TableColumn fx:id="nombreColumn" text="Nombre completo" minWidth="200" />
-                    <TableColumn fx:id="idColumn" text="ID" minWidth="20" />
-                    <TableColumn fx:id="fechaEntradaColumn" text="Fecha" minWidth="80" />
-                    <TableColumn fx:id="horaEntradaColumn" text="H.de entrada" minWidth="150" />
-                    <TableColumn fx:id="horaSalidaColumn" text="H.de salida" minWidth="150" />
-                    <TableColumn fx:id="tiempoLaboradoColumn" text="Tiempo laborado en horas" minWidth="250" />
-                    <TableColumn fx:id="tipoAsistenciaColumn" text="Tipo de Asistencia" minWidth="170" />
-                    <TableColumn fx:id="tipoSalidaColumn" text="Tipo de Salida" minWidth="150" />
-                    <TableColumn fx:id="estadoColumn" text="Estado" minWidth="100" />
-                </columns>
-            </TableView>
+            <center>
+                <AnchorPane>
+                    <TableView fx:id="employeeTableView" prefHeight="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <columns>
+                            <TableColumn fx:id="nombreColumn" text="Nombre completo" minWidth="200" />
+                            <TableColumn fx:id="idColumn" text="ID" minWidth="20" />
+                            <TableColumn fx:id="fechaEntradaColumn" text="Fecha" minWidth="80" />
+                            <TableColumn fx:id="horaEntradaColumn" text="H.de entrada" minWidth="150" />
+                            <TableColumn fx:id="horaSalidaColumn" text="H.de salida" minWidth="150" />
+                            <TableColumn fx:id="tiempoLaboradoColumn" text="Tiempo laborado en horas" minWidth="250" />
+                            <TableColumn fx:id="tipoAsistenciaColumn" text="Tipo de Asistencia" minWidth="170" />
+                            <TableColumn fx:id="tipoSalidaColumn" text="Tipo de Salida" minWidth="150" />
+                            <TableColumn fx:id="estadoColumn" text="Estado" minWidth="100" />
+                        </columns>
+                    </TableView>
+                </AnchorPane>
+            </center>
 
-            <!-- Paginación -->
-            <HBox alignment="CENTER" spacing="10">
-                <ChoiceBox fx:id="itemsPerPageChoiceBox" prefWidth="100.0" />
-                <Button fx:id="previousButton" text="Previous" />
-                <Button fx:id="page1Button" text="1" />
-                <Button fx:id="page2Button" prefWidth="23.0" text="2" />
-                <Button fx:id="page3Button" text="3" />
-                <Button fx:id="nextButton" text="Next" />
-            </HBox>
-        </VBox>
-    </ScrollPane>
+            <bottom>
+                <AnchorPane minHeight="25.0">
+                    <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10">
+                        <ChoiceBox fx:id="itemsPerPageChoiceBox" prefWidth="100.0" />
+                        <Button fx:id="previousButton" text="Previous" />
+                        <Button fx:id="page1Button" text="1" />
+                        <Button fx:id="page2Button" prefWidth="23.0" text="2" />
+                        <Button fx:id="page3Button" text="3" />
+                        <Button fx:id="nextButton" text="Next" />
+                    </HBox>
+                </AnchorPane>
+            </bottom>
+        </BorderPane>
+
 </AnchorPane>
-
-
-
-
