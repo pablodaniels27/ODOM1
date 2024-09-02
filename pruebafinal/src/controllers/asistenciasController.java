@@ -4,12 +4,10 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.sql.Connection;
@@ -38,6 +36,9 @@ public class asistenciasController {
     private Label statusLabel;
 
     @FXML
+    private Label actionMessageLabel;  // Nuevo label para mostrar mensajes adicionales
+
+    @FXML
     private Button registerEntryButton;
 
     @FXML
@@ -58,7 +59,6 @@ public class asistenciasController {
     public void initialize() {
         startDateTimeUpdater();  // Actualiza la fecha y hora en tiempo real
         loadFingerprintImage();  // Cargar la imagen de huella
-
     }
 
     private void startDateTimeUpdater() {
@@ -130,7 +130,8 @@ public class asistenciasController {
             statement.setTime(3, java.sql.Time.valueOf(now));
             statement.executeUpdate();
 
-            statusLabel.setText("Entrada registrada: " + now.toString());
+            statusLabel.setText("Entrada registrada: " + now.format(DateTimeFormatter.ofPattern("hh:mm a")));
+            actionMessageLabel.setText("Entrada registrada correctamente.");  // Mostrar mensaje adicional
             loadUserRecords();  // Recargar los registros después de insertar
             checkButtonStatus();  // Actualizar el estado de los botones
         } catch (SQLException e) {
@@ -152,7 +153,8 @@ public class asistenciasController {
             statement.setDate(3, java.sql.Date.valueOf(today));
             statement.executeUpdate();
 
-            statusLabel.setText("Salida registrada: " + now.toString());
+            statusLabel.setText("Salida registrada: " + now.format(DateTimeFormatter.ofPattern("hh:mm a")));
+            actionMessageLabel.setText("Salida registrada correctamente.");  // Mostrar mensaje adicional
             loadUserRecords();  // Recargar los registros después de actualizar
             checkButtonStatus();  // Actualizar el estado de los botones
         } catch (SQLException e) {
@@ -185,6 +187,4 @@ public class asistenciasController {
             e.printStackTrace();
         }
     }
-
-
 }

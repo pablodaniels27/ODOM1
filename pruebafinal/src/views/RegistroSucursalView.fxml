@@ -3,38 +3,29 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<HBox alignment="TOP_CENTER" spacing="20" style="-fx-padding: 20;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroSucursalController">
-
+<HBox alignment="TOP_CENTER" spacing="50" style="-fx-padding: 20;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroSucursalController">
 
     <!-- Supervisores -->
-    <VBox alignment="TOP_CENTER" spacing="10">
+    <VBox alignment="TOP_CENTER" spacing="20">
         <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Supervisores" />
-
         <HBox spacing="10">
-            <TextField promptText="Buscar supervisor....." style="-fx-font-size: 14px;" />
+            <TextField fx:id="searchSupervisoresField" promptText="Buscar supervisor..." style="-fx-font-size: 14px;" />
         </HBox>
 
-        <VBox spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
-            <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Pablo NERUDA" />
-            <Label style="-fx-font-size: 14px; -fx-text-fill: grey;" text="Jefe de ingeniería: va a arreglar algo" />
+        <VBox fx:id="supervisoresContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
+            <!-- Aquí se cargarán dinámicamente los supervisores -->
         </VBox>
     </VBox>
 
     <!-- Empleados -->
-    <VBox alignment="TOP_CENTER" spacing="10">
+    <VBox alignment="TOP_CENTER" spacing="20">
         <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Empleados" />
-
         <HBox spacing="10">
-            <TextField promptText="Buscar Empleados....." style="-fx-font-size: 14px;" />
+            <TextField fx:id="searchEmpleadosField" promptText="Buscar empleados..." style="-fx-font-size: 14px;" />
         </HBox>
 
-        <VBox fx:id="empleadosContainer" spacing="10">
+        <VBox fx:id="empleadosContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
             <!-- Aquí se cargarán dinámicamente los empleados -->
-        </VBox>
-
-        <VBox spacing="10">
-            <Button style="-fx-font-size: 14px;" text="Editar" />
-            <Button style="-fx-font-size: 14px;" text="Eliminar" />
         </VBox>
     </VBox>
 

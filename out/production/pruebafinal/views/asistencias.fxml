@@ -16,6 +16,9 @@
 
     <Label text="Seleccione el botón correspondiente a su registro" style="-fx-font-size: 16px; -fx-text-fill: #333;" />
 
+    <Label fx:id="actionMessageLabel" style="-fx-font-size: 14px; -fx-text-fill: #008000;" text="" />
+
+
     <!-- Imagen de huella -->
     <ImageView fx:id="fingerprintImageView" fitWidth="150" fitHeight="150" />
 

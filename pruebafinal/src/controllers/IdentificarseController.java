@@ -80,7 +80,11 @@ public class IdentificarseController {
 
         if (features != null) {
             try (Connection connection = DatabaseConnection.getConnection()) {
-                String sql = "SELECT h.huella, e.id, e.nombres, e.apellido_paterno FROM huellas h JOIN empleados e ON h.empleado_id = e.id";
+                // Filtramos los empleados con estatus_id = 1
+                String sql = "SELECT h.huella, e.id, e.nombres, e.apellido_paterno " +
+                        "FROM huellas h " +
+                        "JOIN empleados e ON h.empleado_id = e.id " +
+                        "WHERE e.estatus_id = 1";
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet resultSet = statement.executeQuery();
 
@@ -131,6 +135,7 @@ public class IdentificarseController {
             Platform.runLater(() -> statusLabel.setText("No se pudieron extraer características de la huella."));
         }
     }
+
 
     private DPFPFeatureSet extractFeatures(DPFPSample sample, DPFPDataPurpose purpose) {
         DPFPFeatureExtraction extractor = DPFPGlobal.getFeatureExtractionFactory().createFeatureExtraction();
