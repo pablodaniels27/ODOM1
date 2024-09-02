@@ -4,11 +4,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -22,11 +20,11 @@ import java.util.Map;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.property.SimpleStringProperty;
 
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.chart.NumberAxis;
+import javafx.util.Callback;
+import javafx.beans.value.ObservableValue;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.control.TableColumn;
+import java.util.Map;
 
 public class MonitoreoController {
 
@@ -114,9 +112,8 @@ public class MonitoreoController {
     @FXML
     private HBox chartContainer;
 
-
-
     private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
+    private GraficosController graficosController = new GraficosController();
 
     private int itemsPerPage = 10;
     private int currentPage = 1;
@@ -209,7 +206,6 @@ public class MonitoreoController {
         // Seleccionar la opción "Todos los departamentos" por defecto
         departamentoChoiceBox.getSelectionModel().selectFirst();
     }
-
 
     private void searchByDateAndDepartment() throws SQLException {
         String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
@@ -319,6 +315,25 @@ public class MonitoreoController {
         showPage(1);
     }
 
+    private void toggleGraphView() {
+        boolean isTableVisible = employeeTableView.isVisible();
+
+        // Ocultar la tabla y mostrar el gráfico, o viceversa
+        employeeTableView.setVisible(!isTableVisible);
+        employeeTableView.setManaged(!isTableVisible);
+
+        chartContainer.setVisible(isTableVisible);
+        chartContainer.setManaged(isTableVisible);
+
+        // Cambiar el estilo del botón según la vista actual
+        if (isTableVisible) {
+            // Cargar el gráfico usando GraficosController
+            graficosController.createBarChart(chartPane, fechaInicioPicker.getValue().toString(), fechaFinPicker.getValue().toString());
+            highlightButton(graphViewButton); // Resaltar el botón de gráficos
+        } else {
+            unhighlightButton(graphViewButton); // Desactivar el resaltado del botón
+        }
+    }
 
     private Callback<TableColumn.CellDataFeatures<Map<String, Object>, String>, ObservableValue<String>> createCellValueFactory(String key) {
         return cellData -> {
@@ -405,26 +420,6 @@ public class MonitoreoController {
         showPage(1);
     }
 
-    private void toggleGraphView() {
-        boolean isTableVisible = employeeTableView.isVisible();
-
-        // Ocultar la tabla y mostrar el gráfico, o viceversa
-        employeeTableView.setVisible(!isTableVisible);
-        employeeTableView.setManaged(!isTableVisible);
-
-        chartContainer.setVisible(isTableVisible);
-        chartContainer.setManaged(isTableVisible);
-
-        // Cambiar el estilo del botón según la vista actual
-        if (isTableVisible) {
-            loadChart(); // Si estamos cambiando a la vista de gráficos, cargar el gráfico
-            highlightButton(graphViewButton); // Resaltar el botón de gráficos
-        } else {
-            unhighlightButton(graphViewButton); // Desactivar el resaltado del botón
-        }
-    }
-
-
     private void highlightButton(Button button) {
         button.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
     }
@@ -432,89 +427,6 @@ public class MonitoreoController {
     private void unhighlightButton(Button button) {
         button.setStyle(""); // Restaurar el estilo predeterminado
     }
-
-    private void loadChart() {
-        // Limpiar el Pane del gráfico
-        chartPane.getChildren().clear();
-
-        // Crear los ejes del gráfico
-        CategoryAxis xAxis = new CategoryAxis();
-        xAxis.setLabel("Departamento");
-
-        NumberAxis yAxis = new NumberAxis();
-        yAxis.setLabel("Cantidad");
-
-        // Crear el gráfico de barras
-        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-        barChart.setTitle("Conteo de Tipos de Asistencia por Departamento");
-        barChart.setPrefWidth(600);  // Ajustar el ancho si es necesario
-        barChart.setPrefHeight(700); // Ajustar la altura si es necesario
-
-        // Crear un mapa para almacenar las series por tipo de asistencia
-        Map<String, XYChart.Series<String, Number>> asistenciaSeriesMap = new HashMap<>();
-
-        try {
-            DatabaseConnection connectNow = new DatabaseConnection();
-            Connection connectDB = connectNow.getConnection();
-
-            // Modificar la consulta para obtener datos agrupados por departamento y tipo de asistencia
-            String query = "SELECT d.nombre AS departamento, t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
-                    "FROM entradas_salidas en " +
-                    "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                    "JOIN empleados e ON en.empleado_id = e.id " +
-                    "JOIN departamentos d ON e.departamento_id = d.id " +
-                    "JOIN dias di ON en.dia_id = di.id " +
-                    "WHERE di.fecha BETWEEN '" + fechaInicioPicker.getValue() + "' AND '" + fechaFinPicker.getValue() + "' " +
-                    "GROUP BY d.nombre, t.nombre";
-
-            Statement statement = connectDB.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-
-            // Recorrer los resultados y llenar las series correspondientes
-            while (resultSet.next()) {
-                String departamento = resultSet.getString("departamento");
-                String tipoAsistencia = resultSet.getString("tipo_asistencia");
-                int cantidad = resultSet.getInt("cantidad");
-
-                // Crear o actualizar la serie para el tipo de asistencia actual
-                XYChart.Series<String, Number> series = asistenciaSeriesMap.computeIfAbsent(tipoAsistencia, k -> {
-                    XYChart.Series<String, Number> newSeries = new XYChart.Series<>();
-                    newSeries.setName(k);  // El nombre de la serie será el tipo de asistencia
-                    barChart.getData().add(newSeries);
-                    return newSeries;
-                });
-
-                // Añadir los datos a la serie correspondiente
-                XYChart.Data<String, Number> data = new XYChart.Data<>(departamento, cantidad);
-                series.getData().add(data);
-
-                // Asegurarse de que el nodo esté disponible antes de trabajar con él
-                data.nodeProperty().addListener((observable, oldValue, newValue) -> {
-                    if (newValue != null) {
-                        // Añadir la etiqueta dentro de la barra
-                        Tooltip.install(newValue, new Tooltip(String.valueOf(cantidad)));
-                        Label label = new Label(String.valueOf(cantidad));
-                        label.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
-                        StackPane stackPane = (StackPane) newValue;
-                        stackPane.getChildren().add(label);
-
-                        // Añadir evento de clic en la barra
-                        newValue.setOnMouseClicked(event -> {
-                            showDetails(departamento, tipoAsistencia);
-                        });
-                    }
-                });
-            }
-
-            connectDB.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        // Añadir el gráfico al Pane
-        chartPane.getChildren().add(barChart);
-    }
-
 
     private void showDetails(String departamento, String tipoAsistencia) {
         detailsListView.getItems().clear(); // Limpiar detalles previos
@@ -558,11 +470,4 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
-
-    //grafica exponencial
-
-
-
-
-
 }
