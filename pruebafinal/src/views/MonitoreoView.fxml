@@ -3,8 +3,8 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="1351.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
-
+<ScrollPane fitToWidth="true" fitToHeight="true" hbarPolicy="AS_NEEDED" vbarPolicy="AS_NEEDED" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
+    <AnchorPane prefHeight="1351.0" prefWidth="890.0">
         <BorderPane style="-fx-background-color: transparent; -fx-padding: 10; -fx-border-width: 10;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
                 <VBox alignment="TOP_CENTER" spacing="10">
@@ -74,5 +74,5 @@
                 </AnchorPane>
             </bottom>
         </BorderPane>
-
-</AnchorPane>
+    </AnchorPane>
+</ScrollPane>

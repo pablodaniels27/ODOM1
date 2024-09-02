@@ -26,6 +26,7 @@ import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.chart.NumberAxis;
 
 public class MonitoreoController {
 
@@ -438,7 +439,7 @@ public class MonitoreoController {
 
         // Crear los ejes del gráfico
         CategoryAxis xAxis = new CategoryAxis();
-        xAxis.setLabel("Tipo de Asistencia");
+        xAxis.setLabel("Departamento");
 
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Cantidad");
@@ -446,11 +447,11 @@ public class MonitoreoController {
         // Crear el gráfico de barras
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
         barChart.setTitle("Conteo de Tipos de Asistencia por Departamento");
-        barChart.setPrefWidth(600);  // Ajustar el ancho
-        barChart.setPrefHeight(800); // Ajustar la altura
+        barChart.setPrefWidth(600);  // Ajustar el ancho si es necesario
+        barChart.setPrefHeight(700); // Ajustar la altura si es necesario
 
-        // Crear un mapa para almacenar las series por departamento
-        Map<String, XYChart.Series<String, Number>> departmentSeriesMap = new HashMap<>();
+        // Crear un mapa para almacenar las series por tipo de asistencia
+        Map<String, XYChart.Series<String, Number>> asistenciaSeriesMap = new HashMap<>();
 
         try {
             DatabaseConnection connectNow = new DatabaseConnection();
@@ -475,16 +476,16 @@ public class MonitoreoController {
                 String tipoAsistencia = resultSet.getString("tipo_asistencia");
                 int cantidad = resultSet.getInt("cantidad");
 
-                // Crear o actualizar la serie para el departamento actual
-                XYChart.Series<String, Number> series = departmentSeriesMap.computeIfAbsent(departamento, k -> {
+                // Crear o actualizar la serie para el tipo de asistencia actual
+                XYChart.Series<String, Number> series = asistenciaSeriesMap.computeIfAbsent(tipoAsistencia, k -> {
                     XYChart.Series<String, Number> newSeries = new XYChart.Series<>();
-                    newSeries.setName(k);
+                    newSeries.setName(k);  // El nombre de la serie será el tipo de asistencia
                     barChart.getData().add(newSeries);
                     return newSeries;
                 });
 
                 // Añadir los datos a la serie correspondiente
-                XYChart.Data<String, Number> data = new XYChart.Data<>(tipoAsistencia, cantidad);
+                XYChart.Data<String, Number> data = new XYChart.Data<>(departamento, cantidad);
                 series.getData().add(data);
 
                 // Asegurarse de que el nodo esté disponible antes de trabajar con él
@@ -503,48 +504,6 @@ public class MonitoreoController {
                         });
                     }
                 });
-            }
-
-            // Crear una serie para el total general si se seleccionaron todos los departamentos
-            if ("Todos los departamentos".equals(departamentoChoiceBox.getValue())) {
-                XYChart.Series<String, Number> totalSeries = new XYChart.Series<>();
-                totalSeries.setName("Total General");
-
-                // Crear una consulta para el total general
-                String totalQuery = "SELECT t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
-                        "FROM entradas_salidas en " +
-                        "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                        "JOIN dias di ON en.dia_id = di.id " +
-                        "WHERE di.fecha BETWEEN '" + fechaInicioPicker.getValue() + "' AND '" + fechaFinPicker.getValue() + "' " +
-                        "GROUP BY t.nombre";
-
-                ResultSet totalResultSet = statement.executeQuery(totalQuery);
-                while (totalResultSet.next()) {
-                    String tipoAsistencia = totalResultSet.getString("tipo_asistencia");
-                    int cantidad = totalResultSet.getInt("cantidad");
-
-                    XYChart.Data<String, Number> totalData = new XYChart.Data<>(tipoAsistencia, cantidad);
-                    totalSeries.getData().add(totalData);
-
-                    // Asegurarse de que el nodo esté disponible antes de trabajar con él
-                    totalData.nodeProperty().addListener((observable, oldValue, newValue) -> {
-                        if (newValue != null) {
-                            // Añadir la etiqueta dentro de la barra
-                            Tooltip.install(newValue, new Tooltip(String.valueOf(cantidad)));
-                            Label label = new Label(String.valueOf(cantidad));
-                            label.setStyle("-fx-text-fill: white; -fx-font-size: 14px;");
-                            StackPane stackPane = (StackPane) newValue;
-                            stackPane.getChildren().add(label);
-
-                            // Añadir evento de clic en la barra
-                            newValue.setOnMouseClicked(event -> {
-                                showDetails("Todos los departamentos", tipoAsistencia);
-                            });
-                        }
-                    });
-                }
-
-                barChart.getData().add(totalSeries);
             }
 
             connectDB.close();
@@ -599,6 +558,9 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
+    //grafica exponencial
+
 
 
 
