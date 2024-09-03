@@ -1,12 +1,12 @@
 package controllers;
 
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 import java.sql.Connection;
@@ -141,11 +141,18 @@ public class InicioController {
         // Limpiar el calendario anterior
         calendarGrid.getChildren().clear();
 
-        // Configurar el título del mes
-        currentMonthLabel.setText(currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault()) + " " + currentYearMonth.getYear());
+        // Configurar el título del mes con la primera letra en mayúscula
+        String month = currentYearMonth.getMonth().getDisplayName(TextStyle.FULL, Locale.getDefault());
+        String formattedMonth = month.substring(0, 1).toUpperCase() + month.substring(1).toLowerCase();
+        String monthYear = formattedMonth + " " + currentYearMonth.getYear();
 
-        // Añadir los días de la semana en la primera fila
-        String[] daysOfWeek = {"Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"};
+        currentMonthLabel.setText(monthYear);
+        currentMonthLabel.setMinWidth(150);  // Incrementa el ancho mínimo
+        currentMonthLabel.setMaxWidth(150);  // Incrementa el ancho máximo
+        currentMonthLabel.setAlignment(Pos.CENTER);  // Centrar el texto
+
+        // Añadir los días de la semana en la primera fila, usando abreviaciones de dos letras
+        String[] daysOfWeek = {"Lu", "Ma", "Mi", "Ju", "Vi", "Sa", "Do"};
         for (int i = 0; i < daysOfWeek.length; i++) {
             Label dayLabel = new Label(daysOfWeek[i]);
             dayLabel.setStyle("-fx-font-weight: bold;");
@@ -164,6 +171,7 @@ public class InicioController {
             LocalDate date = currentYearMonth.atDay(day);
 
             Label dayLabel = new Label(String.valueOf(day));
+            dayLabel.getStyleClass().add("day-label"); // Aplica la clase CSS
             dayLabel.setOnMouseClicked(event -> handleWeekSelection(date));
 
             calendarGrid.add(dayLabel, column, row);
@@ -175,6 +183,10 @@ public class InicioController {
             }
         }
     }
+
+
+
+
 
     // Método para manejar la selección de una semana en el calendario
     private void handleWeekSelection(LocalDate selectedDate) {
@@ -195,7 +207,7 @@ public class InicioController {
                         try {
                             int day = Integer.parseInt(text);
                             if (currentDay.getDayOfMonth() == day) {
-                                node.setStyle("-fx-background-color: lightblue;"); // Cambia el color de fondo
+                                node.getStyleClass().add("selected-day");
                             }
                         } catch (NumberFormatException e) {
                             // Ignorar, ya que este nodo no es un número (es un día de la semana)
@@ -213,10 +225,11 @@ public class InicioController {
         // Limpiar cualquier selección previa
         for (Node node : calendarGrid.getChildren()) {
             if (GridPane.getRowIndex(node) != null && GridPane.getRowIndex(node) > 0) { // No limpiar la primera fila (días de la semana)
-                node.setStyle(""); // Resetear el estilo
+                node.getStyleClass().remove("selected-day"); // Remover la clase de día seleccionado
             }
         }
     }
+
 
     // Método para cargar las asistencias de la semana seleccionada
     private void loadWeekAttendance(LocalDate startOfWeek) {
@@ -242,7 +255,6 @@ public class InicioController {
                 LocalDate date = resultSet.getDate("fecha").toLocalDate();
                 String horaEntrada = resultSet.getString("hora_entrada");
                 String horaSalida = resultSet.getString("hora_salida");
-                System.out.println("Día: " + date + " Entrada: " + horaEntrada + " Salida: " + horaSalida);  // Agrega esta línea para depurar
 
                 // Asignar las horas de entrada y salida a los labels correspondientes
                 switch (date.getDayOfWeek()) {
@@ -325,5 +337,4 @@ public class InicioController {
     // Clase para representar un empleado
     public record Employee(int id, String fullName, String profession) {
     }
-
 }

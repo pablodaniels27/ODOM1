@@ -81,7 +81,7 @@ public class LoginController {
         String username = usernameField.getText();
         String password = passwordField.getText();
 
-        if (username.equals("admin") && password.equals("1234")) {
+        if (username.equals("") && password.equals("")) {
             showMainView();
         } else {
             // Manejar error de login
@@ -96,6 +96,9 @@ public class LoginController {
 
             primaryStage.setScene(scene);
             primaryStage.setTitle("ODOM. SA DE CV");
+            primaryStage.setMinWidth(1040);
+            primaryStage.setMinHeight(480);
+
             primaryStage.show();
         } catch (Exception e) {
             e.printStackTrace();

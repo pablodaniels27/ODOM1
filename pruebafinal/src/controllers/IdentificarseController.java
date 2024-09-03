@@ -23,6 +23,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -35,7 +36,10 @@ public class IdentificarseController {
     private Label statusLabel;
 
     @FXML
-    private Label timerLabel;  // Nuevo Label para el temporizador
+    private Label timerLabel;
+
+    @FXML
+    private Label welcomeLabel;
 
     private DPFPCapture capturer;
     private BufferedImage bufferedImage;
@@ -76,16 +80,21 @@ public class IdentificarseController {
 
         if (features != null) {
             try (Connection connection = DatabaseConnection.getConnection()) {
-                String sql = "SELECT huella FROM empleados";
+                // Filtramos los empleados con estatus_id = 1
+                String sql = "SELECT h.huella, e.id, e.nombres, e.apellido_paterno " +
+                        "FROM huellas h " +
+                        "JOIN empleados e ON h.empleado_id = e.id " +
+                        "WHERE e.estatus_id = 1";
                 PreparedStatement statement = connection.prepareStatement(sql);
                 ResultSet resultSet = statement.executeQuery();
 
                 boolean found = false;
+                int empleadoId = -1;
+
                 while (resultSet.next()) {
                     byte[] templateBytes = resultSet.getBytes("huella");
 
                     if (templateBytes != null) {
-                        // Deserializa el template desde los bytes recuperados de la base de datos
                         try (ByteArrayInputStream bais = new ByteArrayInputStream(templateBytes);
                              ObjectInputStream ois = new ObjectInputStream(bais)) {
 
@@ -95,9 +104,16 @@ public class IdentificarseController {
                             DPFPVerificationResult result = verifier.verify(features, template);
 
                             if (result.isVerified()) {
+                                String nombreEmpleado = resultSet.getString("nombres");
+                                String apellidoPaterno = resultSet.getString("apellido_paterno");
+                                empleadoId = resultSet.getInt("id");
+
+                                int finalEmpleadoId = empleadoId;
                                 Platform.runLater(() -> {
+                                    welcomeLabel.setText("Bienvenido, " + nombreEmpleado + " " + apellidoPaterno);
+                                    welcomeLabel.setVisible(true);
                                     statusLabel.setText("Verificación exitosa.");
-                                    startRedirectTimer();  // Iniciar el temporizador después de la verificación exitosa
+                                    startRedirectTimer(finalEmpleadoId);
                                 });
                                 stopCapture();
                                 found = true;
@@ -120,6 +136,7 @@ public class IdentificarseController {
         }
     }
 
+
     private DPFPFeatureSet extractFeatures(DPFPSample sample, DPFPDataPurpose purpose) {
         DPFPFeatureExtraction extractor = DPFPGlobal.getFeatureExtractionFactory().createFeatureExtraction();
         try {
@@ -130,11 +147,11 @@ public class IdentificarseController {
         }
     }
 
-    private void startRedirectTimer() {
+    private void startRedirectTimer(int empleadoId) {
         timerLabel.setVisible(true);
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
-            int countdown = 5;
+            int countdown = 3;
 
             @Override
             public void run() {
@@ -144,19 +161,27 @@ public class IdentificarseController {
                         countdown--;
                     } else {
                         timer.cancel();
-                        redirectToAsistencias();  // Redirigir después de que el temporizador llegue a 0
+                        redirectToAsistencias(empleadoId);
                     }
                 });
             }
         }, 0, 1000);
     }
 
-    private void redirectToAsistencias() {
+    private void redirectToAsistencias(int empleadoId) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/asistencias.fxml"));
             Parent root = loader.load();
+
+            asistenciasController asistenciasController = loader.getController();
+            asistenciasController.setEmpleadoId(empleadoId);
+
+            Scene scene = new Scene(root);
             Stage stage = (Stage) statusLabel.getScene().getWindow();
-            stage.setScene(new Scene(root));
+            stage.setScene(scene);
+
+            stage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/ODOM.jpg"))));
+
             stage.setTitle("Asistencias");
             stage.show();
         } catch (Exception e) {
@@ -171,6 +196,5 @@ public class IdentificarseController {
 
     public void closeWindow() {
         stopCapture();
-        // Código para cerrar la ventana si es necesario
     }
 }

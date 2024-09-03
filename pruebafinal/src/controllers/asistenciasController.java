@@ -1,33 +1,42 @@
 package controllers;
 
-import com.digitalpersona.onetouch.*;
-import com.digitalpersona.onetouch.capture.*;
-import com.digitalpersona.onetouch.capture.event.*;
-import com.digitalpersona.onetouch.processing.*;
-import com.digitalpersona.onetouch.verification.*;
-import javafx.application.Platform;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.util.Duration;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import java.util.Objects;
 
 public class asistenciasController {
 
     @FXML
-    private ImageView fingerprintImageView;
+    private Label dateTimeLabel;
+
+    @FXML
+    private Label entryTimeLabel;
+
+    @FXML
+    private Label exitTimeLabel;
 
     @FXML
     private Label statusLabel;
+
+    @FXML
+    private Label actionMessageLabel;  // Nuevo label para mostrar mensajes adicionales
 
     @FXML
     private Button registerEntryButton;
@@ -35,153 +44,178 @@ public class asistenciasController {
     @FXML
     private Button registerExitButton;
 
-    private DPFPCapture capturer;
-    private DPFPVerification verifier;
-    private DPFPFeatureSet features;
-    private String currentEmployeeId;
+    @FXML
+    private ImageView fingerprintImageView;
 
+    private int empleadoId;
+
+    public void setEmpleadoId(int id) {
+        this.empleadoId = id;
+        loadUserRecords();
+        checkButtonStatus();
+    }
+
+    @FXML
     public void initialize() {
-        capturer = DPFPGlobal.getCaptureFactory().createCapture();
-        verifier = DPFPGlobal.getVerificationFactory().createVerification(DPFPVerification.MEDIUM_SECURITY_FAR);
-        initCaptureEvents();
-        startCapture();
-        statusLabel.setText("Identifíquese con su huella por favor");
-
-        registerEntryButton.setOnAction(event -> registerAttendance("entrada"));
-        registerExitButton.setOnAction(event -> registerAttendance("salida"));
+        startDateTimeUpdater();  // Actualiza la fecha y hora en tiempo real
+        loadFingerprintImage();  // Cargar la imagen de huella
     }
 
-    private void initCaptureEvents() {
-        capturer.addDataListener(new DPFPDataAdapter() {
-            @Override
-            public void dataAcquired(DPFPDataEvent e) {
-                Platform.runLater(() -> showFingerprintImage(e.getSample()));
-                verifyFingerprint(e.getSample());
+    private void startDateTimeUpdater() {
+        Timeline clock = new Timeline(new KeyFrame(Duration.ZERO, e -> {
+            LocalDateTime currentTime = LocalDateTime.now();
+
+            // Formatear la fecha y hora de manera amigable
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "MX"));
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+
+            String formattedDate = currentTime.format(dateFormatter);
+            String formattedTime = currentTime.format(timeFormatter);
+
+            dateTimeLabel.setText(formattedDate + " - " + formattedTime);
+        }), new KeyFrame(Duration.seconds(1)));
+        clock.setCycleCount(Animation.INDEFINITE);
+        clock.play();
+    }
+
+    private void loadUserRecords() {
+        LocalDate today = LocalDate.now();
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            String sql = "SELECT hora_entrada, hora_salida FROM entradas_salidas " +
+                    "JOIN dias ON entradas_salidas.dia_id = dias.id " +
+                    "WHERE entradas_salidas.empleado_id = ? AND dias.fecha = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, empleadoId);
+            statement.setDate(2, java.sql.Date.valueOf(today));
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                LocalTime entrada = resultSet.getTime("hora_entrada").toLocalTime();
+                LocalTime salida = resultSet.getTime("hora_salida") != null ? resultSet.getTime("hora_salida").toLocalTime() : null;
+
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+
+                entryTimeLabel.setText("Te registraste a las: " + entrada.format(timeFormatter));
+
+                if (salida != null) {
+                    exitTimeLabel.setText("Saliste a las: " + salida.format(timeFormatter));
+                } else {
+                    exitTimeLabel.setText("Aún no has registrado tu salida.");
+                }
+            } else {
+                entryTimeLabel.setText("Aún no hay registros en el día");
+                exitTimeLabel.setText("");
             }
-        });
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void startCapture() {
-        capturer.startCapture();
-    }
-
-    private void showFingerprintImage(DPFPSample sample) {
-        BufferedImage bufferedImage = (BufferedImage) DPFPGlobal.getSampleConversionFactory().createImage(sample);
-        javafx.scene.image.Image fingerprintImage = javafx.embed.swing.SwingFXUtils.toFXImage(bufferedImage, null);
+    private void loadFingerprintImage() {
+        Image fingerprintImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/Huella.jpg")));
         fingerprintImageView.setImage(fingerprintImage);
     }
 
-    private void verifyFingerprint(DPFPSample sample) {
-        features = extractFeatures(sample, DPFPDataPurpose.DATA_PURPOSE_VERIFICATION);
+    @FXML
+    private void registerEntry() {
+        LocalDate today = LocalDate.now();
+        LocalTime now = LocalTime.now();
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            int diaId = getDiaId(connection, today);
 
-        if (features != null) {
-            try (Connection connection = DatabaseConnection.getConnection()) {
-                String sql = "SELECT id, huella FROM empleados";
-                PreparedStatement statement = connection.prepareStatement(sql);
-                ResultSet resultSet = statement.executeQuery();
+            // Insertar entrada en la base de datos
+            String sql = "INSERT INTO entradas_salidas (empleado_id, dia_id, hora_entrada, tipo_asistencia_id) " +
+                    "VALUES (?, ?, ?, 1)";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, empleadoId);
+            statement.setInt(2, diaId);
+            statement.setTime(3, java.sql.Time.valueOf(now));
+            statement.executeUpdate();
 
-                boolean found = false;
-                while (resultSet.next()) {
-                    byte[] templateBytes = resultSet.getBytes("huella");
+            // Formato 24 horas para la hora registrada
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+            statusLabel.setText("Entrada registrada: " + now.format(timeFormatter));
 
-                    if (templateBytes != null) {
-                        try (ByteArrayInputStream bais = new ByteArrayInputStream(templateBytes);
-                             ObjectInputStream ois = new ObjectInputStream(bais)) {
-
-                            byte[] serializedTemplate = (byte[]) ois.readObject();
-                            DPFPTemplate template = DPFPGlobal.getTemplateFactory().createTemplate(serializedTemplate);
-
-                            DPFPVerificationResult result = verifier.verify(features, template);
-
-                            if (result.isVerified()) {
-                                currentEmployeeId = resultSet.getString("id");
-                                Platform.runLater(() -> statusLabel.setText("Verificación exitosa."));
-                                found = true;
-                                stopCapture();
-                                break;
-                            }
-                        } catch (Exception e) {
-                            Platform.runLater(() -> statusLabel.setText("Error al deserializar la huella: " + e.getMessage()));
-                        }
-                    }
-                }
-
-                if (!found) {
-                    Platform.runLater(() -> statusLabel.setText("Huella no reconocida."));
-                }
-            } catch (SQLException e) {
-                Platform.runLater(() -> statusLabel.setText("Error de base de datos: " + e.getMessage()));
-            }
-        } else {
-            Platform.runLater(() -> statusLabel.setText("No se pudieron extraer características de la huella."));
-        }
-    }
-
-    private DPFPFeatureSet extractFeatures(DPFPSample sample, DPFPDataPurpose purpose) {
-        DPFPFeatureExtraction extractor = DPFPGlobal.getFeatureExtractionFactory().createFeatureExtraction();
-        try {
-            return extractor.createFeatureSet(sample, purpose);
-        } catch (DPFPImageQualityException e) {
-            Platform.runLater(() -> statusLabel.setText("Error al extraer características: " + e.getMessage()));
-            return null;
-        }
-    }
-
-    private void registerAttendance(String tipo) {
-        if (currentEmployeeId != null) {
-            try (Connection connection = DatabaseConnection.getConnection()) {
-                // Obtener el dia_id de la fecha actual
-                String dayQuery = "SELECT id FROM dias WHERE fecha = ?";
-                PreparedStatement dayStatement = connection.prepareStatement(dayQuery);
-                dayStatement.setDate(1, java.sql.Date.valueOf(LocalDate.now()));
-                ResultSet dayResult = dayStatement.executeQuery();
-
-                int diaId;
-                if (dayResult.next()) {
-                    diaId = dayResult.getInt("id");
-                } else {
-                    // Si no existe el dia_id para la fecha actual, lo creamos
-                    String insertDayQuery = "INSERT INTO dias (fecha) VALUES (?)";
-                    PreparedStatement insertDayStatement = connection.prepareStatement(insertDayQuery, PreparedStatement.RETURN_GENERATED_KEYS);
-                    insertDayStatement.setDate(1, java.sql.Date.valueOf(LocalDate.now()));
-                    insertDayStatement.executeUpdate();
-                    ResultSet generatedKeys = insertDayStatement.getGeneratedKeys();
-                    if (generatedKeys.next()) {
-                        diaId = generatedKeys.getInt(1);
-                    } else {
-                        throw new SQLException("Error al insertar el día actual.");
-                    }
-                }
-
-                if (tipo.equals("entrada")) {
-                    // Insertar registro de entrada
-                    String sql = "INSERT INTO entradas_salidas (empleado_id, dia_id, hora_entrada) VALUES (?, ?, ?)";
-                    PreparedStatement statement = connection.prepareStatement(sql);
-                    statement.setString(1, currentEmployeeId);
-                    statement.setInt(2, diaId);
-                    statement.setTime(3, java.sql.Time.valueOf(LocalTime.now()));
-                    statement.executeUpdate();
-                    Platform.runLater(() -> statusLabel.setText("Registro de entrada exitoso."));
-                } else if (tipo.equals("salida")) {
-                    // Actualizar registro de salida
-                    String sql = "UPDATE entradas_salidas SET hora_salida = ? WHERE empleado_id = ? AND dia_id = ?";
-                    PreparedStatement statement = connection.prepareStatement(sql);
-                    statement.setTime(1, java.sql.Time.valueOf(LocalTime.now()));
-                    statement.setString(2, currentEmployeeId);
-                    statement.setInt(3, diaId);
-                    statement.executeUpdate();
-                    Platform.runLater(() -> statusLabel.setText("Registro de salida exitoso."));
-                }
-            } catch (SQLException e) {
-                Platform.runLater(() -> statusLabel.setText("Error al registrar asistencia: " + e.getMessage()));
-            }
-        } else {
-            Platform.runLater(() -> statusLabel.setText("Primero debes verificar tu huella."));
+            loadUserRecords();  // Recargar los registros después de insertar
+            checkButtonStatus();  // Actualizar el estado de los botones
+        } catch (SQLException e) {
+            statusLabel.setText("Error al registrar entrada: " + e.getMessage());
         }
     }
 
     @FXML
-    private void stopCapture() {
-        capturer.stopCapture();
+    private void registerExit() {
+        LocalTime now = LocalTime.now();
+        LocalDate today = LocalDate.now();
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            int diaId = getDiaId(connection, today);
+
+            // Actualizar salida en la base de datos
+            String sql = "UPDATE entradas_salidas SET hora_salida = ?, tipo_salida_id = 4 WHERE empleado_id = ? " +
+                    "AND dia_id = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setTime(1, java.sql.Time.valueOf(now));
+            statement.setInt(2, empleadoId);
+            statement.setInt(3, diaId);
+            statement.executeUpdate();
+
+            // Formato 24 horas para la hora registrada
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+            statusLabel.setText("Salida registrada: " + now.format(timeFormatter));
+
+            loadUserRecords();  // Recargar los registros después de actualizar
+            checkButtonStatus();  // Actualizar el estado de los botones
+        } catch (SQLException e) {
+            statusLabel.setText("Error al registrar salida: " + e.getMessage());
+        }
+    }
+
+    private void checkButtonStatus() {
+        LocalDate today = LocalDate.now();
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            String sql = "SELECT hora_entrada, hora_salida FROM entradas_salidas " +
+                    "JOIN dias ON entradas_salidas.dia_id = dias.id " +
+                    "WHERE entradas_salidas.empleado_id = ? AND dias.fecha = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, empleadoId);
+            statement.setDate(2, java.sql.Date.valueOf(today));
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                LocalTime entrada = resultSet.getTime("hora_entrada").toLocalTime();
+                LocalTime salida = resultSet.getTime("hora_salida") != null ? resultSet.getTime("hora_salida").toLocalTime() : null;
+
+                registerEntryButton.setDisable(entrada != null);  // Desactivar botón si ya se registró entrada
+                registerExitButton.setDisable(salida != null || entrada == null);  // Desactivar botón si ya se registró salida o no hay entrada
+            } else {
+                registerEntryButton.setDisable(false);
+                registerExitButton.setDisable(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    private int getDiaId(Connection connection, LocalDate date) throws SQLException {
+        String selectDiaSql = "SELECT id FROM dias WHERE fecha = ?";
+        PreparedStatement selectDiaStatement = connection.prepareStatement(selectDiaSql);
+        selectDiaStatement.setDate(1, java.sql.Date.valueOf(date));
+        ResultSet resultSet = selectDiaStatement.executeQuery();
+
+        if (resultSet.next()) {
+            return resultSet.getInt("id");
+        } else {
+            // Insertar un nuevo registro en la tabla dias si no existe
+            String insertDiaSql = "INSERT INTO dias (fecha) VALUES (?)";
+            PreparedStatement insertDiaStatement = connection.prepareStatement(insertDiaSql, PreparedStatement.RETURN_GENERATED_KEYS);
+            insertDiaStatement.setDate(1, java.sql.Date.valueOf(date));
+            insertDiaStatement.executeUpdate();
+
+            ResultSet generatedKeys = insertDiaStatement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                return generatedKeys.getInt(1);
+            } else {
+                throw new SQLException("Failed to insert or retrieve dia_id.");
+            }
+        }
     }
 }
