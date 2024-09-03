@@ -20,7 +20,7 @@ import java.util.Objects;
                 PreLoginView preLoginController = loader.getController();
                 preLoginController.setPrimaryStage(primaryStage);  // Pasar la referencia de la ventana principal al controlador
 
-                // Configurar la escena y la ventana principal
+                // Configurar l+a escena y la ventana principal
                 Scene scene = new Scene(root);
                 primaryStage.setScene(scene);
                 primaryStage.setTitle("ODOM. SA DE CV");

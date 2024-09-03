@@ -238,7 +238,7 @@ public class RegistroController {
                 }
 
                 // Actualizar el campo huella_id en la tabla empleados
-                String updateEmpleadoHuellaSQL = "UPDATE empleados SET huella_id = ? WHERE id = ?";
+                String updateEmpleadoHuellaSQL = "UPDATE empleados SET huella = ? WHERE id = ?";
                 PreparedStatement updateEmpleadoHuellaStmt = connection.prepareStatement(updateEmpleadoHuellaSQL);
                 updateEmpleadoHuellaStmt.setInt(1, huellaId);
                 updateEmpleadoHuellaStmt.setInt(2, empleadoId);
@@ -334,6 +334,6 @@ public class RegistroController {
         curpField.setText("PEGA901101HMCRRL00");
         profesionField.setText("Ingeniero");
         departamentoChoiceBox.getSelectionModel().selectFirst();
-        puestoChoiceBox.getSelectionModel().selectFirst();
+        puestoChoiceBox.getSelectionModel().select(2);
     }
 }
