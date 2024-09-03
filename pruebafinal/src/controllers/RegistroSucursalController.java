@@ -12,9 +12,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Objects;
 
 public class RegistroSucursalController {
@@ -35,53 +35,74 @@ public class RegistroSucursalController {
 
     @FXML
     public void initialize() {
-        searchEmpleadosField.textProperty().addListener((observable, oldValue, newValue) -> buscarEmpleados(newValue));
-        searchSupervisoresField.textProperty().addListener((observable, oldValue, newValue) -> buscarSupervisores(newValue));
-
         cargarEmpleados();
         cargarSupervisores();
+
+        searchEmpleadosField.textProperty().addListener((observable, oldValue, newValue) -> {
+            cargarEmpleados(newValue);
+        });
+
+        searchSupervisoresField.textProperty().addListener((observable, oldValue, newValue) -> {
+            cargarSupervisores(newValue);
+        });
     }
 
     private void cargarEmpleados() {
+        cargarEmpleados("");
+    }
+
+    private void cargarSupervisores() {
+        cargarSupervisores("");
+    }
+
+    private void cargarEmpleados(String filtro) {
         empleadosContainer.getChildren().clear();
 
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 3";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
+            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 3 AND estatus_id != 4";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                int empleadoId = resultSet.getInt("id");
+                int id = resultSet.getInt("id");
                 String nombre = resultSet.getString("nombres");
                 String apellidoPaterno = resultSet.getString("apellido_paterno");
                 String profesion = resultSet.getString("profesion");
                 int estatusId = resultSet.getInt("estatus_id");
 
-                HBox empleadoBox = crearEmpleadoBox(empleadoId, nombre, apellidoPaterno, profesion, estatusId);
-                empleadosContainer.getChildren().add(empleadoBox);
+                String nombreCompleto = nombre + " " + apellidoPaterno;
+
+                if (nombreCompleto.toLowerCase().contains(filtro.toLowerCase())) {
+                    HBox empleadoBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
+                    empleadosContainer.getChildren().add(empleadoBox);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    private void cargarSupervisores() {
+    private void cargarSupervisores(String filtro) {
         supervisoresContainer.getChildren().clear();
 
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 2";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
+            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 2 AND estatus_id != 4";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                int supervisorId = resultSet.getInt("id");
+                int id = resultSet.getInt("id");
                 String nombre = resultSet.getString("nombres");
                 String apellidoPaterno = resultSet.getString("apellido_paterno");
                 String profesion = resultSet.getString("profesion");
                 int estatusId = resultSet.getInt("estatus_id");
 
-                HBox supervisorBox = crearEmpleadoBox(supervisorId, nombre, apellidoPaterno, profesion, estatusId);
-                supervisoresContainer.getChildren().add(supervisorBox);
+                String nombreCompleto = nombre + " " + apellidoPaterno;
+
+                if (nombreCompleto.toLowerCase().contains(filtro.toLowerCase())) {
+                    HBox supervisorBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
+                    supervisoresContainer.getChildren().add(supervisorBox);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -92,8 +113,6 @@ public class RegistroSucursalController {
         HBox empleadoBox = new HBox();
         empleadoBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;");
         empleadoBox.setSpacing(10);
-        empleadoBox.setPrefHeight(Region.USE_COMPUTED_SIZE);
-        empleadoBox.setMinHeight(Region.USE_COMPUTED_SIZE);
 
         ImageView statusIcon = new ImageView();
         statusIcon.setFitHeight(10);
@@ -124,12 +143,15 @@ public class RegistroSucursalController {
         VBox textContainer = new VBox();
         textContainer.setSpacing(5);
 
-        Label nombreLabel = new Label(nombre.toUpperCase() + " " + apellidoPaterno.toUpperCase());
+        // Apilar nombre y apellido
+        Label nombreLabel = new Label(nombre.toUpperCase());
         nombreLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label apellidoPaternoLabel = new Label(apellidoPaterno.toUpperCase());
+        apellidoPaternoLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
         Label profesionLabel = new Label(profesion != null ? profesion : "Profesión no especificada");
         profesionLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: grey;");
 
-        textContainer.getChildren().addAll(nombreLabel, profesionLabel);
+        textContainer.getChildren().addAll(nombreLabel, apellidoPaternoLabel, profesionLabel);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -139,7 +161,8 @@ public class RegistroSucursalController {
         botonesContainer.setVisible(false);
 
         Button editarButton = new Button("Editar");
-        Button eliminarButton = new Button("Eliminar");
+        Button eliminarButton = new Button("Dar baja");
+        eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId));
         botonesContainer.getChildren().addAll(editarButton, eliminarButton);
 
         empleadoBox.getChildren().addAll(statusIcon, textContainer, spacer, botonesContainer);
@@ -171,49 +194,18 @@ public class RegistroSucursalController {
         return empleadoBox;
     }
 
-    private void buscarEmpleados(String query) {
-        empleadosContainer.getChildren().clear();
-
+    private void darDeBajaEmpleado(int empleadoId) {
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 3 " +
-                    "AND (nombres LIKE '%" + query + "%' OR apellido_paterno LIKE '%" + query + "%')";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
+            // Cambiar el estatus del empleado a 'Baja'
+            String sql = "UPDATE empleados SET estatus_id = 4 WHERE id = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, empleadoId);
+            statement.executeUpdate();
 
-            while (resultSet.next()) {
-                int empleadoId = resultSet.getInt("id");
-                String nombre = resultSet.getString("nombres");
-                String apellidoPaterno = resultSet.getString("apellido_paterno");
-                String profesion = resultSet.getString("profesion");
-                int estatusId = resultSet.getInt("estatus_id");
+            // Refrescar la lista de empleados después de la actualización
+            cargarEmpleados(searchEmpleadosField.getText());
+            cargarSupervisores(searchSupervisoresField.getText());
 
-                HBox empleadoBox = crearEmpleadoBox(empleadoId, nombre, apellidoPaterno, profesion, estatusId);
-                empleadosContainer.getChildren().add(empleadoBox);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void buscarSupervisores(String query) {
-        supervisoresContainer.getChildren().clear();
-
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 2 " +
-                    "AND (nombres LIKE '%" + query + "%' OR apellido_paterno LIKE '%" + query + "%')";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-
-            while (resultSet.next()) {
-                int supervisorId = resultSet.getInt("id");
-                String nombre = resultSet.getString("nombres");
-                String apellidoPaterno = resultSet.getString("apellido_paterno");
-                String profesion = resultSet.getString("profesion");
-                int estatusId = resultSet.getInt("estatus_id");
-
-                HBox supervisorBox = crearEmpleadoBox(supervisorId, nombre, apellidoPaterno, profesion, estatusId);
-                supervisoresContainer.getChildren().add(supervisorBox);
-            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
