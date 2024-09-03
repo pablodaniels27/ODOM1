@@ -188,9 +188,6 @@ public class InicioController {
 
 
 
-
-
-
     // Método para manejar la selección de una semana en el calendario
     private void handleWeekSelection(LocalDate selectedDate) {
         // Limpiar la selección previa

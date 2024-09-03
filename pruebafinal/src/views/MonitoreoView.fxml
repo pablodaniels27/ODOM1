@@ -19,15 +19,15 @@
                     <Label layoutX="370" layoutY="50" text="Fecha Fin" />
                     <DatePicker fx:id="fechaFinPicker" layoutX="500" layoutY="50" prefWidth="200" />
 
-                    <CheckBox fx:id="supervisoresCheckBox" layoutX="720" layoutY="10" text="Sólo Supervisores" />
-                    <CheckBox fx:id="empleadosCheckBox" layoutX="720" layoutY="50" text="Sólo Empleados" />
-
+                    <CheckBox fx:id="supervisoresCheckBox" layoutX="720" layoutY="10" text="Sólo Supervisores" onAction="#handleFilterChange"/>
+                    <CheckBox fx:id="empleadosCheckBox" layoutX="720" layoutY="50" text="Sólo Empleados" onAction="#handleFilterChange"/>
 
                     <HBox spacing="10" layoutX="10" layoutY="90">
                         <Label text="Nombre, Apellido" />
                         <TextField fx:id="searchField" prefWidth="250" />
                     </HBox>
-                    <Button fx:id="searchButton" layoutX="720" layoutY="130" prefWidth="150" text="Buscar" />
+                    <Button fx:id="searchButton" layoutX="620" layoutY="130" prefWidth="100" text="Buscar" />
+                    <Button fx:id="resetButton" layoutX="730" layoutY="130" prefWidth="150" text="Restablecer Filtros" onAction="#resetFilters"/>
                     <Button fx:id="graphViewButton" layoutX="500" layoutY="130" prefWidth="150" text="Vista de Gráficos" />
 
                     <!-- Pane para el gráfico y el detalle a la derecha -->
