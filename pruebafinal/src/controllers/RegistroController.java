@@ -334,6 +334,6 @@ public class RegistroController {
         curpField.setText("PEGA901101HMCRRL00");
         profesionField.setText("Ingeniero");
         departamentoChoiceBox.getSelectionModel().selectFirst();
-        puestoChoiceBox.getSelectionModel().selectFirst();
+        puestoChoiceBox.getSelectionModel().select(2);
     }
 }
