@@ -1,0 +1,16 @@
+<component name="libraryTable">
+  <library name="dpotjni">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/Bin/Java/dpotjni.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/Bin/Java/dpotapi.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/Bin/Java/dpfpverification.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/Bin/Java/dpfpenrollment.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/One Touch SDK/Java/Samples/Console/src" />
+      <root url="file://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/One Touch SDK/Java/Samples/Enrollment/src" />
+      <root url="file://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/One Touch SDK/Java/Samples/UISupport/src" />
+    </SOURCES>
+  </library>
+</component>
