@@ -5,6 +5,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
@@ -24,6 +25,9 @@ public class InicioController {
 
     @FXML
     private Label currentDate;
+
+    @FXML
+    private SplitPane splitPane;
 
     @FXML
     private VBox employeeListContainer;
@@ -67,7 +71,15 @@ public class InicioController {
 
     @FXML
     private void initialize() {
-        // Mostrar la fecha actual
+        splitPane.setDividerPositions(0.5);
+
+        // Hacer que el divisor sea invisible y no interactivo
+        splitPane.lookupAll(".split-pane-divider").forEach(div -> {
+            div.setStyle("-fx-background-color: transparent;");  // Hacer el divisor invisible
+            div.setMouseTransparent(true);  // Desactivar la interacción del mouse
+        });
+
+                    // Mostrar la fecha actual
         currentDate.setText(LocalDate.now().toString());
 
         // Inicializar el mes actual
@@ -122,6 +134,9 @@ public class InicioController {
 
         return vbox;
     }
+    // Dentro de tu controlador 'InicioController'
+
+
 
     // Método que maneja la selección de un empleado en la lista
     private void handleEmployeeSelection(MouseEvent event, Employee employee) {
