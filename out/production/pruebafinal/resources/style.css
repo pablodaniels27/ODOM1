@@ -167,5 +167,23 @@
     -fx-border-width: 0;
 }
 
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #2196F3; /* Azul que deseas */
+    -fx-background-radius: 4; /* Redondear las esquinas */
+    -fx-pref-width: 16px; /* Ancho del ScrollBar */
+}
+
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #2196F3; /* Azul que deseas */
+    -fx-background-radius: 4; /* Redondear las esquinas */
+    -fx-pref-height: 16px; /* Altura del ScrollBar horizontal, si lo usas */
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: #2196F3;
+}
+
+
 
 
