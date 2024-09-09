@@ -7,19 +7,17 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.util.Callback;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.Duration;
-import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import javafx.beans.value.ObservableValue;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ObservableValue;
+import javafx.util.Callback;
 
 public class MonitoreoController {
 
@@ -239,12 +237,7 @@ public class MonitoreoController {
                 String horaEntrada = resultSet.getString("hora_entrada");
                 String horaSalida = resultSet.getString("hora_salida");
                 if (horaEntrada != null && horaSalida != null) {
-                    LocalTime entrada = LocalTime.parse(horaEntrada);
-                    LocalTime salida = LocalTime.parse(horaSalida);
-                    Duration tiempoLaborado = Duration.between(entrada, salida);
-                    employeeData.put("tiempoLaborado", String.format("%d:%02d",
-                            tiempoLaborado.toHours(),
-                            tiempoLaborado.toMinutes() % 60));
+                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
                 } else {
                     employeeData.put("tiempoLaborado", "N/A");
                 }
@@ -347,12 +340,7 @@ public class MonitoreoController {
                 String horaEntrada = resultSet.getString("hora_entrada");
                 String horaSalida = resultSet.getString("hora_salida");
                 if (horaEntrada != null && horaSalida != null) {
-                    LocalTime entrada = LocalTime.parse(horaEntrada);
-                    LocalTime salida = LocalTime.parse(horaSalida);
-                    Duration tiempoLaborado = Duration.between(entrada, salida);
-                    employeeData.put("tiempoLaborado", String.format("%d:%02d",
-                            tiempoLaborado.toHours(),
-                            tiempoLaborado.toMinutes() % 60));
+                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
                 } else {
                     employeeData.put("tiempoLaborado", "N/A");
                 }
@@ -371,6 +359,10 @@ public class MonitoreoController {
 
         // Mostrar la primera página de resultados
         showPage(1);
+    }
+
+    private String calculateTiempoLaborado(String horaEntrada, String horaSalida) {
+        return ""; // Implementación del cálculo de tiempo laborado
     }
 
     @FXML
@@ -416,12 +408,7 @@ public class MonitoreoController {
                 String horaEntrada = resultSet.getString("hora_entrada");
                 String horaSalida = resultSet.getString("hora_salida");
                 if (horaEntrada != null && horaSalida != null) {
-                    LocalTime entrada = LocalTime.parse(horaEntrada);
-                    LocalTime salida = LocalTime.parse(horaSalida);
-                    Duration tiempoLaborado = Duration.between(entrada, salida);
-                    employeeData.put("tiempoLaborado", String.format("%d:%02d",
-                            tiempoLaborado.toHours(),
-                            tiempoLaborado.toMinutes() % 60));
+                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
                 } else {
                     employeeData.put("tiempoLaborado", "N/A");
                 }
@@ -444,7 +431,6 @@ public class MonitoreoController {
         // Mostrar la primera página de resultados
         showPage(1);
     }
-
 
     private Callback<TableColumn.CellDataFeatures<Map<String, Object>, String>, ObservableValue<String>> createCellValueFactory(String key) {
         return cellData -> {
@@ -477,22 +463,23 @@ public class MonitoreoController {
     }
 
     private void toggleGraphView() {
+
         boolean isTableVisible = employeeTableView.isVisible();
-
-        // Ocultar la tabla y mostrar el gráfico, o viceversa
         employeeTableView.setVisible(!isTableVisible);
-        employeeTableView.setManaged(!isTableVisible);
-
         chartContainer.setVisible(isTableVisible);
-        chartContainer.setManaged(isTableVisible);
 
-        // Cambiar el estilo del botón según la vista actual
         if (isTableVisible) {
-            // Delegar la creación del gráfico al GraficosController
-            graficosController.createBarChart(chartPane, fechaInicioPicker.getValue().toString(), fechaFinPicker.getValue().toString());
-            highlightButton(graphViewButton); // Resaltar el botón de gráficos
+            // Obtener el departamento seleccionado, fechas, y si se incluyen supervisores o empleados
+            String departamentoSeleccionado = departamentoChoiceBox.getValue();
+            String fechaInicio = fechaInicioPicker.getValue() != null ? fechaInicioPicker.getValue().toString() : "";
+            String fechaFin = fechaFinPicker.getValue() != null ? fechaFinPicker.getValue().toString() : "";
+            boolean incluirSupervisores = supervisoresCheckBox.isSelected();
+            boolean incluirEmpleados = empleadosCheckBox.isSelected();
+
+            graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, incluirSupervisores, incluirEmpleados);
+            highlightButton(graphViewButton);
         } else {
-            unhighlightButton(graphViewButton); // Desactivar el resaltado del botón
+            unhighlightButton(graphViewButton);
         }
     }
 

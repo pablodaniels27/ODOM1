@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="1351.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
+
+    <BorderPane style="-fx-background-color: transparent; -fx-padding: 10; -fx-border-width: 10;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+        <top>
+            <VBox alignment="TOP_CENTER" spacing="10">
+                <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Monitoreo General de Empleados" />
+                <Pane>
+                    <HBox spacing="10" layoutX="10" layoutY="10">
+                        <Label text="Departamento" />
+                        <ChoiceBox fx:id="departamentoChoiceBox" minWidth="200" prefWidth="250" style="-fx-font-size: 12px;" />
+                    </HBox>
+                    <Label layoutX="10" layoutY="50" text="Fecha Inicio" />
+                    <DatePicker fx:id="fechaInicioPicker" layoutX="150" layoutY="50" prefWidth="200" />
+                    <Label layoutX="370" layoutY="50" text="Fecha Fin" />
+                    <DatePicker fx:id="fechaFinPicker" layoutX="500" layoutY="50" prefWidth="200" />
+
+                    <CheckBox fx:id="supervisoresCheckBox" layoutX="720" layoutY="10" text="Sólo Supervisores" onAction="#handleFilterChange"/>
+                    <CheckBox fx:id="empleadosCheckBox" layoutX="720" layoutY="50" text="Sólo Empleados" onAction="#handleFilterChange"/>
+
+                    <HBox spacing="10" layoutX="10" layoutY="90">
+                        <Label text="Nombre, Apellido" />
+                        <TextField fx:id="searchField" prefWidth="250" />
+                    </HBox>
+                    <Button fx:id="searchButton" layoutX="620" layoutY="130" prefWidth="100" text="Buscar" />
+                    <Button fx:id="resetButton" layoutX="730" layoutY="130" prefWidth="150" text="Restablecer Filtros" onAction="#resetFilters"/>
+                    <Button fx:id="graphViewButton" layoutX="500" layoutY="130" prefWidth="150" text="Vista de Gráficos" />
+
+                    <!-- Pane para el gráfico y el detalle a la derecha -->
+                    <HBox layoutX="20" layoutY="180" prefWidth="870" prefHeight="800" visible="false" managed="false" fx:id="chartContainer">
+                        <Pane fx:id="chartPane" prefWidth="1200" prefHeight="800"/> <!-- Ancho ajustado para permitir scroll -->
+                        <VBox fx:id="detailsPane" prefWidth="270" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
+                            <Label text="Detalles" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
+                            <ListView fx:id="detailsListView"/>
+                        </VBox>
+                    </HBox>
+                </Pane>
+            </VBox>
+        </top>
+
+        <center>
+            <AnchorPane>
+                <TableView fx:id="employeeTableView" prefHeight="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <columns>
+                        <TableColumn fx:id="nombreColumn" text="Nombre completo" minWidth="200" />
+                        <TableColumn fx:id="idColumn" text="ID" minWidth="20" />
+                        <TableColumn fx:id="fechaEntradaColumn" text="Fecha" minWidth="80" />
+                        <TableColumn fx:id="horaEntradaColumn" text="H.de entrada" minWidth="150" />
+                        <TableColumn fx:id="horaSalidaColumn" text="H.de salida" minWidth="150" />
+                        <TableColumn fx:id="tiempoLaboradoColumn" text="Tiempo laborado en horas" minWidth="250" />
+                        <TableColumn fx:id="tipoAsistenciaColumn" text="Tipo de Asistencia" minWidth="170" />
+                        <TableColumn fx:id="tipoSalidaColumn" text="Tipo de Salida" minWidth="150" />
+                        <TableColumn fx:id="estadoColumn" text="Estado" minWidth="100" />
+                    </columns>
+                </TableView>
+            </AnchorPane>
+        </center>
+
+        <bottom>
+            <AnchorPane minHeight="25.0">
+                <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10">
+                    <ChoiceBox fx:id="itemsPerPageChoiceBox" prefWidth="100.0" />
+                    <Button fx:id="previousButton" text="Previous" />
+                    <Button fx:id="page1Button" text="1" />
+                    <Button fx:id="page2Button" prefWidth="23.0" text="2" />
+                    <Button fx:id="page3Button" text="3" />
+                    <Button fx:id="nextButton" text="Next" />
+                </HBox>
+            </AnchorPane>
+        </bottom>
+
+    </BorderPane>
+
+</AnchorPane>
