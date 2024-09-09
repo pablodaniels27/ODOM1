@@ -12,9 +12,11 @@
             <TextField fx:id="searchSupervisoresField" promptText="Buscar supervisor..." style="-fx-font-size: 14px;" />
         </HBox>
 
-        <VBox fx:id="supervisoresContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
-            <!-- Aquí se cargarán dinámicamente los supervisores -->
-        </VBox>
+        <ScrollPane fx:id="supervisoresScroll" fitToWidth="true" fitToHeight="true" vbarPolicy="ALWAYS" prefHeight="400" prefWidth="400">
+            <VBox fx:id="supervisoresContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
+                <!-- Aquí se cargarán dinámicamente los supervisores -->
+            </VBox>
+        </ScrollPane>
     </VBox>
 
     <!-- Empleados -->
@@ -24,9 +26,11 @@
             <TextField fx:id="searchEmpleadosField" promptText="Buscar empleados..." style="-fx-font-size: 14px;" />
         </HBox>
 
-        <VBox fx:id="empleadosContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
-            <!-- Aquí se cargarán dinámicamente los empleados -->
-        </VBox>
+        <ScrollPane fx:id="empleadosScroll" fitToWidth="true" fitToHeight="true" vbarPolicy="ALWAYS" prefHeight="400" prefWidth="400">
+            <VBox fx:id="empleadosContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
+                <!-- Aquí se cargarán dinámicamente los empleados -->
+            </VBox>
+        </ScrollPane>
     </VBox>
 
 </HBox>

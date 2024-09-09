@@ -79,7 +79,7 @@ public class InicioController {
             div.setMouseTransparent(true);  // Desactivar la interacción del mouse
         });
 
-                    // Mostrar la fecha actual
+        // Mostrar la fecha actual
         currentDate.setText(LocalDate.now().toString());
 
         // Inicializar el mes actual
@@ -350,6 +350,6 @@ public class InicioController {
     }
 
     // Clase para representar un empleado
-    public record Employee(int id, String fullName, String profession) {
+    public record Employee(int id, String fullName, String profession){
     }
 }
