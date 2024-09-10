@@ -166,24 +166,24 @@
     -fx-border-color: transparent;
     -fx-border-width: 0;
 }
-.chart-bar {
-    -fx-bar-fill: red; /* Esto aplica un color por defecto */
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #2196F3; /* Azul que deseas */
+    -fx-background-radius: 4; /* Redondear las esquinas */
+    -fx-pref-width: 16px; /* Ancho del ScrollBar */
 }
 
-.chart-bar.series0 {
-    -fx-bar-fill: green; /* Asistencia */
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #2196F3; /* Azul que deseas */
+    -fx-background-radius: 4; /* Redondear las esquinas */
+    -fx-pref-height: 16px; /* Altura del ScrollBar horizontal, si lo usas */
 }
 
-.chart-bar.series1 {
-    -fx-bar-fill: red; /* No asistencia */
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: #2196F3;
 }
 
-.chart-bar.series2 {
-    -fx-bar-fill: yellow; /* Retardo */
-}
 
-.chart-bar.series3 {
-    -fx-bar-fill: blue; /* Justificación */
-}
 
 
