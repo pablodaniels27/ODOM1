@@ -9,6 +9,7 @@ module pruebafinal {
     requires javafx.graphics;
     requires javafx.swing;
     requires java.sql;
+    requires com.github.benmanes.caffeine;
 
 
     opens Lector to javafx.fxml;

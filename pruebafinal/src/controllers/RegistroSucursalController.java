@@ -1,5 +1,7 @@
 package controllers;
 
+import Usuarios.Usuario;
+import UsuariosDAO.UsuarioDAO;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -15,6 +17,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 
 public class RegistroSucursalController {
@@ -81,6 +84,7 @@ public class RegistroSucursalController {
             e.printStackTrace();
         }
     }
+
 
     private void cargarSupervisores(String filtro) {
         supervisoresContainer.getChildren().clear();

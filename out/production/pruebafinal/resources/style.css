@@ -160,6 +160,30 @@
     -fx-border-color: #2196F3;        /* Mantener el borde azul */
 }
 
+.split-pane > .split-pane-divider {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+.chart-bar {
+    -fx-bar-fill: red; /* Esto aplica un color por defecto */
+}
 
+.chart-bar.series0 {
+    -fx-bar-fill: green; /* Asistencia */
+}
+
+.chart-bar.series1 {
+    -fx-bar-fill: red; /* No asistencia */
+}
+
+.chart-bar.series2 {
+    -fx-bar-fill: yellow; /* Retardo */
+}
+
+.chart-bar.series3 {
+    -fx-bar-fill: blue; /* Justificación */
+}
 
 

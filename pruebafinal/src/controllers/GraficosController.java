@@ -1,7 +1,5 @@
 package controllers;
 
-import controllers.DatabaseConnection;
-import controllers.MonitoreoController;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -24,16 +22,22 @@ import java.util.Map;
 
 public class GraficosController {
 
-    private MonitoreoController monitoreoController;
-
-    // Método para inyectar el MonitoreoController
-    public void setMonitoreoController(MonitoreoController monitoreoController) {
-        this.monitoreoController = monitoreoController;
-    }
-
     public BarChart<String, Number> createBarChart(Pane chartPane, String fechaInicio, String fechaFin, String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados) {
         // Limpiar el Pane del gráfico
         chartPane.getChildren().clear();
+
+        // Validar los parámetros antes de la consulta
+        if (fechaInicio == null || fechaInicio.isEmpty()) {
+            throw new IllegalArgumentException("La fecha de inicio es requerida");
+        }
+
+        if (fechaFin == null || fechaFin.isEmpty()) {
+            throw new IllegalArgumentException("La fecha de fin es requerida");
+        }
+
+        if (departamentoSeleccionado == null) {
+            departamentoSeleccionado = "Todos los departamentos";
+        }
 
         // Crear los ejes del gráfico
         CategoryAxis xAxis = new CategoryAxis();
@@ -73,6 +77,7 @@ public class GraficosController {
             query += "AND d.nombre = ? ";
         }
 
+        // Incluir el filtro de búsqueda por nombre si no está vacío o nulo
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {
             query += "AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?) ";
         }
@@ -88,7 +93,7 @@ public class GraficosController {
         try (Connection connectDB = DatabaseConnection.getConnection();
              PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
 
-            // Asignar parámetros
+            // Asignar parámetros al PreparedStatement
             preparedStatement.setString(1, fechaInicio);
             preparedStatement.setString(2, fechaFin);
 
@@ -97,6 +102,7 @@ public class GraficosController {
                 preparedStatement.setString(paramIndex++, departamentoSeleccionado);
             }
 
+            // Asignar los parámetros del filtro de búsqueda si está presente
             if (searchQuery != null && !searchQuery.trim().isEmpty()) {
                 String searchPattern = "%" + searchQuery.trim() + "%";
                 preparedStatement.setString(paramIndex++, searchPattern);
@@ -112,7 +118,10 @@ public class GraficosController {
                 String tipoAsistencia = resultSet.getString("tipo_asistencia");
                 int cantidad = resultSet.getInt("cantidad");
 
+                // Inicializar el mapa para el departamento si no existe
                 asistenciaPorDepartamento.putIfAbsent(departamento, new HashMap<>());
+
+                // Almacenar la cantidad por tipo de asistencia
                 asistenciaPorDepartamento.get(departamento).put(tipoAsistencia, cantidad);
             }
 
@@ -138,52 +147,32 @@ public class GraficosController {
         // Añadir el gráfico al Pane
         chartPane.getChildren().add(barChart);
 
-        // Añadir los labels de cantidad encima de cada barra
+        // Usar Platform.runLater para asegurarnos de que el gráfico se haya renderizado antes de agregar los labels
         Platform.runLater(() -> {
             for (XYChart.Series<String, Number> series : barChart.getData()) {
                 for (XYChart.Data<String, Number> data : series.getData()) {
                     Node node = data.getNode();
                     if (node != null) {
+                        // Crear el label con el valor de la cantidad
                         Label label = new Label(String.valueOf(data.getYValue()));
+
+                        // Ajustar el estilo del label para hacerlo visible
                         label.setStyle("-fx-text-fill: black; -fx-font-size: 14px; -fx-font-weight: bold;");
+
+                        // Añadir el label a la barra (StackPane)
                         StackPane stackPane = (StackPane) node;
                         stackPane.getChildren().add(label);
+
+                        // Alinear el label en el centro de la barra
                         StackPane.setAlignment(label, Pos.CENTER);
-                        label.setTranslateY(-30);  // Ajustar la posición según el tamaño de la barra
+
+                        // Ajustar la posición del label más arriba dentro de la barra
+                        label.setTranslateY(-30);  // Ajustar esto según el tamaño de la barra
                     }
-                }
-            }
-        });
-
-        // Asegurar que los nodos sean interactivos y visibles, utilizando Platform.runLater
-        Platform.runLater(() -> {
-            for (XYChart.Series<String, Number> series : barChart.getData()) {
-                for (XYChart.Data<String, Number> data : series.getData()) {
-                    // Observa los cambios en el nodo del gráfico (cuando se crea)
-                    data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                        if (newNode != null) {
-                            newNode.setStyle("-fx-cursor: hand;");  // Cambiar el cursor al pasar sobre la barra
-                            newNode.setOnMousePressed(event -> {
-                                String departamento = data.getXValue();
-                                String tipoAsistencia = series.getName();
-                                System.out.println("Clic en la barra. Departamento: " + departamento + ", Tipo de asistencia: " + tipoAsistencia);
-
-                                // Aquí imprimes un mensaje cuando se hace clic en la barra
-                                System.out.println("Se hizo clic en la barra: " + departamento + " - " + tipoAsistencia);
-
-                                // Llamar al método en MonitoreoController si es necesario
-                                if (monitoreoController != null) {
-                                    monitoreoController.mostrarNombresPorAsistencia(departamento, tipoAsistencia);
-                                }
-                            });
-                            newNode.toFront();  // Llevar el nodo al frente
-                        }
-                    });
                 }
             }
         });
 
         return barChart;
     }
-
 }
