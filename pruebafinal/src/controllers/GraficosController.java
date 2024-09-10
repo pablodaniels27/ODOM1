@@ -162,29 +162,40 @@ public class GraficosController {
         });
 
         // Asegurarse de que los nodos de las barras ya se han creado antes de añadir labels y eventos
+        // Asegurarse de que los nodos de las barras ya se han creado antes de añadir labels y eventos
         Platform.runLater(() -> {
+            System.out.println("Verificando si los nodos de las barras se están creando...");
             for (XYChart.Series<String, Number> series : barChart.getData()) {
                 for (XYChart.Data<String, Number> data : series.getData()) {
-                    // Observa los cambios en el nodo del gráfico (cuando se crea)
-                    data.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                        if (newNode != null) {
-                            newNode.setStyle("-fx-cursor: hand;");  // Cambiar el cursor al pasar sobre la barra
-                            newNode.toFront();  // Llevar el nodo al frente
-                            newNode.setPickOnBounds(true);  // Asegurar que el nodo reciba clics fuera de sus límites
-                            newNode.setOnMouseClicked(event -> {
-                                String departamento = data.getXValue();
-                                String tipoAsistencia = series.getName();
+                    Node node = data.getNode();
+                    if (node != null) {
+                        System.out.println("Nodo creado para el departamento: " + data.getXValue() + " - Tipo de asistencia: " + series.getName());
 
-                                System.out.println("Clic en la barra. Departamento: " + departamento + ", Tipo de asistencia: " + tipoAsistencia);
+                        // Aplicar estilo y comportamiento
+                        node.setStyle("-fx-cursor: hand;");
+                        node.toFront();
+                        node.setPickOnBounds(true);
+                        node.setMouseTransparent(false);
 
-                                // Llamar al método en MonitoreoController para mostrar los nombres
-                                monitoreoController.mostrarNombresPorAsistencia(departamento, tipoAsistencia);
-                            });
-                        }
-                    });
+                        // Agregar el evento de clic
+                        node.setOnMouseClicked(event -> {
+                            String departamento = data.getXValue();
+                            String tipoAsistencia = series.getName();
+                            String nombreFilter = monitoreoController.getSearchFieldText();
+
+                            System.out.println("Clic en la barra. Departamento: " + departamento + ", Tipo de asistencia: " + tipoAsistencia);
+
+                            // Llamar al método en MonitoreoController para mostrar los nombres
+                            monitoreoController.mostrarNombresPorAsistencia(departamento, tipoAsistencia, nombreFilter);
+                        });
+
+                    } else {
+                        System.out.println("El nodo no está creado aún para el departamento: " + data.getXValue());
+                    }
                 }
             }
         });
+
 
         System.out.println("chartPane bounds: " + chartPane.getBoundsInParent());
         System.out.println("BarChart bounds: " + barChart.getBoundsInParent());

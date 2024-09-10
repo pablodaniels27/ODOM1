@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="1351.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
+<AnchorPane prefHeight="1351.0" prefWidth="890.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController" >
 
     <BorderPane style="-fx-background-color: transparent; -fx-padding: 10; -fx-border-width: 10;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
@@ -36,9 +36,15 @@
                         <!-- Pane dinámico para el gráfico -->
                         <Pane fx:id="chartPane" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
                         <!-- ListView para los detalles a la derecha -->
-                        <VBox fx:id="detailsPane" prefWidth="170" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
-                            <Label text="Personas" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
-                            <ListView fx:id="personListView" />
+                        <VBox fx:id="detailsPane" prefWidth="400" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
+
+                            <TableView fx:id="personTableView" prefHeight="400" prefWidth="300">
+                                <columns>
+                                    <TableColumn fx:id="nombreCompletoColumn" text="Nombre Completo" prefWidth="280"/>
+                                </columns>
+                            </TableView>
+
+
                             <Label text="Fechas" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
                             <ListView fx:id="dateListView" />
                         </VBox>

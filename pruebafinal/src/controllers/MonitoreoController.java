@@ -16,7 +16,25 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.util.Callback;
 
+import javafx.fxml.FXML;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableColumn;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.cell.PropertyValueFactory;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import java.util.HashSet;
+import java.util.Set;
+
 public class MonitoreoController {
+
+    @FXML
+    private TableView<Empleado> personTableView;  // Cambiamos ListView a TableView
+
+    @FXML
+    private TableColumn<Empleado, String> nombreCompletoColumn;
 
     @FXML
     private TableView<Map<String, Object>> employeeTableView;
@@ -102,8 +120,7 @@ public class MonitoreoController {
     @FXML
     private HBox chartContainer;
 
-    @FXML
-    private ListView<String> personListView;
+
 
 
     private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
@@ -117,6 +134,9 @@ public class MonitoreoController {
 
     @FXML
     public void initialize() {
+
+        // Vincular la columna con la propiedad "nombreCompleto"
+        nombreCompletoColumn.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
 
         graficosController = new GraficosController();
         graficosController.setMonitoreoController(this);
@@ -536,8 +556,11 @@ public class MonitoreoController {
         }
     }
 
-    public void mostrarNombresPorAsistencia(String departamento, String tipoAsistencia) {
-        personListView.getItems().clear();  // Limpiar la lista anterior
+    public void mostrarNombresPorAsistencia(String departamento, String tipoAsistencia, String searchQuery) {
+        System.out.println("Método mostrarNombresPorAsistencia llamado con Departamento: " + departamento + ", Tipo de Asistencia: " + tipoAsistencia + ", Filtro de búsqueda: " + searchQuery);
+
+        // Usar un Set para evitar duplicados
+        Set<String> empleadosUnicos = new HashSet<>();
 
         // Consulta SQL para obtener los nombres de las personas
         String query = "SELECT e.nombres, e.apellido_paterno, e.apellido_materno " +
@@ -547,21 +570,68 @@ public class MonitoreoController {
                 "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
                 "WHERE d.nombre = ? AND t.nombre = ?";
 
+        // Si hay una búsqueda, agregar el filtro al query
+        if (searchQuery != null && !searchQuery.isEmpty()) {
+            query += " AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?)";
+        }
+
         try (Connection connectDB = DatabaseConnection.getConnection();
              PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
 
+            // Asignar los parámetros de la consulta
             preparedStatement.setString(1, departamento);
             preparedStatement.setString(2, tipoAsistencia);
 
+            // Si hay un valor de búsqueda, agregarlo como parámetro
+            if (searchQuery != null && !searchQuery.isEmpty()) {
+                String searchPattern = "%" + searchQuery.trim() + "%";
+                preparedStatement.setString(3, searchPattern);
+                preparedStatement.setString(4, searchPattern);
+                preparedStatement.setString(5, searchPattern);
+            }
+
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                String nombreCompleto = resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno");
-                personListView.getItems().add(nombreCompleto);  // Agregar el nombre al ListView
+                String nombreCompleto = resultSet.getString("nombres") + " " +
+                        resultSet.getString("apellido_paterno") + " " +
+                        resultSet.getString("apellido_materno");
+
+                // Agregar al Set, que no permitirá duplicados
+                empleadosUnicos.add(nombreCompleto);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        System.out.println("Mostrando nombres para el departamento: " + departamento + ", Tipo de asistencia: " + tipoAsistencia);
+
+        // Convertir el Set en una lista observable para el TableView
+        ObservableList<Empleado> empleados = FXCollections.observableArrayList();
+        for (String nombre : empleadosUnicos) {
+            empleados.add(new Empleado(nombre));  // Agregar el nombre único al TableView
+        }
+
+        // Asignar los datos al TableView
+        personTableView.setItems(empleados);
+
+        System.out.println("Nombres únicos añadidos al TableView: " + empleados.size());
+    }
+
+
+    // Clase auxiliar para representar empleados
+    public static class Empleado {
+        private final String nombreCompleto;
+
+        public Empleado(String nombreCompleto) {
+            this.nombreCompleto = nombreCompleto;
+        }
+
+        public String getNombreCompleto() {
+            return nombreCompleto;
+        }
+    }
+
+    public String getSearchFieldText() {
+        return (searchField != null) ? searchField.getText().trim() : "";  // Si searchField no está enlazado correctamente, este valor será null
     }
 
 
