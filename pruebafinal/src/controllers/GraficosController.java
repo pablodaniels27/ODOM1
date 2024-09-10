@@ -12,9 +12,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,9 +22,22 @@ import java.util.Map;
 
 public class GraficosController {
 
-    public BarChart<String, Number> createBarChart(Pane chartPane, String fechaInicio, String fechaFin, String departamentoSeleccionado, boolean incluirSupervisores, boolean incluirEmpleados) {
+    public BarChart<String, Number> createBarChart(Pane chartPane, String fechaInicio, String fechaFin, String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados) {
         // Limpiar el Pane del gráfico
         chartPane.getChildren().clear();
+
+        // Validar los parámetros antes de la consulta
+        if (fechaInicio == null || fechaInicio.isEmpty()) {
+            throw new IllegalArgumentException("La fecha de inicio es requerida");
+        }
+
+        if (fechaFin == null || fechaFin.isEmpty()) {
+            throw new IllegalArgumentException("La fecha de fin es requerida");
+        }
+
+        if (departamentoSeleccionado == null) {
+            departamentoSeleccionado = "Todos los departamentos";
+        }
 
         // Crear los ejes del gráfico
         CategoryAxis xAxis = new CategoryAxis();
@@ -39,12 +52,9 @@ public class GraficosController {
 
         // Cargar el archivo CSS usando ClassLoader
         try {
-            // Cambiar el método de obtención del recurso CSS
             String cssPath = getClass().getResource("/resources/style.css").toExternalForm();
-            System.out.println("Ruta del archivo CSS: " + cssPath); // Verificación
             barChart.getStylesheets().add(cssPath);
         } catch (Exception e) {
-            System.out.println("Error cargando el archivo CSS: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -55,32 +65,52 @@ public class GraficosController {
         List<String> tiposAsistenciaEsperados = Arrays.asList("Asistencia", "No Asistencia", "Retardo", "Justificación");
 
         // Consulta SQL para obtener los datos desde la base de datos
-        try {
-            DatabaseConnection connectNow = new DatabaseConnection();
-            Connection connectDB = connectNow.getConnection();
+        String query = "SELECT d.nombre AS departamento, t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
+                "FROM entradas_salidas en " +
+                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                "JOIN empleados e ON en.empleado_id = e.id " +
+                "JOIN departamentos d ON e.departamento_id = d.id " +
+                "JOIN dias di ON en.dia_id = di.id " +
+                "WHERE di.fecha BETWEEN ? AND ? ";
 
-            String query = "SELECT d.nombre AS departamento, t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
-                    "FROM entradas_salidas en " +
-                    "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                    "JOIN empleados e ON en.empleado_id = e.id " +
-                    "JOIN departamentos d ON e.departamento_id = d.id " +
-                    "JOIN dias di ON en.dia_id = di.id " +
-                    "WHERE di.fecha BETWEEN '" + fechaInicio + "' AND '" + fechaFin + "' ";
+        if (!departamentoSeleccionado.equals("Todos los departamentos")) {
+            query += "AND d.nombre = ? ";
+        }
 
+        // Incluir el filtro de búsqueda por nombre si no está vacío o nulo
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            query += "AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?) ";
+        }
+
+        if (incluirSupervisores && !incluirEmpleados) {
+            query += "AND e.jerarquia_id = 2 ";  // Solo supervisores
+        } else if (incluirEmpleados && !incluirSupervisores) {
+            query += "AND e.jerarquia_id = 3 ";  // Solo empleados
+        }
+
+        query += "GROUP BY d.nombre, t.nombre";
+
+        try (Connection connectDB = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
+
+            // Asignar parámetros al PreparedStatement
+            preparedStatement.setString(1, fechaInicio);
+            preparedStatement.setString(2, fechaFin);
+
+            int paramIndex = 3;
             if (!departamentoSeleccionado.equals("Todos los departamentos")) {
-                query += "AND d.nombre = '" + departamentoSeleccionado + "' ";
+                preparedStatement.setString(paramIndex++, departamentoSeleccionado);
             }
 
-            if (incluirSupervisores && !incluirEmpleados) {
-                query += "AND e.jerarquia_id = 2 ";  // Solo supervisores
-            } else if (incluirEmpleados && !incluirSupervisores) {
-                query += "AND e.jerarquia_id = 3 ";  // Solo empleados
+            // Asignar los parámetros del filtro de búsqueda si está presente
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                String searchPattern = "%" + searchQuery.trim() + "%";
+                preparedStatement.setString(paramIndex++, searchPattern);
+                preparedStatement.setString(paramIndex++, searchPattern);
+                preparedStatement.setString(paramIndex++, searchPattern);
             }
 
-            query += "GROUP BY d.nombre, t.nombre";
-
-            Statement statement = connectDB.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
+            ResultSet resultSet = preparedStatement.executeQuery();
 
             // Procesar los resultados
             while (resultSet.next()) {
@@ -95,7 +125,6 @@ public class GraficosController {
                 asistenciaPorDepartamento.get(departamento).put(tipoAsistencia, cantidad);
             }
 
-            connectDB.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }

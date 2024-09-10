@@ -463,7 +463,6 @@ public class MonitoreoController {
     }
 
     private void toggleGraphView() {
-
         boolean isTableVisible = employeeTableView.isVisible();
         employeeTableView.setVisible(!isTableVisible);
         chartContainer.setVisible(isTableVisible);
@@ -476,7 +475,12 @@ public class MonitoreoController {
             boolean incluirSupervisores = supervisoresCheckBox.isSelected();
             boolean incluirEmpleados = empleadosCheckBox.isSelected();
 
-            graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, incluirSupervisores, incluirEmpleados);
+            // Obtener el valor de búsqueda por nombre
+            String searchQuery = searchField.getText();  // Nuevo parámetro de búsqueda
+
+            // Llamada al nuevo método de GraficosController con searchQuery
+            graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados);
+
             highlightButton(graphViewButton);
         } else {
             unhighlightButton(graphViewButton);

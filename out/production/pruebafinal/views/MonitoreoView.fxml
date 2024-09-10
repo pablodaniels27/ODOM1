@@ -34,10 +34,7 @@
                     <!-- Pane para el gráfico y el detalle a la derecha -->
                     <HBox layoutX="20" layoutY="180" prefWidth="870" prefHeight="800" visible="false" managed="false" fx:id="chartContainer">
                         <Pane fx:id="chartPane" prefWidth="1200" prefHeight="800"/> <!-- Ancho ajustado para permitir scroll -->
-                        <VBox fx:id="detailsPane" prefWidth="270" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
-                            <Label text="Detalles" style="-fx-font-weight: bold; -fx-font-size: 16px;"/>
-                            <ListView fx:id="detailsListView"/>
-                        </VBox>
+
                     </HBox>
                 </Pane>
             </VBox>
