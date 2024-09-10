@@ -1,5 +1,7 @@
 package controllers;
 
+import controllers.DatabaseConnection;
+import controllers.MonitoreoController;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -12,9 +14,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +24,14 @@ import java.util.Map;
 
 public class GraficosController {
 
-    public BarChart<String, Number> createBarChart(Pane chartPane, String fechaInicio, String fechaFin, String departamentoSeleccionado, boolean incluirSupervisores, boolean incluirEmpleados) {
+    private MonitoreoController monitoreoController;
+
+    // Método para inyectar el MonitoreoController
+    public void setMonitoreoController(MonitoreoController monitoreoController) {
+        this.monitoreoController = monitoreoController;
+    }
+
+    public BarChart<String, Number> createBarChart(Pane chartPane, String fechaInicio, String fechaFin, String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados) {
         // Limpiar el Pane del gráfico
         chartPane.getChildren().clear();
 
@@ -39,12 +48,9 @@ public class GraficosController {
 
         // Cargar el archivo CSS usando ClassLoader
         try {
-            // Cambiar el método de obtención del recurso CSS
-            String cssPath = getClass().getResource("/css/monitoreo.css").toExternalForm();
-            System.out.println("Ruta del archivo CSS: " + cssPath); // Verificación
+            String cssPath = getClass().getResource("/resources/style.css").toExternalForm();
             barChart.getStylesheets().add(cssPath);
         } catch (Exception e) {
-            System.out.println("Error cargando el archivo CSS: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -55,32 +61,50 @@ public class GraficosController {
         List<String> tiposAsistenciaEsperados = Arrays.asList("Asistencia", "No Asistencia", "Retardo", "Justificación");
 
         // Consulta SQL para obtener los datos desde la base de datos
-        try {
-            DatabaseConnection connectNow = new DatabaseConnection();
-            Connection connectDB = connectNow.getConnection();
+        String query = "SELECT d.nombre AS departamento, t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
+                "FROM entradas_salidas en " +
+                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                "JOIN empleados e ON en.empleado_id = e.id " +
+                "JOIN departamentos d ON e.departamento_id = d.id " +
+                "JOIN dias di ON en.dia_id = di.id " +
+                "WHERE di.fecha BETWEEN ? AND ? ";
 
-            String query = "SELECT d.nombre AS departamento, t.nombre AS tipo_asistencia, COUNT(*) AS cantidad " +
-                    "FROM entradas_salidas en " +
-                    "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                    "JOIN empleados e ON en.empleado_id = e.id " +
-                    "JOIN departamentos d ON e.departamento_id = d.id " +
-                    "JOIN dias di ON en.dia_id = di.id " +
-                    "WHERE di.fecha BETWEEN '" + fechaInicio + "' AND '" + fechaFin + "' ";
+        if (!departamentoSeleccionado.equals("Todos los departamentos")) {
+            query += "AND d.nombre = ? ";
+        }
 
+        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+            query += "AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?) ";
+        }
+
+        if (incluirSupervisores && !incluirEmpleados) {
+            query += "AND e.jerarquia_id = 2 ";  // Solo supervisores
+        } else if (incluirEmpleados && !incluirSupervisores) {
+            query += "AND e.jerarquia_id = 3 ";  // Solo empleados
+        }
+
+        query += "GROUP BY d.nombre, t.nombre";
+
+        try (Connection connectDB = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
+
+            // Asignar parámetros
+            preparedStatement.setString(1, fechaInicio);
+            preparedStatement.setString(2, fechaFin);
+
+            int paramIndex = 3;
             if (!departamentoSeleccionado.equals("Todos los departamentos")) {
-                query += "AND d.nombre = '" + departamentoSeleccionado + "' ";
+                preparedStatement.setString(paramIndex++, departamentoSeleccionado);
             }
 
-            if (incluirSupervisores && !incluirEmpleados) {
-                query += "AND e.jerarquia_id = 2 ";  // Solo supervisores
-            } else if (incluirEmpleados && !incluirSupervisores) {
-                query += "AND e.jerarquia_id = 3 ";  // Solo empleados
+            if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+                String searchPattern = "%" + searchQuery.trim() + "%";
+                preparedStatement.setString(paramIndex++, searchPattern);
+                preparedStatement.setString(paramIndex++, searchPattern);
+                preparedStatement.setString(paramIndex++, searchPattern);
             }
 
-            query += "GROUP BY d.nombre, t.nombre";
-
-            Statement statement = connectDB.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
+            ResultSet resultSet = preparedStatement.executeQuery();
 
             // Procesar los resultados
             while (resultSet.next()) {
@@ -88,14 +112,10 @@ public class GraficosController {
                 String tipoAsistencia = resultSet.getString("tipo_asistencia");
                 int cantidad = resultSet.getInt("cantidad");
 
-                // Inicializar el mapa para el departamento si no existe
                 asistenciaPorDepartamento.putIfAbsent(departamento, new HashMap<>());
-
-                // Almacenar la cantidad por tipo de asistencia
                 asistenciaPorDepartamento.get(departamento).put(tipoAsistencia, cantidad);
             }
 
-            connectDB.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -118,32 +138,52 @@ public class GraficosController {
         // Añadir el gráfico al Pane
         chartPane.getChildren().add(barChart);
 
-        // Usar Platform.runLater para asegurarnos de que el gráfico se haya renderizado antes de agregar los labels
+        // Añadir los labels de cantidad encima de cada barra
         Platform.runLater(() -> {
             for (XYChart.Series<String, Number> series : barChart.getData()) {
                 for (XYChart.Data<String, Number> data : series.getData()) {
                     Node node = data.getNode();
                     if (node != null) {
-                        // Crear el label con el valor de la cantidad
                         Label label = new Label(String.valueOf(data.getYValue()));
-
-                        // Ajustar el estilo del label para hacerlo visible
                         label.setStyle("-fx-text-fill: black; -fx-font-size: 14px; -fx-font-weight: bold;");
-
-                        // Añadir el label a la barra (StackPane)
                         StackPane stackPane = (StackPane) node;
                         stackPane.getChildren().add(label);
-
-                        // Alinear el label en el centro de la barra
                         StackPane.setAlignment(label, Pos.CENTER);
-
-                        // Ajustar la posición del label más arriba dentro de la barra
-                        label.setTranslateY(-30);  // Ajustar esto según el tamaño de la barra
+                        label.setTranslateY(-30);  // Ajustar la posición según el tamaño de la barra
                     }
+                }
+            }
+        });
+
+        // Asegurar que los nodos sean interactivos y visibles, utilizando Platform.runLater
+        Platform.runLater(() -> {
+            for (XYChart.Series<String, Number> series : barChart.getData()) {
+                for (XYChart.Data<String, Number> data : series.getData()) {
+                    // Observa los cambios en el nodo del gráfico (cuando se crea)
+                    data.nodeProperty().addListener((obs, oldNode, newNode) -> {
+                        if (newNode != null) {
+                            newNode.setStyle("-fx-cursor: hand;");  // Cambiar el cursor al pasar sobre la barra
+                            newNode.setOnMousePressed(event -> {
+                                String departamento = data.getXValue();
+                                String tipoAsistencia = series.getName();
+                                System.out.println("Clic en la barra. Departamento: " + departamento + ", Tipo de asistencia: " + tipoAsistencia);
+
+                                // Aquí imprimes un mensaje cuando se hace clic en la barra
+                                System.out.println("Se hizo clic en la barra: " + departamento + " - " + tipoAsistencia);
+
+                                // Llamar al método en MonitoreoController si es necesario
+                                if (monitoreoController != null) {
+                                    monitoreoController.mostrarNombresPorAsistencia(departamento, tipoAsistencia);
+                                }
+                            });
+                            newNode.toFront();  // Llevar el nodo al frente
+                        }
+                    });
                 }
             }
         });
 
         return barChart;
     }
+
 }
