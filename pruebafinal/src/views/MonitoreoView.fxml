@@ -29,13 +29,21 @@
                     </HBox>
                     <Button fx:id="searchButton" layoutX="620" layoutY="130" prefWidth="100" text="Buscar" />
                     <Button fx:id="resetButton" layoutX="730" layoutY="130" prefWidth="150" text="Restablecer Filtros" onAction="#resetFilters"/>
-                    <Button fx:id="graphViewButton" layoutX="500" layoutY="130" prefWidth="150" text="Vista de Gráficos" />
+                    <Button fx:id="graphViewButton" layoutX="500" layoutY="130" prefWidth="150" text="Vista de Gráficos" onAction="#toggleGraphView"/>
 
                     <!-- Pane para el gráfico y el detalle a la derecha -->
                     <HBox layoutX="20" layoutY="180" prefWidth="870" prefHeight="800" visible="false" managed="false" fx:id="chartContainer">
-                        <Pane fx:id="chartPane" prefWidth="1200" prefHeight="800"/> <!-- Ancho ajustado para permitir scroll -->
-
+                        <!-- Pane dinámico para el gráfico -->
+                        <Pane fx:id="chartPane" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
+                        <!-- ListView para los detalles a la derecha -->
+                        <VBox fx:id="detailsPane" prefWidth="170" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
+                            <Label text="Personas" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
+                            <ListView fx:id="personListView" />
+                            <Label text="Fechas" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
+                            <ListView fx:id="dateListView" />
+                        </VBox>
                     </HBox>
+
                 </Pane>
             </VBox>
         </top>

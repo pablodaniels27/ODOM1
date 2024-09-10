@@ -8,10 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -105,16 +102,24 @@ public class MonitoreoController {
     @FXML
     private HBox chartContainer;
 
+    @FXML
+    private ListView<String> personListView;
+
+
     private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
 
     private int itemsPerPage = 10;
     private int currentPage = 1;
     private int totalPages = 1;
 
-    private GraficosController graficosController = new GraficosController();
+    private GraficosController graficosController;
+
 
     @FXML
     public void initialize() {
+
+        graficosController = new GraficosController();
+        graficosController.setMonitoreoController(this);
         // Configurar las columnas con los Callbacks
         nombreColumn.setCellValueFactory(createCellValueFactory("nombreCompleto"));
         idColumn.setCellValueFactory(createCellValueFactory("id"));
@@ -462,13 +467,17 @@ public class MonitoreoController {
         page3Button.setDisable(pageNumber == 3 || totalPages < 3);
     }
 
+    @FXML
     private void toggleGraphView() {
+        // Alternar la visibilidad de la tabla y el gráfico
         boolean isTableVisible = employeeTableView.isVisible();
         employeeTableView.setVisible(!isTableVisible);
+        employeeTableView.setManaged(!isTableVisible); // Esto asegura que el espacio se gestiona correctamente
         chartContainer.setVisible(isTableVisible);
+        chartContainer.setManaged(isTableVisible);
 
         if (isTableVisible) {
-            // Obtener el departamento seleccionado, fechas, y si se incluyen supervisores o empleados
+            // Obtener los valores seleccionados de los filtros
             String departamentoSeleccionado = departamentoChoiceBox.getValue();
             String fechaInicio = fechaInicioPicker.getValue() != null ? fechaInicioPicker.getValue().toString() : "";
             String fechaFin = fechaFinPicker.getValue() != null ? fechaFinPicker.getValue().toString() : "";
@@ -476,16 +485,17 @@ public class MonitoreoController {
             boolean incluirEmpleados = empleadosCheckBox.isSelected();
 
             // Obtener el valor de búsqueda por nombre
-            String searchQuery = searchField.getText();  // Nuevo parámetro de búsqueda
+            String searchQuery = searchField.getText();
 
-            // Llamada al nuevo método de GraficosController con searchQuery
+            // Generar la gráfica en el chartPane
             graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados);
 
-            highlightButton(graphViewButton);
+            highlightButton(graphViewButton); // Mantener resaltado el botón de gráfica
         } else {
-            unhighlightButton(graphViewButton);
+            unhighlightButton(graphViewButton); // Remover resaltado cuando no está en vista gráfica
         }
     }
+
 
     private void highlightButton(Button button) {
         button.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
@@ -525,4 +535,37 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
+    public void mostrarNombresPorAsistencia(String departamento, String tipoAsistencia) {
+        personListView.getItems().clear();  // Limpiar la lista anterior
+
+        // Consulta SQL para obtener los nombres de las personas
+        String query = "SELECT e.nombres, e.apellido_paterno, e.apellido_materno " +
+                "FROM entradas_salidas en " +
+                "JOIN empleados e ON en.empleado_id = e.id " +
+                "JOIN departamentos d ON e.departamento_id = d.id " +
+                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                "WHERE d.nombre = ? AND t.nombre = ?";
+
+        try (Connection connectDB = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
+
+            preparedStatement.setString(1, departamento);
+            preparedStatement.setString(2, tipoAsistencia);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String nombreCompleto = resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno");
+                personListView.getItems().add(nombreCompleto);  // Agregar el nombre al ListView
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Mostrando nombres para el departamento: " + departamento + ", Tipo de asistencia: " + tipoAsistencia);
+    }
+
+
+
+
+
 }
