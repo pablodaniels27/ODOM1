@@ -184,7 +184,8 @@ public class GraficosController {
                             String nombreFilter = monitoreoController.getSearchFieldText();
 
                             System.out.println("Clic en la barra. Departamento: " + departamento + ", Tipo de asistencia: " + tipoAsistencia);
-
+                            // Actualizar el tipo de asistencia seleccionado en el MonitoreoController
+                            monitoreoController.setTipoAsistenciaSeleccionado(tipoAsistencia);
                             // Llamar al método en MonitoreoController para mostrar los nombres
                             monitoreoController.mostrarNombresPorAsistencia(departamento, tipoAsistencia, nombreFilter);
                         });
