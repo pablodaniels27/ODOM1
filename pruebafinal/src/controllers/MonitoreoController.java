@@ -28,7 +28,21 @@ import javafx.collections.ObservableList;
 import java.util.HashSet;
 import java.util.Set;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+
 public class MonitoreoController {
+
+
+    @FXML
+    private TableView<Fecha> dateTableView;
+
+    @FXML
+    private TableColumn<Fecha, String> fechaColumn;
 
     @FXML
     private TableView<Empleado> personTableView;  // Cambiamos ListView a TableView
@@ -122,6 +136,7 @@ public class MonitoreoController {
 
 
 
+    private String tipoAsistenciaSeleccionado = "Asistencia"; // Inicializar con un valor por defecto
 
     private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
 
@@ -137,6 +152,38 @@ public class MonitoreoController {
 
         // Vincular la columna con la propiedad "nombreCompleto"
         nombreCompletoColumn.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
+        fechaColumn.setCellValueFactory(new PropertyValueFactory<>("fecha"));
+
+        // Listener para cuando se selecciona un empleado en el personTableView
+        // Listener para cuando se selecciona un empleado en el personTableView
+        personTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                // Obtener el nombre del empleado seleccionado
+                String nombreEmpleado = newSelection.getNombreCompleto();
+                System.out.println("empleado seleccionado: " + nombreEmpleado);
+
+                // Obtener el tipo de asistencia seleccionado actualmente
+                String tipoAsistencia = obtenerTipoAsistenciaSeleccionado();
+                System.out.println("Tipo de asistencia obtenido: " + tipoAsistencia);
+
+                // Obtener el departamento seleccionado
+                String departamentoSeleccionado = obtenerDepartamentoSeleccionado();
+
+                // Verificar si los DatePicker no están vacíos
+                if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
+                    String fechaInicio = fechaInicioPicker.getValue().toString();
+                    String fechaFin = fechaFinPicker.getValue().toString();
+
+                    // Llamar al método para mostrar las fechas filtradas por rango y empleado
+                    mostrarFechasPorEmpleado(departamentoSeleccionado, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
+                } else {
+                    System.out.println("Por favor, selecciona un rango de fechas válido.");
+                }
+            }
+        });
+
+
+
 
         graficosController = new GraficosController();
         graficosController.setMonitoreoController(this);
@@ -556,6 +603,8 @@ public class MonitoreoController {
         }
     }
 
+    //TABLAS DE NOMBRES Y FECHAS
+
     public void mostrarNombresPorAsistencia(String departamento, String tipoAsistencia, String searchQuery) {
         System.out.println("Método mostrarNombresPorAsistencia llamado con Departamento: " + departamento + ", Tipo de Asistencia: " + tipoAsistencia + ", Filtro de búsqueda: " + searchQuery);
 
@@ -632,6 +681,123 @@ public class MonitoreoController {
 
     public String getSearchFieldText() {
         return (searchField != null) ? searchField.getText().trim() : "";  // Si searchField no está enlazado correctamente, este valor será null
+    }
+
+    // Clase auxiliar para representar las fechas
+    public static class Fecha {
+        private final String fecha;
+
+        public Fecha(String fecha) {
+            this.fecha = fecha;
+        }
+
+        public String getFecha() {
+            return fecha;
+        }
+    }
+
+    // Método para mostrar las fechas en las que un empleado tuvo una asistencia específica
+    public void mostrarFechasPorEmpleado(String departamento, String tipoAsistencia, String nombreEmpleado, String fechaInicio, String fechaFin) {
+        System.out.println("Mostrando fechas para el empleado: " + nombreEmpleado + ", Departamento: " + departamento + ", Tipo de Asistencia: " + tipoAsistencia + ", Fecha Inicio: " + fechaInicio + ", Fecha Fin: " + fechaFin);
+
+        // Crear un Set para evitar duplicados
+        Set<String> fechasUnicas = new HashSet<>();
+
+        // Base de la consulta SQL para obtener las fechas del empleado
+        String query = "SELECT dias.fecha " +
+                "FROM entradas_salidas en " +
+                "JOIN empleados e ON en.empleado_id = e.id " +
+                "JOIN departamentos d ON e.departamento_id = d.id " +
+                "JOIN dias ON en.dia_id = dias.id " +
+                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                "WHERE t.nombre = ? " + // Filtro por tipo de asistencia
+                "AND (e.nombres = ? AND e.apellido_paterno = ? AND e.apellido_materno = ?) " + // Filtrar por nombre completo
+                "AND dias.fecha BETWEEN ? AND ?";  // Filtrar por rango de fechas
+
+        // Si el departamento no es "Todos los departamentos", agregar el filtro de departamento
+        if (!departamento.equals("Todos los departamentos")) {
+            query += " AND d.nombre = ?";
+        }
+
+        try (Connection connectDB = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
+
+            System.out.println("Ejecutando consulta SQL: " + query);
+
+            // Asignar los parámetros
+            preparedStatement.setString(1, tipoAsistencia);
+
+            // Separar el nombre completo en partes: nombres, apellido paterno y materno
+            String[] partesNombre = nombreEmpleado.split(" ");
+            if (partesNombre.length < 3) {
+                System.out.println("Nombre completo no válido: " + nombreEmpleado);
+                return; // Detener si el nombre no tiene al menos 3 partes
+            }
+            preparedStatement.setString(2, partesNombre[0]); // Nombres
+            preparedStatement.setString(3, partesNombre[1]); // Apellido Paterno
+            preparedStatement.setString(4, partesNombre[2]); // Apellido Materno
+
+            preparedStatement.setString(5, fechaInicio);  // Fecha de inicio
+            preparedStatement.setString(6, fechaFin);     // Fecha de fin
+
+            // Si el departamento no es "Todos los departamentos", asignar también el valor del departamento
+            if (!departamento.equals("Todos los departamentos")) {
+                preparedStatement.setString(7, departamento);
+            }
+
+            System.out.println("Parámetros asignados: ");
+            System.out.println("Departamento: " + (departamento.equals("Todos los departamentos") ? "Todos" : departamento));
+            System.out.println("Tipo de Asistencia: " + tipoAsistencia);
+            System.out.println("Nombre del Empleado: " + nombreEmpleado);
+            System.out.println("Fecha Inicio: " + fechaInicio);
+            System.out.println("Fecha Fin: " + fechaFin);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            int counter = 0;
+            while (resultSet.next()) {
+                String fecha = resultSet.getString("fecha");
+                fechasUnicas.add(fecha);  // Añadir al Set para evitar duplicados
+                counter++;
+                System.out.println("Fecha encontrada: " + fecha);
+            }
+
+            if (counter == 0) {
+                System.out.println("No se encontraron fechas para el empleado: " + nombreEmpleado + " con el tipo de asistencia: " + tipoAsistencia);
+            } else {
+                System.out.println("Total de fechas encontradas: " + counter);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error al ejecutar la consulta SQL para obtener fechas: ");
+            e.printStackTrace();
+        }
+
+        // Convertir el Set en una lista observable para el TableView
+        ObservableList<Fecha> fechas = FXCollections.observableArrayList();
+        for (String fecha : fechasUnicas) {
+            fechas.add(new Fecha(fecha));
+        }
+
+        // Asignar los datos al dateTableView
+        dateTableView.setItems(fechas);
+        System.out.println("Fechas asignadas al TableView");
+    }
+
+
+
+    public String obtenerDepartamentoSeleccionado() {
+        // Aquí puedes retornar el departamento seleccionado
+        // Esto depende de cómo el usuario seleccione o filtre por el departamento en tu aplicación
+        return departamentoChoiceBox.getSelectionModel().getSelectedItem(); // Ejemplo usando ChoiceBox
+    }
+
+    public String obtenerTipoAsistenciaSeleccionado() {
+        System.out.println("Tipo de asistencia seleccionado: " + tipoAsistenciaSeleccionado);
+        return tipoAsistenciaSeleccionado;
+    }
+
+    public void setTipoAsistenciaSeleccionado(String tipoAsistencia) {
+        this.tipoAsistenciaSeleccionado = tipoAsistencia;
     }
 
 

@@ -31,24 +31,32 @@
                     <Button fx:id="resetButton" layoutX="730" layoutY="130" prefWidth="150" text="Restablecer Filtros" onAction="#resetFilters"/>
                     <Button fx:id="graphViewButton" layoutX="500" layoutY="130" prefWidth="150" text="Vista de Gráficos" onAction="#toggleGraphView"/>
 
-                    <!-- Pane para el gráfico y el detalle a la derecha -->
-                    <HBox layoutX="20" layoutY="180" prefWidth="870" prefHeight="800" visible="false" managed="false" fx:id="chartContainer">
+                    <!-- Pane para el gráfico y los tableviews de la derecha -->
+                    <HBox layoutX="20" layoutY="180" prefWidth="1200" prefHeight="800" fx:id="chartContainer" visible="false" managed="false"> <!-- Aumentamos el prefWidth a 1200 y lo ocultamos inicialmente -->
                         <!-- Pane dinámico para el gráfico -->
-                        <Pane fx:id="chartPane" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" />
-                        <!-- ListView para los detalles a la derecha -->
-                        <VBox fx:id="detailsPane" prefWidth="400" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
+                        <Pane fx:id="chartPane" HBox.hgrow="ALWAYS" VBox.vgrow="ALWAYS" prefWidth="700"/> <!-- Ajustar el prefWidth para el gráfico -->
 
-                            <TableView fx:id="personTableView" prefHeight="400" prefWidth="300">
-                                <columns>
-                                    <TableColumn fx:id="nombreCompletoColumn" text="Nombre Completo" prefWidth="280"/>
-                                </columns>
-                            </TableView>
+                        <!-- VBox que contiene los TableView de detalles -->
+                        <VBox fx:id="detailsPane" prefWidth="500" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
+                            <HBox spacing="5">
+                                <!-- TableView para las personas -->
+                                <TableView fx:id="personTableView" prefHeight="400" prefWidth="400">
+                                    <columns>
+                                        <TableColumn fx:id="nombreCompletoColumn" text="Nombre Completo" prefWidth="380"/>
+                                    </columns>
+                                </TableView>
 
-
-                            <Label text="Fechas" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
-                            <ListView fx:id="dateListView" />
+                                <!-- TableView para las fechas a la derecha -->
+                                <TableView fx:id="dateTableView" prefHeight="400" prefWidth="300">
+                                    <columns>
+                                        <TableColumn fx:id="fechaColumn" text="Fecha" prefWidth="280"/>
+                                    </columns>
+                                </TableView>
+                            </HBox>
                         </VBox>
                     </HBox>
+
+
 
                 </Pane>
             </VBox>
