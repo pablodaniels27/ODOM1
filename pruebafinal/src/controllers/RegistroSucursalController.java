@@ -1,10 +1,10 @@
 package controllers;
 
-import Usuarios.Usuario;
-
+import Services.CacheService;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class RegistroSucursalController {
@@ -34,19 +35,66 @@ public class RegistroSucursalController {
     @FXML
     private TextField searchSupervisoresField;
 
+    @FXML
+    private ScrollPane empleadosScroll;
+
+    @FXML
+    private ScrollPane supervisoresScroll;
+
     private HBox selectedBox;
+    private int empleadosOffset = 0;
+    private int supervisoresOffset = 0;
+    private static final int ITEMS_PER_PAGE = 5;
 
     @FXML
     public void initialize() {
+        // Ajustar tamaño dinámico de los ScrollPane
+        empleadosScroll.sceneProperty().addListener((observable, oldScene, newScene) -> {
+            if (newScene != null) {
+                empleadosScroll.prefWidthProperty().bind(empleadosScroll.getScene().widthProperty().multiply(0.45));
+                supervisoresScroll.prefWidthProperty().bind(supervisoresScroll.getScene().widthProperty().multiply(0.45));
+                empleadosScroll.prefHeightProperty().bind(empleadosScroll.getScene().heightProperty().multiply(0.60));
+                supervisoresScroll.prefHeightProperty().bind(supervisoresScroll.getScene().heightProperty().multiply(0.60));
+            }
+        });
+
         cargarEmpleados();
         cargarSupervisores();
 
         searchEmpleadosField.textProperty().addListener((observable, oldValue, newValue) -> {
+            empleadosOffset = 0;
+            empleadosContainer.getChildren().clear();
             cargarEmpleados(newValue);
         });
 
         searchSupervisoresField.textProperty().addListener((observable, oldValue, newValue) -> {
+            supervisoresOffset = 0;
+            supervisoresContainer.getChildren().clear();
             cargarSupervisores(newValue);
+        });
+
+        empleadosContainer.sceneProperty().addListener((observable, oldScene, newScene) -> {
+            if (newScene != null) {
+                setupScrollListeners();
+            }
+        });
+    }
+
+    private void setupScrollListeners() {
+        empleadosScroll.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() == empleadosScroll.getVmax()) {
+                // Incrementar offset y cargar más datos
+                empleadosOffset++;
+                cargarEmpleados(searchEmpleadosField.getText());
+            }
+        });
+
+        supervisoresScroll.vvalueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.doubleValue() == supervisoresScroll.getVmax()) {
+                // Incrementar offset y cargar más datos
+                supervisoresOffset++;
+                cargarSupervisores(searchSupervisoresField.getText());
+            }
         });
     }
 
@@ -59,11 +107,26 @@ public class RegistroSucursalController {
     }
 
     private void cargarEmpleados(String filtro) {
-        empleadosContainer.getChildren().clear();
+        if (empleadosOffset == 0) {
+            empleadosContainer.getChildren().clear();
+        }
 
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 3 AND estatus_id != 4";
+            // Modificamos el SQL para que busque solo en las columnas nombres y apellido_paterno
+            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados " +
+                    "WHERE jerarquia_id = 3 AND estatus_id != 4 " +
+                    "AND (nombres LIKE ? OR apellido_paterno LIKE ?) " +
+                    "LIMIT ? OFFSET ?";
             PreparedStatement statement = connection.prepareStatement(sql);
+
+            // Usamos el filtro para comparar con los nombres y apellido paterno
+            String filtroSQL = "%" + filtro + "%";
+            statement.setString(1, filtroSQL);
+            statement.setString(2, filtroSQL);
+
+            statement.setInt(3, ITEMS_PER_PAGE);
+            statement.setInt(4, empleadosOffset * ITEMS_PER_PAGE);
+
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
@@ -75,23 +138,35 @@ public class RegistroSucursalController {
 
                 String nombreCompleto = nombre + " " + apellidoPaterno;
 
-                if (nombreCompleto.toLowerCase().contains(filtro.toLowerCase())) {
-                    HBox empleadoBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
-                    empleadosContainer.getChildren().add(empleadoBox);
-                }
+                // No necesitamos hacer la comparación aquí ya que el filtro se aplica directamente en SQL
+                HBox empleadoBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
+                empleadosContainer.getChildren().add(empleadoBox);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
 
     private void cargarSupervisores(String filtro) {
-        supervisoresContainer.getChildren().clear();
+        if (supervisoresOffset == 0) {
+            supervisoresContainer.getChildren().clear();
+        }
 
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados WHERE jerarquia_id = 2 AND estatus_id != 4";
+            // Similar ajuste al método de cargarEmpleados, búsqueda solo en nombres y apellido_paterno
+            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados " +
+                    "WHERE jerarquia_id = 2 AND estatus_id != 4 " +
+                    "AND (nombres LIKE ? OR apellido_paterno LIKE ?) " +
+                    "LIMIT ? OFFSET ?";
             PreparedStatement statement = connection.prepareStatement(sql);
+
+            String filtroSQL = "%" + filtro + "%";
+            statement.setString(1, filtroSQL);
+            statement.setString(2, filtroSQL);
+
+            statement.setInt(3, ITEMS_PER_PAGE);
+            statement.setInt(4, supervisoresOffset * ITEMS_PER_PAGE);
+
             ResultSet resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
@@ -103,15 +178,14 @@ public class RegistroSucursalController {
 
                 String nombreCompleto = nombre + " " + apellidoPaterno;
 
-                if (nombreCompleto.toLowerCase().contains(filtro.toLowerCase())) {
-                    HBox supervisorBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
-                    supervisoresContainer.getChildren().add(supervisorBox);
-                }
+                HBox supervisorBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
+                supervisoresContainer.getChildren().add(supervisorBox);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     private HBox crearEmpleadoBox(int empleadoId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
         HBox empleadoBox = new HBox();
