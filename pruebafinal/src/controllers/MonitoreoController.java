@@ -171,6 +171,20 @@ public class MonitoreoController {
         graficosController = new GraficosController();
         graficosController.setMonitoreoController(this);
 
+        // Listener para que se desmarque el otro CheckBox cuando se selecciona uno
+        supervisoresCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {  // Si se selecciona supervisoresCheckBox
+                empleadosCheckBox.setSelected(false); // Desmarcar empleadosCheckBox
+            }
+        });
+
+        empleadosCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal) {  // Si se selecciona empleadosCheckBox
+                supervisoresCheckBox.setSelected(false); // Desmarcar supervisoresCheckBox
+            }
+        });
+
+
         // Configurar las columnas con los Callbacks
         nombreColumn.setCellValueFactory(createCellValueFactory("nombreCompleto"));
         idColumn.setCellValueFactory(createCellValueFactory("id"));
