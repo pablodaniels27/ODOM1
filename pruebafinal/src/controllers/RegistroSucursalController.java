@@ -44,7 +44,7 @@ public class RegistroSucursalController {
     private HBox selectedBox;
     private int empleadosOffset = 0;
     private int supervisoresOffset = 0;
-    private static final int ITEMS_PER_PAGE = 5;
+    private static final int ITEMS_PER_PAGE = 14;
 
     @FXML
     public void initialize() {
