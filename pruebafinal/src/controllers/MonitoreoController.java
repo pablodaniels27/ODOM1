@@ -13,8 +13,7 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
@@ -25,10 +24,6 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
 
 import javafx.scene.control.cell.PropertyValueFactory;
-
-
-import java.util.HashSet;
-import java.util.Set;
 
 
 public class MonitoreoController {
@@ -183,7 +178,35 @@ public class MonitoreoController {
         estadoColumn.setCellValueFactory(createCellValueFactory("estado"));
 
         employeeTableView.setItems(employees);
+        //123123213
+        // **Nuevo**: Añadir evento de clic para el tipo de asistencia
+        tipoAsistenciaColumn.setCellFactory(tc -> {
+            TableCell<Map<String, Object>, String> cell = new TableCell<>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(item);
+                    }
+                }
+            };
 
+            // Detectar el clic en la celda
+            cell.setOnMouseClicked(event -> {
+                if (!cell.isEmpty()) {
+                    // Obtener los datos de la fila seleccionada
+                    Map<String, Object> employeeData = employeeTableView.getItems().get(cell.getIndex());
+                    System.out.println("Tipo de asistencia clickeado: " + employeeData.get("tipoAsistencia"));
+                    // Mostrar el popup para cambiar el tipo de asistencia
+                    showTipoAsistenciaPopup(employeeData);
+                }
+            });
+
+            return cell;
+        });
+        //123123213
         cargarDepartamentos(); // Cargar los departamentos en el ChoiceBox
         departamentoChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> handleDepartmentSelection());
 
@@ -209,11 +232,25 @@ public class MonitoreoController {
         // Configurar el botón de búsqueda
         searchButton.setOnAction(event -> {
             try {
-                searchByDateAndDepartment(); // Buscar por fecha y departamento
+                // Obtener los valores de los filtros
+                String departamentoSeleccionado = departamentoChoiceBox.getValue();
+                String searchQuery = searchField.getText().trim();
+                boolean incluirSupervisores = supervisoresCheckBox.isSelected();
+                boolean incluirEmpleados = empleadosCheckBox.isSelected();
+                String fechaInicio = fechaInicioPicker.getValue() != null ? fechaInicioPicker.getValue().toString() : "";
+                String fechaFin = fechaFinPicker.getValue() != null ? fechaFinPicker.getValue().toString() : "";
+
+                // Filtrar y cargar datos en la tabla (ahora con los parámetros correctos)
+                searchByDateAndDepartment(departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados, fechaInicio, fechaFin);
+
+                // Actualizar el gráfico con los filtros seleccionados
+                graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados);
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
+
 
         // Configurar botones de paginación
         previousButton.setOnAction(event -> {
@@ -312,10 +349,7 @@ public class MonitoreoController {
         showPage(1);
     }
 
-    private void searchByDateAndDepartment() throws SQLException {
-        String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
-        String searchQuery = searchField.getText().trim();  // Obtener el valor del campo de búsqueda
-
+    private void searchByDateAndDepartment(String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados, String fechaInicio, String fechaFin) throws SQLException {
         employees.clear();
 
         DatabaseConnection connectNow = new DatabaseConnection();
@@ -329,90 +363,77 @@ public class MonitoreoController {
                 "JOIN dias ON en.dia_id = dias.id " +
                 "JOIN estatus_empleado es ON e.estatus_id = es.id " +
                 "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id ";
+                "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
+                "WHERE dias.fecha BETWEEN ? AND ? ";  // Filtrar por fechas primero
 
-        // Filtros de departamento, supervisores, empleados y búsqueda por nombre/apellido
-        boolean filtroDepartamento = !departamentoSeleccionado.equals("Todos los departamentos");
-        boolean filtroSupervisores = supervisoresCheckBox.isSelected();
-        boolean filtroEmpleados = empleadosCheckBox.isSelected();
-        boolean filtroFechas = fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null;
-
-        // Agregar las condiciones en función de los filtros seleccionados
-        StringBuilder conditions = new StringBuilder();
-
-        if (filtroDepartamento) {
-            conditions.append("e.departamento_id IN (SELECT id FROM departamentos WHERE nombre = '").append(departamentoSeleccionado).append("') ");
+        // Agregar filtros adicionales después de las fechas
+        if (!departamentoSeleccionado.equals("Todos los departamentos")) {
+            query += "AND e.departamento_id IN (SELECT id FROM departamentos WHERE nombre = ?) ";
         }
 
-        if (filtroSupervisores || filtroEmpleados) {
-            if (conditions.length() > 0) conditions.append("AND ");
-            conditions.append("(");
-            if (filtroSupervisores) {
-                conditions.append("e.jerarquia_id = 2 ");  // ID de Supervisores
+        if (incluirSupervisores || incluirEmpleados) {
+            query += "AND (";
+            if (incluirSupervisores) {
+                query += "e.jerarquia_id = 2 ";  // Supervisores
             }
-            if (filtroSupervisores && filtroEmpleados) {
-                conditions.append("OR ");
+            if (incluirSupervisores && incluirEmpleados) {
+                query += "OR ";
             }
-            if (filtroEmpleados) {
-                conditions.append("e.jerarquia_id = 3 ");  // ID de Empleados
+            if (incluirEmpleados) {
+                query += "e.jerarquia_id = 3 ";  // Empleados
             }
-            conditions.append(") ");
+            query += ") ";
         }
 
         if (!searchQuery.isEmpty()) {
-            if (conditions.length() > 0) conditions.append("AND ");
-            conditions.append("(e.nombres LIKE '%").append(searchQuery).append("%' OR e.apellido_paterno LIKE '%").append(searchQuery).append("%' OR e.apellido_materno LIKE '%").append(searchQuery).append("%') ");
+            query += "AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?) ";
         }
 
-        if (filtroFechas) {
-            if (conditions.length() > 0) conditions.append("AND ");
-            String fechaInicioSQL = fechaInicioPicker.getValue().toString();
-            String fechaFinSQL = fechaFinPicker.getValue().toString();
-            conditions.append("dias.fecha BETWEEN '").append(fechaInicioSQL).append("' AND '").append(fechaFinSQL).append("' ");
-        }
+        // Aplicar el orden por fecha de manera ascendente
+        query += "ORDER BY dias.fecha ASC";  // Ordenar por fecha de manera ascendente
 
-        // Si hay condiciones, agregarlas a la consulta
-        if (conditions.length() > 0) {
-            query += "WHERE " + conditions.toString();
-        }
+        try (PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
+            int paramIndex = 1;
 
-        System.out.println("Ejecutando consulta SQL: " + query);
+            // Asignar los parámetros de fecha primero
+            preparedStatement.setString(paramIndex++, fechaInicio);
+            preparedStatement.setString(paramIndex++, fechaFin);
 
-        try {
-            Statement statement = connectDB.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
+            // Asignar los parámetros de departamento
+            if (!departamentoSeleccionado.equals("Todos los departamentos")) {
+                preparedStatement.setString(paramIndex++, departamentoSeleccionado);
+            }
+
+            // Asignar los parámetros de búsqueda por nombre
+            if (!searchQuery.isEmpty()) {
+                String searchPattern = "%" + searchQuery + "%";
+                preparedStatement.setString(paramIndex++, searchPattern);
+                preparedStatement.setString(paramIndex++, searchPattern);
+                preparedStatement.setString(paramIndex++, searchPattern);
+            }
+
+            ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 Map<String, Object> employeeData = new HashMap<>();
                 employeeData.put("id", String.valueOf(resultSet.getInt("id")));
                 employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno"));
-                employeeData.put("fechaEntrada", resultSet.getString("fecha") != null ? resultSet.getString("fecha") : "");
-                employeeData.put("horaEntrada", resultSet.getString("hora_entrada") != null ? resultSet.getString("hora_entrada") : "");
-                employeeData.put("horaSalida", resultSet.getString("hora_salida") != null ? resultSet.getString("hora_salida") : "");
-
-                // Cálculo del tiempo laborado
-                String horaEntrada = resultSet.getString("hora_entrada");
-                String horaSalida = resultSet.getString("hora_salida");
-                if (horaEntrada != null && horaSalida != null) {
-                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
-                } else {
-                    employeeData.put("tiempoLaborado", "N/A");
-                }
-
-                employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia") != null ? resultSet.getString("tipo_asistencia") : "");
-                employeeData.put("tipoSalida", resultSet.getString("tipo_salida") != null ? resultSet.getString("tipo_salida") : "");
-                employeeData.put("estado", resultSet.getString("estado") != null ? resultSet.getString("estado") : "");
+                employeeData.put("fechaEntrada", resultSet.getString("fecha"));
+                employeeData.put("horaEntrada", resultSet.getString("hora_entrada"));
+                employeeData.put("horaSalida", resultSet.getString("hora_salida"));
+                employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
+                employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
+                employeeData.put("estado", resultSet.getString("estado"));
 
                 employees.add(employeeData);
             }
 
-            connectDB.close();
-        } catch (Exception e) {
+            // Mostrar la primera página de resultados después de la búsqueda
+            showPage(1);
+
+        } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        // Mostrar la primera página de resultados
-        showPage(1);
     }
 
     private String calculateTiempoLaborado(String horaEntrada, String horaSalida) {
@@ -648,16 +669,23 @@ public class MonitoreoController {
         }
 
         try {
-            // Actualizar la tabla de empleados
-            searchByDateAndDepartment(); // Filtra los empleados por el departamento, tipo de asistencia y rango de fechas
+            // Obtener los valores de los filtros
+            String departamentoSeleccionado = departamentoChoiceBox.getValue();
+            String fechaInicio = fechaInicioPicker.getValue() != null ? fechaInicioPicker.getValue().toString() : "";
+            String fechaFin = fechaFinPicker.getValue() != null ? fechaFinPicker.getValue().toString() : "";
+            String searchQuery = searchField.getText().trim();
+
+            // Si no hay fechas seleccionadas, mostrar un mensaje de advertencia o tomar una acción predeterminada
+            if (fechaInicio.isEmpty() || fechaFin.isEmpty()) {
+                System.out.println("Por favor, selecciona un rango de fechas.");
+                return;  // Salir del método si no hay fechas seleccionadas
+            }
+
+            // Actualizar la tabla de empleados con los parámetros correctos
+            searchByDateAndDepartment(departamentoSeleccionado, searchQuery, soloSupervisores, soloEmpleados, fechaInicio, fechaFin);
 
             // Actualizar la gráfica
             if (chartContainer.isVisible()) {
-                String departamentoSeleccionado = departamentoChoiceBox.getValue();
-                String fechaInicio = fechaInicioPicker.getValue() != null ? fechaInicioPicker.getValue().toString() : "";
-                String fechaFin = fechaFinPicker.getValue() != null ? fechaFinPicker.getValue().toString() : "";
-                String searchQuery = searchField.getText();
-
                 // Generar la gráfica actualizada
                 graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, searchQuery, soloSupervisores, soloEmpleados);
             }
@@ -917,6 +945,70 @@ public class MonitoreoController {
         dateTableView.getItems().clear(); // Esto vacía la tabla de fechas
     }
 
+    private void showTipoAsistenciaPopup(Map<String, Object> employeeData) {
+        // Crear el Dialog
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Cambiar Tipo de Asistencia");
+
+        // Crear el ChoiceBox con las opciones
+        ChoiceBox<String> choiceBox = new ChoiceBox<>();
+        choiceBox.getItems().addAll("Asistencia", "No Asistencia", "Retardo", "Justificación");
+
+        // Añadir el ChoiceBox al contenido del Dialog
+        dialog.getDialogPane().setContent(choiceBox);
+
+        // Añadir botones de OK y Cancelar
+        ButtonType okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+
+        // Procesar el resultado cuando se hace clic en OK
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == okButtonType) {
+                return choiceBox.getValue(); // Devolver el valor seleccionado
+            }
+            return null;
+        });
+
+        // Mostrar el Dialog y esperar por la respuesta
+        Optional<String> result = dialog.showAndWait();
+
+        result.ifPresent(newTipoAsistencia -> {
+            // Actualizar el tipo de asistencia en los datos de la tabla
+            employeeData.put("tipoAsistencia", newTipoAsistencia);
+
+            // Llamar a la base de datos para actualizar el tipo de asistencia SOLO en la fecha seleccionada
+            try (Connection connection = DatabaseConnection.getConnection()) {
+                // Obtener el id correspondiente al tipo de asistencia seleccionado
+                String query = "SELECT id FROM tipos_asistencia WHERE nombre = ?";
+                PreparedStatement preparedStatement = connection.prepareStatement(query);
+                preparedStatement.setString(1, newTipoAsistencia);
+
+                ResultSet resultSet = preparedStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    int tipoAsistenciaId = resultSet.getInt("id");
+
+                    // Ahora que tenemos el tipo de asistencia, actualizamos en la tabla `entradas_salidas` SOLO para la fecha seleccionada
+                    String updateQuery = "UPDATE entradas_salidas SET tipo_asistencia_id = ? WHERE empleado_id = ? AND dia_id = (SELECT id FROM dias WHERE fecha = ?)";
+                    PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
+                    updateStatement.setInt(1, tipoAsistenciaId); // El nuevo ID del tipo de asistencia
+                    updateStatement.setInt(2, Integer.parseInt(employeeData.get("id").toString())); // ID del empleado
+                    updateStatement.setString(3, employeeData.get("fechaEntrada").toString()); // Fecha seleccionada
+
+                    updateStatement.executeUpdate();
+                    updateStatement.close();
+                }
+
+                preparedStatement.close();
+                resultSet.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            // Recargar la tabla para mostrar el nuevo valor
+            employeeTableView.refresh();
+        });
+    }
 
 
 }
