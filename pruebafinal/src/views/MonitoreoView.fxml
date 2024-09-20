@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="1351.0" prefWidth="1395.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
+<AnchorPane prefHeight="1351.0" prefWidth="1395.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MonitoreoController">
 
     <BorderPane style="-fx-background-color: transparent; -fx-padding: 10; -fx-border-width: 10;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
@@ -39,7 +39,7 @@
                         <!-- VBox que contiene los TableView de detalles -->
                         <VBox fx:id="detailsPane" prefWidth="500" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
                             <!-- Label dinámico para mostrar el tipo de asistencia -->
-                            <Label fx:id="asistenciaLabel" text="Tipo de Asistencia: N/A" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                            <Label fx:id="asistenciaLabel" style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Tipo de Asistencia: N/A" />
 
                             <HBox spacing="5">
                                 <TableView fx:id="personTableView" prefHeight="400" prefWidth="400">
@@ -65,7 +65,7 @@
 
         <center>
             <AnchorPane>
-                <TableView fx:id="employeeTableView" prefHeight="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <TableView fx:id="employeeTableView" layoutX="-8.0" layoutY="49.0" prefHeight="1017.0" prefWidth="1383.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-8.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="49.0">
                     <columns>
                         <TableColumn fx:id="nombreColumn" minWidth="200" text="Nombre completo" />
                         <TableColumn fx:id="idColumn" minWidth="20" text="ID" />
@@ -86,7 +86,7 @@
                 <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10">
                     <ChoiceBox fx:id="itemsPerPageChoiceBox" prefWidth="100.0" />
                     <Button fx:id="previousButton" text="Previous" />
-                    <HBox fx:id="paginationBox" spacing="5.0" alignment="CENTER" />
+                    <HBox fx:id="paginationBox" alignment="CENTER" spacing="5.0" />
                     <Button fx:id="nextButton" text="Next" />
                 </HBox>
             </AnchorPane>
