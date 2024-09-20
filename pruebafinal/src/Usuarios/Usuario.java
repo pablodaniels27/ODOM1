@@ -1,12 +1,4 @@
 package Usuarios;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import controllers.DatabaseConnection;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
 
 public class Usuario {
     private int id;
@@ -24,41 +16,12 @@ public class Usuario {
     private String profesion;
     private int departamentoId;
     private int jerarquiaId;
-    private int huellaId;  // Atributo para almacenar el ID de la huella
+    private int estatusId;
 
-    public String getTipoAsistencia() {
-        return tipoAsistencia;
-    }
-
-    public void setTipoAsistencia(String tipoAsistencia) {
-        this.tipoAsistencia = tipoAsistencia;
-    }
-
-    public String getTipoSalida() {
-        return tipoSalida;
-    }
-
-    public void setTipoSalida(String tipoSalida) {
-        this.tipoSalida = tipoSalida;
-    }
-
-    public String getEstadoEmpleado() {
-        return estadoEmpleado;
-    }
-
-    public void setEstadoEmpleado(String estadoEmpleado) {
-        this.estadoEmpleado = estadoEmpleado;
-    }
-
-    private String tipoAsistencia;  // Nuevo apartado: Tipo de Asistencia
-    private String tipoSalida;      // Nuevo apartado: Tipo de Salida
-    private String estadoEmpleado;  // Nuevo apartado: Estado del Empleado
-
-    // Constructor completo
+    // Constructor con todos los campos
     public Usuario(int id, String nombres, String apellidoMaterno, String apellidoPaterno, String fechaNacimiento,
                    String pais, String ciudad, String correoElectronico, String lada, String telefono, String rfc,
-                   String curp, String profesion, int departamentoId, int jerarquiaId, int huellaId,
-                   String tipoAsistencia, String tipoSalida, String estadoEmpleado) {
+                   String curp, String profesion, int departamentoId, int jerarquiaId, int estatusId) {
         this.id = id;
         this.nombres = nombres;
         this.apellidoMaterno = apellidoMaterno;
@@ -74,13 +37,10 @@ public class Usuario {
         this.profesion = profesion;
         this.departamentoId = departamentoId;
         this.jerarquiaId = jerarquiaId;
-        this.huellaId = huellaId;
-        this.tipoAsistencia = tipoAsistencia;  // Asigna el nuevo apartado
-        this.tipoSalida = tipoSalida;          // Asigna el nuevo apartado
-        this.estadoEmpleado = estadoEmpleado;  // Asigna el nuevo apartado
+        this.estatusId = estatusId;
     }
 
-    // Getters y setters
+    // Getters y Setters para cada atributo
     public int getId() {
         return id;
     }
@@ -201,29 +161,20 @@ public class Usuario {
         this.jerarquiaId = jerarquiaId;
     }
 
-    public int getHuellaId() {
-        return huellaId;
+    public int getEstatusId() {
+        return estatusId;
     }
 
-    public void setHuellaId(int huellaId) {
-        this.huellaId = huellaId;
+    public void setEstatusId(int estatusId) {
+        this.estatusId = estatusId;
     }
 
-    // Método para cargar la huella desde la base de datos utilizando DatabaseConnection
-    public byte[] cargarHuellaDesdeBD() throws SQLException {
-        String query = "SELECT huella FROM huellas WHERE id = ?";
-        try (Connection connection = DatabaseConnection.getConnection(); // Utiliza la conexión de la clase DatabaseConnection
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, this.huellaId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getBytes("huella");
-            } else {
-                throw new SQLException("Huella no encontrada.");
-            }
-        }
+    // Métodos adicionales
+    public String getNombreCompleto() {
+        return nombres + " " + apellidoPaterno + " " + apellidoMaterno;
     }
 
-
-
+    public boolean esActivo() {
+        return estatusId == 1; // Supone que el estatus '1' es 'Activo'
+    }
 }
