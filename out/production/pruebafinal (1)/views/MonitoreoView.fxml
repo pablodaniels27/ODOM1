@@ -39,7 +39,7 @@
                         <!-- VBox que contiene los TableView de detalles -->
                         <VBox fx:id="detailsPane" prefWidth="500" spacing="10" style="-fx-padding: 10; -fx-border-color: black; -fx-border-width: 1;">
                             <!-- Label dinámico para mostrar el tipo de asistencia -->
-                            <Label fx:id="asistenciaLabel" text="Tipo de Asistencia: N/A" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+                            <Label fx:id="asistenciaLabel" style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Tipo de Asistencia: N/A" />
 
                             <HBox spacing="5">
                                 <TableView fx:id="personTableView" prefHeight="400" prefWidth="400">
@@ -65,7 +65,14 @@
 
         <center>
             <AnchorPane>
-                <TableView fx:id="employeeTableView" prefHeight="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <!-- Aquí agregamos el nuevo label para mostrar el departamento seleccionado -->
+                <Label fx:id="selectedDepartmentLabel"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold;"
+                       text="Departamento: Todos los departamentos"
+                       AnchorPane.leftAnchor="0.0"
+                       AnchorPane.rightAnchor="0.0"
+                       alignment="CENTER" />
+                <TableView fx:id="employeeTableView" layoutX="-3.0" layoutY="29.0" prefHeight="1036.0" prefWidth="1378.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-3.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="29.0">
                     <columns>
                         <TableColumn fx:id="nombreColumn" minWidth="200" text="Nombre completo" />
                         <TableColumn fx:id="idColumn" minWidth="20" text="ID" />
@@ -76,7 +83,11 @@
                         <TableColumn fx:id="tipoAsistenciaColumn" minWidth="170" text="Tipo de Asistencia" />
                         <TableColumn fx:id="tipoSalidaColumn" minWidth="150" text="Tipo de Salida" />
                         <TableColumn fx:id="estadoColumn" minWidth="100" text="Estado" />
+                        <TableColumn fx:id="notasColum" minWidth="100" text="Notas" />
                     </columns>
+               <columnResizePolicy>
+                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
                 </TableView>
             </AnchorPane>
         </center>
@@ -86,7 +97,7 @@
                 <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10">
                     <ChoiceBox fx:id="itemsPerPageChoiceBox" prefWidth="100.0" />
                     <Button fx:id="previousButton" text="Previous" />
-                    <HBox fx:id="paginationBox" spacing="5.0" alignment="CENTER" />
+                    <HBox fx:id="paginationBox" alignment="CENTER" spacing="5.0" />
                     <Button fx:id="nextButton" text="Next" />
                 </HBox>
             </AnchorPane>

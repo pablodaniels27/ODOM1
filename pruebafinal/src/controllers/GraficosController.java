@@ -44,7 +44,12 @@ public class GraficosController {
 
         // Crear el gráfico de barras
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-        barChart.setTitle("Conteo de Tipos de Asistencia por Departamento");
+        // Cambiar el título dinámicamente según el departamento seleccionado
+        if (!departamentoSeleccionado.equals("Todos los departamentos")) {
+            barChart.setTitle("Conteo de Tipos de Asistencia para : " + departamentoSeleccionado);
+        } else {
+            barChart.setTitle("Conteo de Tipos de Asistencia por Departamento");
+        }
 
         // Cargar el archivo CSS usando ClassLoader
         try {
