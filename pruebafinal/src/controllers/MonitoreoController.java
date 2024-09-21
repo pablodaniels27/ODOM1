@@ -138,7 +138,7 @@ public class MonitoreoController {
 
     private String tipoAsistenciaSeleccionado = "Asistencia"; // Inicializar con un valor por defecto
 
-    private ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
+    private final ObservableList<Map<String, Object>> employees = FXCollections.observableArrayList();
 
     private int itemsPerPage = 10;
     private int currentPage = 1;
@@ -278,7 +278,7 @@ public class MonitoreoController {
         employees.clear();
 
         DatabaseConnection connectNow = new DatabaseConnection();
-        Connection connectDB = connectNow.getConnection();
+        Connection connectDB = DatabaseConnection.getConnection();
 
         // Consulta SQL para obtener todas las entradas/salidas
         String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
@@ -337,7 +337,7 @@ public class MonitoreoController {
         employees.clear();
 
         DatabaseConnection connectNow = new DatabaseConnection();
-        Connection connectDB = connectNow.getConnection();
+        Connection connectDB = DatabaseConnection.getConnection();
 
         // Base de la consulta
         String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
@@ -391,7 +391,7 @@ public class MonitoreoController {
 
         // Si hay condiciones, agregarlas a la consulta
         if (conditions.length() > 0) {
-            query += "WHERE " + conditions.toString();
+            query += "WHERE " + conditions;
         }
 
         System.out.println("Ejecutando consulta SQL: " + query);
@@ -445,7 +445,7 @@ public class MonitoreoController {
 
         try {
             DatabaseConnection connectNow = new DatabaseConnection();
-            Connection connectDB = connectNow.getConnection();
+            Connection connectDB = DatabaseConnection.getConnection();
 
             // Base de la consulta
             String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
