@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -49,11 +50,12 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import static Usuarios.Supervisor.getCurrentSupervisorId;
-
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.input.KeyEvent;
 
 public class MonitoreoController {
-    @FXML
-    public ChoiceBox tipoAsistenciaChoiceBox;
+
     @FXML
     private TableView<Fecha> dateTableView;
 
@@ -161,8 +163,14 @@ public class MonitoreoController {
 
     private GraficosController graficosController;
 
+
+    private ContextMenu suggestionsMenu = new ContextMenu();
+
     @FXML
     public void initialize() {
+
+        // Añadir un evento al SearchField para capturar las teclas presionadas
+        searchField.setOnKeyReleased(event -> searchForNames(event));
 
         notasColum.setCellFactory(tc -> new TableCell<Map<String, Object>, String>() {
             @Override
@@ -288,6 +296,21 @@ public class MonitoreoController {
         // Configurar el botón de búsqueda
         searchButton.setOnAction(event -> {
             try {
+                // Verificar si se ha seleccionado una fecha de inicio y una fecha final
+                if (fechaInicioPicker.getValue() == null || fechaFinPicker.getValue() == null) {
+                    // Mostrar una alerta si falta alguna de las fechas
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Advertencia");
+                    alert.setHeaderText("Faltan fechas");
+                    alert.setContentText("Por favor, selecciona una fecha de inicio y una fecha final.");
+                    alert.showAndWait();
+                    return; // Salir de la acción sin ejecutar la búsqueda
+                }
+                // Limpiar las selecciones y los datos de ambos TableViews
+                personTableView.getSelectionModel().clearSelection();
+                dateTableView.getSelectionModel().clearSelection();
+                personTableView.getItems().clear();
+                dateTableView.getItems().clear();
                 // Obtener los valores de los filtros
                 String departamentoSeleccionado = departamentoChoiceBox.getValue();
                 // Actualizar el Label con el departamento seleccionado
@@ -632,6 +655,7 @@ public class MonitoreoController {
 
             // Mostrar los datos en la tabla
             showPage(1);
+            updatePaginationButtons();
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -804,48 +828,7 @@ public class MonitoreoController {
         button.setStyle(""); // Restaurar el estilo predeterminado
     }
 
-    //Handlerfilterchange
-    @FXML
-    private void handleFilterChange() {
-        boolean soloSupervisores = supervisoresCheckBox.isSelected();
-        boolean soloEmpleados = empleadosCheckBox.isSelected();
-
-        // Si ambos checkboxes están seleccionados, no aplicar filtro
-        if (soloSupervisores && soloEmpleados) {
-            supervisoresCheckBox.setSelected(false);
-            empleadosCheckBox.setSelected(false);
-        }
-
-        try {
-            // Obtener los valores de los filtros
-            String departamentoSeleccionado = departamentoChoiceBox.getValue();
-            String fechaInicio = fechaInicioPicker.getValue() != null ? fechaInicioPicker.getValue().toString() : "";
-            String fechaFin = fechaFinPicker.getValue() != null ? fechaFinPicker.getValue().toString() : "";
-            String searchQuery = searchField.getText().trim();
-
-            // Verificar si las fechas están seleccionadas
-            if (!fechaInicio.isEmpty() && !fechaFin.isEmpty()) {
-                // Si ambas fechas están seleccionadas, aplicar el filtro por fechas
-                searchByDateAndDepartment(departamentoSeleccionado, searchQuery, soloSupervisores, soloEmpleados, fechaInicio, fechaFin);
-
-                // Actualizar la gráfica si el contenedor de gráficos es visible
-                if (chartContainer.isVisible()) {
-                    graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, searchQuery, soloSupervisores, soloEmpleados);
-                }
-            } else {
-                // Si no hay fechas seleccionadas, mantener el comportamiento original (mostrar los datos más recientes)
-                searchByDateAndDepartment(departamentoSeleccionado, searchQuery, soloSupervisores, soloEmpleados, "", "");
-
-                // Actualizar la gráfica si el contenedor de gráficos es visible
-                if (chartContainer.isVisible()) {
-                    graficosController.createBarChart(chartPane, "", "", departamentoSeleccionado, searchQuery, soloSupervisores, soloEmpleados);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
+    // aqui estaba el Handlerfilterchange
 
     @FXML
     private void resetFilters() {
@@ -862,6 +845,8 @@ public class MonitoreoController {
             toggleGraphView(); // Volver a la vista de tabla si estamos en gráficos
         }
 
+        selectedDepartmentLabel.setText("Departamento: Todos los departamentos" );
+
         // Cargar los registros más recientes (esto ya está en el método loadAllEntries)
         try {
             employees.clear();
@@ -869,6 +854,9 @@ public class MonitoreoController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        // Mostrar la primera página
+        showPage(1);
     }
 
     //TABLAS DE NOMBRES Y FECHAS
@@ -1098,6 +1086,148 @@ public class MonitoreoController {
     public void clearDateTableView() {
         dateTableView.getItems().clear(); // Esto vacía la tabla de fechas
     }
+
+    private void searchForNames(KeyEvent event) {
+        String searchQuery = searchField.getText().trim();
+
+        // Si el texto tiene menos de 3 caracteres, no buscar
+        if (searchQuery.length() < 3) {
+            suggestionsMenu.hide();
+            return;
+        }
+
+        // Obtener el estado de los CheckBox
+        boolean incluirSupervisores = supervisoresCheckBox.isSelected();
+        boolean incluirEmpleados = empleadosCheckBox.isSelected();
+
+        // Si ninguno está seleccionado, asumimos que se deben mostrar todos
+        if (!incluirSupervisores && !incluirEmpleados) {
+            incluirSupervisores = true;
+            incluirEmpleados = true;
+        }
+
+        // Obtener coincidencias desde la base de datos
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            // Consulta SQL que concatena los campos de nombres y apellidos
+            StringBuilder query = new StringBuilder("SELECT CONCAT(TRIM(nombres), ' ', TRIM(apellido_paterno), ' ', TRIM(apellido_materno)) AS nombreCompleto, jerarquia_id ");
+            query.append("FROM empleados WHERE ");
+
+            // Filtrar por nombre completo usando CONCAT en lugar de buscar por partes
+            query.append("CONCAT(LOWER(TRIM(nombres)), ' ', LOWER(TRIM(apellido_paterno)), ' ', LOWER(TRIM(apellido_materno))) LIKE ?");
+
+            // Filtros para supervisores o empleados
+            if (incluirSupervisores || incluirEmpleados) {
+                query.append(" AND (");
+                if (incluirSupervisores) {
+                    query.append("jerarquia_id = 2");  // Supervisores
+                }
+                if (incluirSupervisores && incluirEmpleados) {
+                    query.append(" OR ");
+                }
+                if (incluirEmpleados) {
+                    query.append("jerarquia_id = 3");  // Empleados
+                }
+                query.append(")");
+            }
+
+            PreparedStatement preparedStatement = connection.prepareStatement(query.toString());
+
+            // Crear el patrón de búsqueda
+            String searchPattern = "%" + searchQuery.toLowerCase() + "%";
+
+            // Asignar el patrón de búsqueda
+            preparedStatement.setString(1, searchPattern);
+
+            // Ejecutar la consulta
+            ResultSet resultSet = preparedStatement.executeQuery();
+            ObservableList<String> results = FXCollections.observableArrayList();
+
+            // Procesar los resultados
+            while (resultSet.next()) {
+                results.add(resultSet.getString("nombreCompleto") + "," + resultSet.getInt("jerarquia_id"));  // Añadir la jerarquía a los resultados
+            }
+
+            if (!results.isEmpty()) {
+                populateSuggestions(results);
+            } else {
+                suggestionsMenu.hide();
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
+
+    // Método para mostrar sugerencias en el ContextMenu
+    // Método para mostrar sugerencias en el ContextMenu
+    private void populateSuggestions(ObservableList<String> suggestions) {
+        suggestionsMenu.getItems().clear();
+
+        // Crear un VBox para contener las sugerencias
+        VBox suggestionBox = new VBox();
+        suggestionBox.setFillWidth(true);
+        suggestionBox.setStyle("-fx-background-color: white;"); // Asegurar que el fondo del VBox sea siempre blanco
+
+        // Obtener el estado de los checkboxes
+        boolean incluirSupervisores = supervisoresCheckBox.isSelected();
+        boolean incluirEmpleados = empleadosCheckBox.isSelected();
+
+        // Si ninguno de los checkboxes está seleccionado, mostramos todo (supervisores y empleados)
+        if (!incluirSupervisores && !incluirEmpleados) {
+            incluirSupervisores = true;
+            incluirEmpleados = true;
+        }
+
+        for (String suggestion : suggestions) {
+            // Dividir la sugerencia para obtener el nombre completo y la jerarquía
+            String[] suggestionParts = suggestion.split(",");
+            String nombreCompleto = suggestionParts[0];
+            int jerarquiaId = Integer.parseInt(suggestionParts[1]);  // Jerarquía: 2 = Supervisor, 3 = Empleado
+
+            // Filtrar según el estado de los checkboxes
+            if ((incluirSupervisores && jerarquiaId == 2) || (incluirEmpleados && jerarquiaId == 3)) {
+                // Crear un Label para cada sugerencia en lugar de un MenuItem
+                Label item = new Label(nombreCompleto);
+                item.setStyle("-fx-padding: 5px; -fx-background-color: white;"); // Añadir algo de estilo
+                // Añadir un evento de "hover" para que se destaque el Label cuando el mouse esté sobre él
+                item.setOnMouseEntered(event -> item.setStyle("-fx-padding: 5px; -fx-background-color: #0078d7; -fx-text-fill: white;"));
+                item.setOnMouseExited(event -> item.setStyle("-fx-padding: 5px; -fx-background-color: white; -fx-text-fill: black;"));
+
+                // Evento al hacer clic sobre la sugerencia
+                item.setOnMouseClicked(event -> {
+                    searchField.setText(nombreCompleto);
+                    suggestionsMenu.hide();
+                });
+
+                suggestionBox.getChildren().add(item); // Añadir el Label al VBox
+            }
+        }
+
+        // Crear un ScrollPane para el VBox si hay muchas sugerencias
+        ScrollPane scrollPane = new ScrollPane(suggestionBox);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(150); // Altura máxima del ScrollPane
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED); // Activar scroll vertical cuando sea necesario
+
+        // Añadir el ScrollPane en un CustomMenuItem
+        CustomMenuItem scrollableMenuItem = new CustomMenuItem(scrollPane, false);
+
+        // Añadir el CustomMenuItem al ContextMenu
+        suggestionsMenu.getItems().add(scrollableMenuItem);
+
+        // Mostrar el menú justo debajo del TextField
+        if (!suggestionsMenu.isShowing()) {
+            Bounds boundsInScreen = searchField.localToScreen(searchField.getBoundsInLocal());
+            suggestionsMenu.show(searchField, boundsInScreen.getMinX(), boundsInScreen.getMaxY());
+        }
+    }
+
+
 
 
 

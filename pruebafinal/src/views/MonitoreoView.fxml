@@ -20,8 +20,8 @@
                     <Label layoutX="370" layoutY="50" text="Fecha Fin" />
                     <DatePicker fx:id="fechaFinPicker" layoutX="500" layoutY="50" prefWidth="200" />
 
-                    <CheckBox fx:id="supervisoresCheckBox" layoutX="720" layoutY="10" onAction="#handleFilterChange" text="Sólo Supervisores" />
-                    <CheckBox fx:id="empleadosCheckBox" layoutX="720" layoutY="50" onAction="#handleFilterChange" text="Sólo Empleados" />
+                    <CheckBox fx:id="supervisoresCheckBox" layoutX="720" layoutY="10"  text="Sólo Supervisores" />
+                    <CheckBox fx:id="empleadosCheckBox" layoutX="720" layoutY="50"  text="Sólo Empleados" />
 
                     <HBox layoutX="10" layoutY="90" spacing="10">
                         <Label text="Nombre, Apellido" />
