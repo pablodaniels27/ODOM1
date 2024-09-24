@@ -4,80 +4,107 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane minHeight="480" minWidth="640" prefHeight="720" prefWidth="1280" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroController">
-    <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Registro de empleado" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
-   <AnchorPane layoutX="10.0" layoutY="50.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="50.0">
-      <children>
-          <GridPane hgap="10" vgap="10">
-              <columnConstraints>
-                  <!-- Configuración de las columnas: Ampliar el ancho de las columnas -->
-                  <ColumnConstraints minWidth="150" prefWidth="200" />
-                  <ColumnConstraints minWidth="150" prefWidth="200" />
-                  <ColumnConstraints minWidth="150" prefWidth="200" />
-                  <ColumnConstraints minWidth="150" prefWidth="200" />
-                  <ColumnConstraints minWidth="150" prefWidth="200" />
-                  <ColumnConstraints minWidth="150" prefWidth="200" />
-                  <ColumnConstraints minWidth="150" prefWidth="200" />
-                  <ColumnConstraints minWidth="150" prefWidth="200" />
-              </columnConstraints>
-              <rowConstraints>
-                  <!-- Configuración de las filas -->
-                  <RowConstraints minHeight="30.0" prefHeight="40.0" />
-                  <RowConstraints minHeight="30.0" prefHeight="40.0" />
-                  <RowConstraints minHeight="30.0" prefHeight="40.0" />
-                  <RowConstraints minHeight="30.0" prefHeight="40.0" />
-                  <RowConstraints minHeight="30.0" prefHeight="40.0" />
-                  <RowConstraints minHeight="30.0" prefHeight="40.0" />
-                  <RowConstraints minHeight="30.0" prefHeight="40.0" />
-                  <RowConstraints minHeight="30.0" prefHeight="40.0" />
-              </rowConstraints>
-      
-              <Label text="Nombre/s" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-              <TextField fx:id="nombreField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-              <Label text="Apellido Materno" GridPane.columnIndex="4" />
-              <TextField fx:id="apellidoMaternoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="5" />
-              <Label text="Apellido Paterno" GridPane.columnIndex="2" />
-              <TextField fx:id="apellidoPaternoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" />
-              <Label text="Fecha de nacimiento" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-              <DatePicker fx:id="fechaNacimientoPicker" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-              <Label text="País" GridPane.columnIndex="2" GridPane.rowIndex="1" />
-              <TextField fx:id="paisField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" GridPane.rowIndex="1" />
-              <Label text="Ciudad" GridPane.columnIndex="4" GridPane.rowIndex="1" />
-              <TextField fx:id="ciudadField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="5" GridPane.rowIndex="1" />
-              <Label text="Correo electrónico" GridPane.columnIndex="6" GridPane.rowIndex="1" />
-              <TextField fx:id="emailField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="7" GridPane.rowIndex="1" />
-              <Label text="Lada" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-              <TextField fx:id="ladaField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-              <Label text="Teléfono" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-              <TextField fx:id="telefonoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" GridPane.rowIndex="2" />
-              <Label text="RFC" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-              <TextField fx:id="rfcField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="5" GridPane.rowIndex="2" />
-              <Label text="CURP" GridPane.columnIndex="6" GridPane.rowIndex="2" />
-              <TextField fx:id="curpField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="7" GridPane.rowIndex="2" />
-              <Label text="Profesión" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-              <TextField fx:id="profesionField" prefWidth="400" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.columnSpan="3" GridPane.rowIndex="3" />
-      
-              <Label text="Departamento" GridPane.columnIndex="4" GridPane.rowIndex="3" />
-              <ChoiceBox fx:id="departamentoChoiceBox" minWidth="150" prefWidth="200" style="-fx-font-size: 12px;" GridPane.columnIndex="5" GridPane.rowIndex="3" />
-      
-              <Label text="Puesto" GridPane.columnIndex="6" GridPane.rowIndex="3" />
-              <ChoiceBox fx:id="puestoChoiceBox" minWidth="150" prefWidth="200" style="-fx-font-size: 12px;" GridPane.columnIndex="7" GridPane.rowIndex="3" />
-      
-              <Label GridPane.columnIndex="4" GridPane.rowIndex="4" />
-              <Pane prefHeight="26.0" prefWidth="150.0" GridPane.columnIndex="6" GridPane.rowIndex="4">
-                  <children>
-                      <ImageView fx:id="fingerprintImageView" fitHeight="100.0" fitWidth="242.0" preserveRatio="true" />
-                  </children>
-              </Pane>
-      
-              <Button fx:id="ingresarHuellaButton" onAction="#handleIngresarHuellaButton" prefHeight="62.0" prefWidth="150.0" text="Presionar para ingresar huella" GridPane.columnIndex="6" GridPane.rowIndex="6" />
-      
-              <HBox alignment="CENTER" spacing="10" GridPane.columnSpan="8" GridPane.rowIndex="7">
-                  <Button fx:id="enviarButton" onAction="#enviarDatos" text="Enviar" />
-                  <Button fx:id="borrarButton" text="Borrar" />
-                  <Button fx:id="rellenarButton" onAction="#rellenarCampos" text="Rellenar" />
-              </HBox>
-          </GridPane>
-      </children>
-   </AnchorPane>
+<AnchorPane prefHeight="1351.0" prefWidth="1395.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroController">
+    <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+
+        <!-- Sección inferior siempre visible -->
+        <bottom>
+            <AnchorPane minHeight="50.0" style="-fx-border-width: 1; -fx-border-color: black;" BorderPane.alignment="TOP_CENTER">
+                <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="10" VBox.vgrow="NEVER">
+                    <Button fx:id="enviarButton" onAction="#enviarDatos" text="Enviar" />
+                    <Button fx:id="borrarButton" text="Borrar" />
+                    <Button fx:id="rellenarButton" onAction="#rellenarCampos" text="Rellenar" />
+                    <Button fx:id="ingresarHuellaButton" onAction="#handleIngresarHuellaButton" prefHeight="0.0" prefWidth="291.0" text="Presionar para ingresar huella" />
+                </HBox>
+            </AnchorPane>
+        </bottom>
+
+        <!-- Centro del layout, con el formulario -->
+        <center>
+            <ScrollPane fitToHeight="true" fitToWidth="true" pannable="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                <content>
+                    <VBox prefWidth="1409.0">
+                        <GridPane alignment="TOP_RIGHT" hgap="10.0" minHeight="0" vgap="10.0" VBox.vgrow="ALWAYS">
+                            <columnConstraints>
+                                <!-- Configuración de las columnas: Ampliar el ancho de las columnas -->
+                                <ColumnConstraints fillWidth="false" minWidth="150.0" prefWidth="400.0" />
+                                <ColumnConstraints minWidth="150.0" prefWidth="400.0" />
+                                <ColumnConstraints fillWidth="false" minWidth="150.0" prefWidth="400.0" />
+                                <ColumnConstraints minWidth="150.0" prefWidth="400.0" />
+                                <ColumnConstraints fillWidth="false" minWidth="150.0" prefWidth="400.0" />
+                                <ColumnConstraints minWidth="150.0" prefWidth="400.0" />
+                                <ColumnConstraints />
+                                <ColumnConstraints />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <!-- Configuración de las filas -->
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                                <RowConstraints minHeight="0.0" prefHeight="40.0" />
+                            </rowConstraints>
+
+                            <Label alignment="TOP_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="220.0" text="Nombre/s" textAlignment="RIGHT" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="0" />
+                            <TextField fx:id="nombreField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                            <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="255.0" text="Apellido Materno" GridPane.columnIndex="4" GridPane.halignment="CENTER" />
+                            <TextField fx:id="apellidoMaternoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="5" />
+                            <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="232.0" text="Apellido Paterno" GridPane.columnIndex="2" GridPane.halignment="CENTER" />
+                            <TextField fx:id="apellidoPaternoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" />
+                            <Label alignment="TOP_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="229.0" text="Fecha de nacimiento" textAlignment="RIGHT" GridPane.columnIndex="0" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                            <DatePicker fx:id="fechaNacimientoPicker" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            <Label alignment="TOP_RIGHT" prefWidth="226.0" text="País" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                            <TextField fx:id="paisField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" GridPane.rowIndex="1" />
+                            <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="249.0" text="Ciudad" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
+                            <TextField fx:id="ciudadField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="5" GridPane.rowIndex="1" />
+
+                            <!-- Separador entre las secciones -->
+                            <Separator minWidth="2560.0" style=" -fx-padding: 10 20 10 20;" GridPane.columnSpan="6" GridPane.rowIndex="2" />
+
+
+                            <Label alignment="TOP_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="275.0" text="Correo electrónico" textAlignment="RIGHT" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+                            <TextField fx:id="emailField" prefHeight="25.0" prefWidth="331.0" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="4" />
+                            <Label alignment="TOP_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="244.0" text="Lada" textAlignment="RIGHT" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                            <TextField fx:id="ladaField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                            <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="228.0" text="Teléfono" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" />
+                            <TextField fx:id="telefonoField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" GridPane.rowIndex="3" />
+                            <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="268.0" text="RFC" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+                            <TextField fx:id="rfcField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="5" GridPane.rowIndex="4" />
+                            <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="243.0" text="CURP" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="4" />
+                            <TextField fx:id="curpField" prefWidth="200" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+
+                            <!-- Otro separador entre las secciones -->
+                            <Separator minWidth="2560.0" style=" -fx-padding: 10 20 10 20;" GridPane.columnSpan="6" GridPane.rowIndex="5" />
+
+
+                            <Label alignment="TOP_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="356.0" text="Profesión" textAlignment="RIGHT" GridPane.halignment="CENTER" GridPane.rowIndex="6" />
+                            <TextField fx:id="profesionField" prefHeight="25.0" prefWidth="617.0" style="-fx-alignment: CENTER-LEFT;" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.halignment="RIGHT" GridPane.rowIndex="6" />
+
+
+                            <Label alignment="TOP_RIGHT" contentDisplay="RIGHT" prefHeight="17.0" prefWidth="248.0" text="Departamento" textAlignment="RIGHT" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
+                            <ChoiceBox fx:id="departamentoChoiceBox" minWidth="150" prefWidth="200" style="-fx-font-size: 12px;" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+
+                            <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="219.0" text="Puesto" textAlignment="RIGHT" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
+                            <ChoiceBox fx:id="puestoChoiceBox" minWidth="150" prefWidth="200" style="-fx-font-size: 12px;" GridPane.columnIndex="3" GridPane.rowIndex="7" />
+
+                            <Label GridPane.columnIndex="4" GridPane.rowIndex="4" />
+
+                            <!-- Imagen de la huella dactilar -->
+                            <ImageView fx:id="fingerprintImageView" fitHeight="115.0" fitWidth="450.0" preserveRatio="true" GridPane.columnIndex="4" GridPane.rowIndex="7" />
+                        </GridPane>
+                    </VBox>
+                </content>
+            </ScrollPane>
+        </center>
+
+        <!-- Título superior -->
+        <top>
+            <Label alignment="CENTER" style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Registro de empleado" textAlignment="CENTER" BorderPane.alignment="CENTER" />
+        </top>
+
+    </BorderPane>
 </AnchorPane>

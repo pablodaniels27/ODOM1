@@ -97,8 +97,8 @@ public class RegistroController {
 
     private void configurarDatePicker() {
         LocalDate today = LocalDate.now();
-        LocalDate maxDate = today.minus(15, ChronoUnit.YEARS); // Limitar a fechas anteriores a 15 años
-        LocalDate minDate = today.minus(100, ChronoUnit.YEARS); // Limitar a fechas de hace 100 años
+        LocalDate maxDate = today.minusYears(15); // Limitar a fechas anteriores a 15 años
+        LocalDate minDate = today.minusYears(100); // Limitar a fechas de hace 100 años
 
         // Preconfigurar la fecha del DatePicker al mínimo valor disponible
         fechaNacimientoPicker.setValue(maxDate);

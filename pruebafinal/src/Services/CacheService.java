@@ -16,7 +16,7 @@ import java.util.HashMap;
 
 public class CacheService {
 
-    private static Cache<String, List<Map<String, Object>>> employeeCache;
+    private static final Cache<String, List<Map<String, Object>>> employeeCache;
 
     static {
         employeeCache = Caffeine.newBuilder()
