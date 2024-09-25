@@ -13,6 +13,6 @@
     <orderEntry type="library" exported="" name="Lectorhuella" level="application" />
     <orderEntry type="library" exported="" name="javafx-swt1" level="application" />
     <orderEntry type="library" exported="" name="mysql-connector-j-9.0.0" level="application" />
-    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" exported="" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>
