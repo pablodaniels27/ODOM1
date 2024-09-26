@@ -608,9 +608,9 @@ public class MonitoreoController {
             query += ") ";
         }
 
-        // Filtro por búsqueda en los nombres o apellidos
+        // Filtro por búsqueda en nombre completo (concatenando nombres y apellidos)
         if (!searchQuery.isEmpty()) {
-            query += "AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?) ";
+            query += "AND CONCAT(LOWER(TRIM(e.nombres)), ' ', LOWER(TRIM(e.apellido_paterno)), ' ', LOWER(TRIM(e.apellido_materno))) LIKE ? ";
         }
 
         query += "ORDER BY dias.fecha ASC";  // Ordenar por fecha
@@ -628,11 +628,9 @@ public class MonitoreoController {
                 preparedStatement.setString(paramIndex++, departamentoSeleccionado);
             }
 
-            // Si hay un valor de búsqueda, asignamos los patrones de búsqueda
+            // Si hay un valor de búsqueda, asignamos el patrón de búsqueda
             if (!searchQuery.isEmpty()) {
-                String searchPattern = "%" + searchQuery + "%";
-                preparedStatement.setString(paramIndex++, searchPattern);
-                preparedStatement.setString(paramIndex++, searchPattern);
+                String searchPattern = "%" + searchQuery.toLowerCase() + "%";
                 preparedStatement.setString(paramIndex++, searchPattern);
             }
 
@@ -661,6 +659,7 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
 
 
 
@@ -1157,6 +1156,7 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
 
 
 
