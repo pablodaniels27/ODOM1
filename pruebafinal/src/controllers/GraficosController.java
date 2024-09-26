@@ -78,8 +78,10 @@ public class GraficosController {
             query += "AND d.nombre = ? ";
         }
 
+        // Modificación para buscar por nombre completo o partes del nombre
         if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-            query += "AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?) ";
+            query += "AND (LOWER(e.nombres) LIKE ? OR LOWER(e.apellido_paterno) LIKE ? OR LOWER(e.apellido_materno) LIKE ? " +
+                    "OR CONCAT(LOWER(e.nombres), ' ', LOWER(e.apellido_paterno), ' ', LOWER(e.apellido_materno)) LIKE ?) ";
         }
 
         if (incluirSupervisores && !incluirEmpleados) {
@@ -102,11 +104,13 @@ public class GraficosController {
                 preparedStatement.setString(paramIndex++, departamentoSeleccionado);
             }
 
+            // Modificación para pasar el patrón de búsqueda
             if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-                String searchPattern = "%" + searchQuery.trim() + "%";
-                preparedStatement.setString(paramIndex++, searchPattern);
-                preparedStatement.setString(paramIndex++, searchPattern);
-                preparedStatement.setString(paramIndex++, searchPattern);
+                String searchPattern = "%" + searchQuery.trim().toLowerCase() + "%";
+                preparedStatement.setString(paramIndex++, searchPattern);  // Para nombres
+                preparedStatement.setString(paramIndex++, searchPattern);  // Para apellido paterno
+                preparedStatement.setString(paramIndex++, searchPattern);  // Para apellido materno
+                preparedStatement.setString(paramIndex++, searchPattern);  // Para la concatenación del nombre completo
             }
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -140,7 +144,7 @@ public class GraficosController {
             barChart.getData().add(series);
         }
 
-        // Usar Platform.runLater para asegurarnos de que el gráfico se haya renderizado antes de agregar los labels
+        // Asegurarse de que los nodos de las barras ya se han creado antes de añadir labels y eventos
         Platform.runLater(() -> {
             for (XYChart.Series<String, Number> series : barChart.getData()) {
                 for (XYChart.Data<String, Number> data : series.getData()) {
@@ -148,33 +152,11 @@ public class GraficosController {
                     if (node != null) {
                         // Crear el label con el valor de la cantidad
                         Label label = new Label(String.valueOf(data.getYValue()));
-
-                        // Ajustar el estilo del label para hacerlo visible
                         label.setStyle("-fx-text-fill: black; -fx-font-size: 14px; -fx-font-weight: bold;");
-
-                        // Añadir el label a la barra (StackPane)
                         StackPane stackPane = (StackPane) node;
                         stackPane.getChildren().add(label);
-
-                        // Alinear el label en el centro de la barra
                         StackPane.setAlignment(label, Pos.CENTER);
-
-                        // Ajustar la posición del label más arriba dentro de la barra
                         label.setTranslateY(-30);  // Ajustar esto según el tamaño de la barra
-                    }
-                }
-            }
-        });
-
-        // Asegurarse de que los nodos de las barras ya se han creado antes de añadir labels y eventos
-        // Asegurarse de que los nodos de las barras ya se han creado antes de añadir labels y eventos
-        Platform.runLater(() -> {
-            System.out.println("Verificando si los nodos de las barras se están creando...");
-            for (XYChart.Series<String, Number> series : barChart.getData()) {
-                for (XYChart.Data<String, Number> data : series.getData()) {
-                    Node node = data.getNode();
-                    if (node != null) {
-                        System.out.println("Nodo creado para el departamento: " + data.getXValue() + " - Tipo de asistencia: " + series.getName());
 
                         // Aplicar estilo y comportamiento
                         node.setStyle("-fx-cursor: hand;");
@@ -195,26 +177,20 @@ public class GraficosController {
                             monitoreoController.updateAsistenciaLabel(tipoAsistencia);
                             // Limpiar las fechas al seleccionar una nueva columna de la gráfica
                             monitoreoController.clearDateTableView();
-                            // Llamar al método en MonitoreoController para mostrar los nombres
+                            // Llamar al método en MonitoreoController para mostrar los nombres y fechas
                             monitoreoController.mostrarNombresPorAsistencia(departamento, tipoAsistencia, nombreFilter);
                         });
-
-                    } else {
-                        System.out.println("El nodo no está creado aún para el departamento: " + data.getXValue());
                     }
                 }
             }
         });
 
-
-        System.out.println("chartPane bounds: " + chartPane.getBoundsInParent());
-        System.out.println("BarChart bounds: " + barChart.getBoundsInParent());
-
-
-        // Finalmente, añadir el gráfico al Pane después de todas las manipulaciones
+        // Finalmente, añadir el gráfico al Pane
         chartPane.getChildren().add(barChart);
 
         return barChart;
     }
+
+
 
 }
