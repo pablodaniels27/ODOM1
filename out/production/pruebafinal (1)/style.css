@@ -1,0 +1,185 @@
+/* Estilos generales */
+.root {
+    -fx-font-family: 'Arial';
+    -fx-background-color: #F5F5F5;
+}
+
+/* Estilo para etiquetas generales */
+.label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+/* Estilo específico para las etiquetas de empleados */
+.empleado-label {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+    -fx-alignment: center;
+}
+.table-column .label {
+    -fx-alignment: CENTER_LEFT;
+}
+
+/* Otros estilos */
+.hbox {
+    -fx-spacing: 10px;
+    -fx-alignment: center; /* Centra los elementos horizontalmente */
+}
+
+.vbox {
+    -fx-spacing: 10px;
+    -fx-padding: 10px;
+    -fx-alignment: center; /* Centra los elementos verticalmente */
+}
+
+.list-view {
+    -fx-padding: 10px;
+    -fx-alignment: center; /* Centra los elementos en la lista */
+    -fx-pref-width: 100%;  /* Ajuste automático al ancho disponible */
+    -fx-pref-height: 100%; /* Ajuste automático a la altura disponible */
+}
+
+/* Centrar el contenido en el ScrollPane */
+.scroll-pane .viewport {
+    -fx-alignment: center;
+}
+
+.text-field, .password-field {
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 10;
+    -fx-background-color: #EFEFEF;
+}
+
+.button {
+    -fx-background-color: #2A87CA;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+/* Botón negro */
+.button-black {
+    -fx-background-color: #333333;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+/* Botón claro */
+.button-light {
+    -fx-background-color: #D3D3D3;
+    -fx-text-fill: black;
+    -fx-font-size: 14px;
+    -fx-background-radius: 10;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+.hyperlink {
+    -fx-text-fill: blue;
+    -fx-font-size: 12px;
+}
+
+/* Estilo para el VBox que contiene empleados */
+#empleadosContainer {
+    -fx-pref-height: 200px;
+    -fx-pref-width: 300px;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: lightgrey;
+    -fx-border-width: 1px;
+}
+.attendance-box {
+    -fx-background-color: lightgray;
+    -fx-alignment: CENTER;
+    -fx-padding: 10;
+    -fx-border-color: darkgray;
+    -fx-border-width: 1;
+    -fx-min-width: 80px; /* Ancho mínimo ajustado */
+    -fx-max-width: 100px; /* Ancho máximo ajustado */
+    -fx-min-height: 25px;
+    -fx-max-height: 30px; /* Altura máxima ajustada */
+}
+.responsive-button {
+    -fx-background-color: #2A87CA; /* Color inicial */
+    -fx-text-fill: white; /* Color del texto */
+}
+
+.responsive-button:pressed {
+    -fx-background-color: #219D01; /* Color cuando se presiona el botón */
+}
+
+.responsive-button:selected {
+    -fx-background-color: #FF4080; /* Color cuando el botón está seleccionado */
+}
+
+.responsive-button:hover {
+    -fx-background-color: #0056b3; /* Color cuando el ratón pasa sobre el botón */
+}
+/* Estilo por defecto */
+.employee-box {
+    -fx-background-color: #ffffff;
+    -fx-border-color: lightgrey;
+    -fx-border-width: 1;
+    -fx-padding: 10;
+}
+
+/* Efecto hover */
+.employee-box:hover {
+    -fx-background-color: #f0f8ff; /* Cambia a un color más claro al pasar el mouse */
+}
+
+/* Efecto seleccionado */
+.employee-box:focused {
+    -fx-background-color: #d1e7dd; /* Cambia a un color distinto cuando se selecciona */
+}
+
+.day-label {
+    -fx-background-color: transparent;  /* Fondo transparente */
+    -fx-text-fill: #2196F3;              /* Texto azul */
+    -fx-alignment: center;               /* Centrar texto */
+    -fx-border-color: #2196F3;           /* Color del borde azul */
+    -fx-border-width: 2px;               /* Ancho del borde */
+    -fx-border-radius: 50%;              /* Bordes redondeados */
+    -fx-background-radius: 50%;          /* Fondo redondeado */
+    -fx-min-width: 30px;                 /* Ancho mínimo */
+    -fx-min-height: 30px;                /* Altura mínima */
+    -fx-max-width: 30px;                 /* Ancho máximo */
+    -fx-max-height: 30px;                /* Altura máxima */
+    -fx-font-size: 12px;                 /* Tamaño de fuente consistente */
+}
+
+.selected-day {
+    -fx-background-color: lightblue;  /* Fondo azul claro para resaltar */
+    -fx-text-fill: #2196F3;           /* Mantener el texto en azul */
+    -fx-border-color: #2196F3;        /* Mantener el borde azul */
+}
+
+.split-pane > .split-pane-divider {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+}
+
+.scroll-bar:vertical .thumb {
+    -fx-background-color: #2196F3; /* Azul que deseas */
+    -fx-background-radius: 4; /* Redondear las esquinas */
+    -fx-pref-width: 16px; /* Ancho del ScrollBar */
+}
+
+.scroll-bar:horizontal .thumb {
+    -fx-background-color: #2196F3; /* Azul que deseas */
+    -fx-background-radius: 4; /* Redondear las esquinas */
+    -fx-pref-height: 16px; /* Altura del ScrollBar horizontal, si lo usas */
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: #2196F3;
+}
