@@ -3,12 +3,12 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="1272.0" prefWidth="1222.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.InicioController">
+<AnchorPane  prefWidth="1222.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.InicioController" >
     <children>
-        <SplitPane fx:id="splitPane" dividerPositions="0.5" layoutX="21.0" maxWidth="1201.0" minWidth="911.0" prefHeight="1263.0" prefWidth="1201.0" style="-fx-border-color: transparent; -fx-padding: 0 1 0 1;" AnchorPane.bottomAnchor="9.0" AnchorPane.leftAnchor="21.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <SplitPane fx:id="splitPane" dividerPositions="0.5" layoutX="21.0" maxWidth="1201.0" minWidth="911.0" prefHeight="1263.0" prefWidth="1201.0" style="-fx-border-color: transparent; -fx-padding: 0 1 0 1;" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="21.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <items>
                 <!-- Cuadrante 1: Mensajes y lista de empleados -->
-                <VBox alignment="TOP_LEFT" maxWidth="2000.0" minWidth="481.0" prefHeight="1251.0" prefWidth="711.0" spacing="10" style="-fx-padding: 10;">
+                <VBox alignment="TOP_LEFT" maxWidth="2000.0" minWidth="481.0" prefHeight="1080.0" prefWidth="711.0" spacing="10" style="-fx-padding: 10;" AnchorPane.bottomAnchor="20">
                     <!-- Mensajes -->
                     <Label styleClass="header-label" text="Lista de empleados" />
                     <Label text="Aeropuerto internacional de la Ciudad de México" />
@@ -19,7 +19,7 @@
                         <VBox fx:id="employeeListContainer" alignment="TOP_LEFT" spacing="10" styleClass="employee-section" />
                     </ScrollPane>
                 </VBox>
-                <AnchorPane maxWidth="480.0" minHeight="50" minWidth="480.0" prefHeight="587.0">
+                <AnchorPane maxWidth="480.0" minHeight="70" minWidth="480.0" prefHeight="587.0">
                     <children>
                         <SplitPane dividerPositions="0.25693893735130846" maxHeight="1261.0" maxWidth="480.0" minHeight="180" orientation="VERTICAL" prefHeight="1261.0" prefWidth="480.0" style=" -fx-padding: 0 1 0 1;">
                             <items>
