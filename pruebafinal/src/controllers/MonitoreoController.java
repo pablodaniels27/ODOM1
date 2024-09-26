@@ -1,6 +1,5 @@
 package controllers;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -10,7 +9,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
-import java.io.IOException;
 import java.sql.*;
 import java.time.Duration;
 import java.time.LocalTime;
@@ -28,30 +26,12 @@ import javafx.scene.control.TableColumn;
 
 import javafx.scene.control.cell.PropertyValueFactory;
 
-import javafx.fxml.FXML;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.input.ContextMenuEvent;
 
 import java.util.Map;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-
 import static Usuarios.Supervisor.getCurrentSupervisorId;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
+
 import javafx.scene.input.KeyEvent;
 
 public class MonitoreoController {
@@ -63,7 +43,7 @@ public class MonitoreoController {
     private TableColumn<Fecha, String> fechaColumn;
 
     @FXML
-    private TableView<Empleado> personTableView;  // Cambiamos ListView a TableView
+    private TableView<Empleado> personTableView;
 
     @FXML
     private TableColumn<Empleado, String> nombreCompletoColumn;
@@ -97,9 +77,6 @@ public class MonitoreoController {
 
     @FXML
     private TableColumn<Map<String, Object>, String> estadoColumn;
-
-    @FXML
-    private Button aceptarButton;
 
     @FXML
     private DatePicker fechaInicioPicker;
@@ -138,9 +115,6 @@ public class MonitoreoController {
     private Button nextButton;
 
     @FXML
-    private VBox detailsPane;
-
-    @FXML
     private HBox paginationBox;
     @FXML
     private HBox chartContainer;
@@ -150,6 +124,7 @@ public class MonitoreoController {
 
     @FXML
     private TableColumn<Map<String, Object>, String> notasColum;
+
     @FXML
     private Label selectedDepartmentLabel;
 
@@ -163,15 +138,15 @@ public class MonitoreoController {
 
     private GraficosController graficosController;
 
-
     private ContextMenu suggestionsMenu = new ContextMenu();
 
     @FXML
     public void initialize() {
 
-        // Añadir un evento al SearchField para capturar las teclas presionadas
-        searchField.setOnKeyReleased(event -> searchForNames(event));
+        // Configurar el evento del searchField para capturar teclas presionadas
+        configureSearchField();
 
+        // Configurar la columna de notas con un enlace y estilo para mostrar un popup
         notasColum.setCellFactory(tc -> new TableCell<Map<String, Object>, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -180,9 +155,7 @@ public class MonitoreoController {
                     setText(null); // No hay nota, dejar vacío
                 } else {
                     setText("ver nota");
-                    setStyle("-fx-text-fill: blue; -fx-underline: true;"); // Estilo para parecer un enlace
-
-                    // Detectar clic en la celda para mostrar la nota
+                    setStyle("-fx-text-fill: blue; -fx-underline: true;"); // Estilo tipo enlace
                     setOnMouseClicked(event -> {
                         if (!isEmpty()) {
                             showNotePopup(item); // Mostrar el popup con la nota
@@ -192,44 +165,35 @@ public class MonitoreoController {
             }
         });
 
+        // Vincular datos de la columna de notas
         notasColum.setCellValueFactory(createCellValueFactory("notas"));
 
-
-
-        // Vincular la columna con la propiedad "nombreCompleto"
+        // Configurar las columnas de nombre completo y fecha
         nombreCompletoColumn.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
         fechaColumn.setCellValueFactory(new PropertyValueFactory<>("fecha"));
 
-
-        // Verificar que tipoAsistenciaColumn no sea null
+        // Verificar que la columna tipoAsistenciaColumn no sea null
         if (tipoAsistenciaColumn == null) {
             System.out.println("Error: tipoAsistenciaColumn es null.");
             return;
-        }
-        else{
-            System.out.println("tipoAsistenciaColumn se cargo.");
+        } else {
+            System.out.println("tipoAsistenciaColumn se cargó correctamente.");
         }
 
-        // Listener para cuando se selecciona un empleado en el personTableView
+        // Listener para seleccionar un empleado en la tabla personTableView
         personTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
-                // Obtener el nombre del empleado seleccionado
                 String nombreEmpleado = newSelection.getNombreCompleto();
                 System.out.println("Empleado seleccionado: " + nombreEmpleado);
 
-                // Obtener el tipo de asistencia seleccionado actualmente
                 String tipoAsistencia = obtenerTipoAsistenciaSeleccionado();
-                System.out.println("Tipo de asistencia obtenido: " + tipoAsistencia);
-
-                // Obtener el departamento seleccionado
                 String departamentoSeleccionado = obtenerDepartamentoSeleccionado();
 
-                // Verificar si los DatePicker no están vacíos
                 if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
                     String fechaInicio = fechaInicioPicker.getValue().toString();
                     String fechaFin = fechaFinPicker.getValue().toString();
 
-                    // Llamar al método para mostrar las fechas filtradas por rango y empleado
+                    // Mostrar las fechas filtradas por rango y empleado
                     mostrarFechasPorEmpleado(departamentoSeleccionado, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
                 } else {
                     System.out.println("Por favor, selecciona un rango de fechas válido.");
@@ -237,26 +201,23 @@ public class MonitoreoController {
             }
         });
 
+        // Configurar el controlador de gráficos
         graficosController = new GraficosController();
         graficosController.setMonitoreoController(this);
 
-        // Listener para que se desmarque el otro CheckBox cuando se selecciona uno
+        // Configurar los CheckBoxes para supervisores y empleados
         supervisoresCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {  // Si se selecciona supervisoresCheckBox
+            if (newVal) {
                 empleadosCheckBox.setSelected(false); // Desmarcar empleadosCheckBox
             }
         });
-
-
-
         empleadosCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {  // Si se selecciona empleadosCheckBox
+            if (newVal) {
                 supervisoresCheckBox.setSelected(false); // Desmarcar supervisoresCheckBox
             }
         });
 
-
-        // Configurar las columnas con los Callbacks
+        // Configurar columnas de la tabla de empleados
         nombreColumn.setCellValueFactory(createCellValueFactory("nombreCompleto"));
         idColumn.setCellValueFactory(createCellValueFactory("id"));
         fechaEntradaColumn.setCellValueFactory(createCellValueFactory("fechaEntrada"));
@@ -267,24 +228,26 @@ public class MonitoreoController {
         tipoSalidaColumn.setCellValueFactory(createCellValueFactory("tipoSalida"));
         estadoColumn.setCellValueFactory(createCellValueFactory("estado"));
 
+        // Asignar los empleados a la tabla employeeTableView
         employeeTableView.setItems(employees);
 
-        cargarDepartamentos(); // Cargar los departamentos en el ChoiceBox
+        // Cargar departamentos en el ChoiceBox
+        cargarDepartamentos();
         departamentoChoiceBox.getSelectionModel().selectedItemProperty();
 
-        // Configurar el ChoiceBox para la cantidad de ítems por página
+        // Configurar el ChoiceBox para seleccionar la cantidad de ítems por página
         itemsPerPageChoiceBox.setItems(FXCollections.observableArrayList(10, 20, 30, 40));
         itemsPerPageChoiceBox.setValue(itemsPerPage);
         itemsPerPageChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
             itemsPerPage = newVal;
             totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
-            showPage(1); // Mostrar la primera página con los nuevos ítems por página
+            showPage(1); // Mostrar la primera página
         });
 
-        // Configurar comportamiento del botón de gráficos
+        // Configurar el comportamiento del botón de gráficos
         graphViewButton.setOnAction(event -> toggleGraphView());
 
-        // Cargar todos los registros disponibles al inicio
+        // Cargar todos los registros al inicio
         try {
             employees.clear();
             loadAllEntries();
@@ -293,37 +256,37 @@ public class MonitoreoController {
         }
 
         // Configurar el botón de búsqueda
-        // Configurar el botón de búsqueda
         searchButton.setOnAction(event -> {
             try {
-                // Verificar si se ha seleccionado una fecha de inicio y una fecha final
                 if (fechaInicioPicker.getValue() == null || fechaFinPicker.getValue() == null) {
-                    // Mostrar una alerta si falta alguna de las fechas
+                    // Mostrar una alerta si falta alguna fecha
                     Alert alert = new Alert(Alert.AlertType.WARNING);
                     alert.setTitle("Advertencia");
                     alert.setHeaderText("Faltan fechas");
                     alert.setContentText("Por favor, selecciona una fecha de inicio y una fecha final.");
                     alert.showAndWait();
-                    return; // Salir de la acción sin ejecutar la búsqueda
+                    return;
                 }
-                // Limpiar las selecciones y los datos de ambos TableViews
+
+                // Limpiar las selecciones y los datos de las tablas
                 personTableView.getSelectionModel().clearSelection();
                 dateTableView.getSelectionModel().clearSelection();
                 personTableView.getItems().clear();
                 dateTableView.getItems().clear();
+
                 // Obtener los valores de los filtros
                 String departamentoSeleccionado = departamentoChoiceBox.getValue();
-                // Actualizar el Label con el departamento seleccionado
                 if (departamentoSeleccionado != null) {
                     selectedDepartmentLabel.setText("Departamento: " + departamentoSeleccionado);
                 }
+
                 String searchQuery = searchField.getText().trim();
                 boolean incluirSupervisores = supervisoresCheckBox.isSelected();
                 boolean incluirEmpleados = empleadosCheckBox.isSelected();
                 String fechaInicio = fechaInicioPicker.getValue() != null ? fechaInicioPicker.getValue().toString() : "";
                 String fechaFin = fechaFinPicker.getValue() != null ? fechaFinPicker.getValue().toString() : "";
 
-                // Filtrar y cargar datos en la tabla (ahora con los parámetros correctos)
+                // Buscar y cargar datos en la tabla
                 searchByDateAndDepartment(departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados, fechaInicio, fechaFin);
 
                 // Actualizar el gráfico con los filtros seleccionados
@@ -349,16 +312,11 @@ public class MonitoreoController {
             }
         });
 
-        // Eliminar las referencias a page1Button, page2Button y page3Button, ya que ahora se generan dinámicamente.
-
-        // Calcular el total de páginas
+        // Calcular el total de páginas y mostrar la primera página
         totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
-
-        // Mostrar la primera página
         showPage(1);
 
-        //ACCION DE JUSTIFICAR/////////////////
-        // *Nuevo*: Añadir evento de clic para el tipo de asistencia
+        // Configurar el tipo de asistencia con evento para cambiarlo
         tipoAsistenciaColumn.setCellFactory(tc -> {
             TableCell<Map<String, Object>, String> cell = new TableCell<>() {
                 @Override
@@ -372,21 +330,22 @@ public class MonitoreoController {
                 }
             };
 
-            // Detectar el clic en la celda
             cell.setOnMouseClicked(event -> {
                 if (!cell.isEmpty()) {
-                    // Obtener los datos de la fila seleccionada
                     Map<String, Object> employeeData = employeeTableView.getItems().get(cell.getIndex());
                     System.out.println("Tipo de asistencia clickeado: " + employeeData.get("tipoAsistencia"));
-                    // Mostrar el popup para cambiar el tipo de asistencia
-                    showTipoAsistenciaPopup(employeeData);
+                    showTipoAsistenciaPopup(employeeData); // Mostrar el popup para cambiar el tipo de asistencia
                 }
             });
 
             return cell;
         });
-
     }
+
+    private void configureSearchField() {
+        searchField.setOnKeyReleased(this::searchForNames);
+    }
+
 
     private void showNotePopup(String nota) {
         // Crear un nuevo dialog
@@ -488,11 +447,6 @@ public class MonitoreoController {
             employeeTableView.refresh();
         });
     }
-
-
-
-
-
 
     private void cargarDepartamentos() {
         departamentoChoiceBox.getItems().add("Todos los departamentos"); // Agregar opción para todos los departamentos
@@ -874,49 +828,52 @@ public class MonitoreoController {
                 "JOIN dias ON en.dia_id = dias.id " + // Relacionar con la tabla de días para el rango de fechas
                 "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
                 "WHERE d.nombre = ? AND t.nombre = ? " +  // Filtrar por departamento y tipo de asistencia
-                "AND dias.fecha BETWEEN ? AND ? ";  // Filtro por rango de fechas
+                "AND dias.fecha BETWEEN ? AND ? ";
 
         // Añadir condiciones adicionales para supervisores o empleados
         if (supervisoresCheckBox.isSelected() || empleadosCheckBox.isSelected()) {
             query += " AND (";
             if (supervisoresCheckBox.isSelected()) {
-                query += "e.jerarquia_id = 2";  // Filtrar supervisores (jerarquia_id = 2)
+                query += "e.jerarquia_id = 2";
             }
             if (supervisoresCheckBox.isSelected() && empleadosCheckBox.isSelected()) {
-                query += " OR ";  // Si ambos están seleccionados, permitir OR
+                query += " OR ";
             }
             if (empleadosCheckBox.isSelected()) {
-                query += "e.jerarquia_id = 3";  // Filtrar empleados (jerarquia_id = 3)
+                query += "e.jerarquia_id = 3";
             }
             query += ")";
         }
 
-        // Si hay una búsqueda, agregar el filtro al query
+        // Si hay una búsqueda, agregar el filtro al query para buscar por nombre, apellido o nombre completo
         if (searchQuery != null && !searchQuery.isEmpty()) {
-            query += " AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ?)";
+            query += " AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ? OR CONCAT(e.nombres, ' ', e.apellido_paterno, ' ', e.apellido_materno) LIKE ?)";
         }
 
         try (Connection connectDB = DatabaseConnection.getConnection();
              PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
 
+            int paramIndex = 1;
+
             // Asignar los parámetros de la consulta
-            preparedStatement.setString(1, departamento);
-            preparedStatement.setString(2, tipoAsistencia);
+            preparedStatement.setString(paramIndex++, departamento);
+            preparedStatement.setString(paramIndex++, tipoAsistencia);
 
             // Obtener los valores del rango de fechas
             String fechaInicio = (fechaInicioPicker.getValue() != null) ? fechaInicioPicker.getValue().toString() : "1900-01-01"; // Valor por defecto si no hay fecha seleccionada
             String fechaFin = (fechaFinPicker.getValue() != null) ? fechaFinPicker.getValue().toString() : "2100-12-31"; // Valor por defecto si no hay fecha seleccionada
 
             // Asignar las fechas a los parámetros de la consulta
-            preparedStatement.setString(3, fechaInicio);
-            preparedStatement.setString(4, fechaFin);
+            preparedStatement.setString(paramIndex++, fechaInicio);
+            preparedStatement.setString(paramIndex++, fechaFin);
 
             // Si hay un valor de búsqueda, agregarlo como parámetro
             if (searchQuery != null && !searchQuery.isEmpty()) {
                 String searchPattern = "%" + searchQuery.trim() + "%";
-                preparedStatement.setString(5, searchPattern);
-                preparedStatement.setString(6, searchPattern);
-                preparedStatement.setString(7, searchPattern);
+                preparedStatement.setString(paramIndex++, searchPattern); // e.nombres LIKE ?
+                preparedStatement.setString(paramIndex++, searchPattern); // e.apellido_paterno LIKE ?
+                preparedStatement.setString(paramIndex++, searchPattern); // e.apellido_materno LIKE ?
+                preparedStatement.setString(paramIndex++, searchPattern); // CONCAT(...) LIKE ?
             }
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -944,6 +901,9 @@ public class MonitoreoController {
 
         System.out.println("Nombres únicos añadidos al TableView: " + empleados.size());
     }
+
+
+
 
     // Clase auxiliar para representar empleados
     public static class Empleado {
@@ -1157,13 +1117,6 @@ public class MonitoreoController {
         }
     }
 
-
-
-
-
-
-
-    // Método para mostrar sugerencias en el ContextMenu
     // Método para mostrar sugerencias en el ContextMenu
     private void populateSuggestions(ObservableList<String> suggestions) {
         suggestionsMenu.getItems().clear();
