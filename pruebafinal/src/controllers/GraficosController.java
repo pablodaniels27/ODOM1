@@ -186,6 +186,10 @@ public class GraficosController {
                             System.out.println("Clic en la barra. Departamento: " + departamento + ", Tipo de asistencia: " + tipoAsistencia);
                             // Actualizar el tipo de asistencia seleccionado en el MonitoreoController
                             monitoreoController.setTipoAsistenciaSeleccionado(tipoAsistencia);
+                            // Actualizar el Label en la interfaz con el tipo de asistencia
+                            monitoreoController.updateAsistenciaLabel(tipoAsistencia);
+                            // Limpiar las fechas al seleccionar una nueva columna de la gráfica
+                            monitoreoController.clearDateTableView();
                             // Llamar al método en MonitoreoController para mostrar los nombres
                             monitoreoController.mostrarNombresPorAsistencia(departamento, tipoAsistencia, nombreFilter);
                         });

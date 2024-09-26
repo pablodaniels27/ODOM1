@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="dpfpenrollment">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/Bin/Java/dpfpenrollment.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/Bin/Java/dpfpverification.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/Bin/Java/dpotapi.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../../../Program Files/DigitalPersona/Bin/Java/dpotjni.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
