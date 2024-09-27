@@ -28,8 +28,8 @@ import java.util.Objects;
         primaryStage.setWidth(1280);
         primaryStage.setHeight(720);
         // Establecer el tamaño mínimo de la ventana principal
-        primaryStage.setMinWidth(500);
-        primaryStage.setMinHeight(480);
+        primaryStage.setMinWidth(1280);
+        primaryStage.setMinHeight(720);
 
         primaryStage.show();
     }

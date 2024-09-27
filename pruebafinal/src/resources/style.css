@@ -2,6 +2,7 @@
 .root {
     -fx-font-family: 'Arial';
     -fx-background-color: #F5F5F5;
+
 }
 
 /* Estilo para etiquetas generales */
@@ -147,11 +148,11 @@
     -fx-border-width: 2px;               /* Ancho del borde */
     -fx-border-radius: 50%;              /* Bordes redondeados */
     -fx-background-radius: 50%;          /* Fondo redondeado */
-    -fx-min-width: 35px;                 /* Ancho mínimo */
-    -fx-min-height: 35px;                /* Altura mínima */
-    -fx-max-width: 35px;                 /* Ancho máximo */
-    -fx-max-height: 35px;                /* Altura máxima */
-    -fx-font-size: 14px;                 /* Tamaño de fuente consistente */
+    -fx-min-width: 30px;                 /* Ancho mínimo */
+    -fx-min-height: 30px;                /* Altura mínima */
+    -fx-max-width: 30px;                 /* Ancho máximo */
+    -fx-max-height: 30px;                /* Altura máxima */
+    -fx-font-size: 12px;                 /* Tamaño de fuente consistente */
 }
 
 .selected-day {
