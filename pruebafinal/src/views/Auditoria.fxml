@@ -55,19 +55,19 @@
     <TableView fx:id="auditoriaTable" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="100.0">
         <!-- Table Columns -->
         <columns>
-            <TableColumn fx:id="nombreCompletoColumn" text="Nombre completo">
-                <cellValueFactory><PropertyValueFactory property="nombreCompleto" /></cellValueFactory>
+            <TableColumn fx:id="nombreCompletoSupervisor" text="Supervisor">
+                <cellValueFactory><PropertyValueFactory property="nombreSupervisor" /></cellValueFactory>
             </TableColumn>
-            <TableColumn fx:id="departamentoIdColumn" text="Departamento ID">
-                <cellValueFactory><PropertyValueFactory property="departamentoId" /></cellValueFactory>
+            <TableColumn fx:id="departamentoColumn" text="Departamento">
+                <cellValueFactory><PropertyValueFactory property="departamentoNombre" /></cellValueFactory>
             </TableColumn>
             <TableColumn fx:id="accionColumn" text="Acción">
                 <cellValueFactory><PropertyValueFactory property="accion" /></cellValueFactory>
             </TableColumn>
-            <TableColumn fx:id="targetEmployeeIdColumn" text="Target Employee ID">
-                <cellValueFactory><PropertyValueFactory property="targetEmployeeId" /></cellValueFactory>
+            <TableColumn fx:id="nombreCompletoEmpleado" text="Empleado afectado">
+                <cellValueFactory><PropertyValueFactory property="nombreCompletoEmpleado" /></cellValueFactory>
             </TableColumn>
-            <TableColumn fx:id="timestampColumn" text="Timestamp">
+            <TableColumn fx:id="timestampColumn" text="Horario">
                 <cellValueFactory><PropertyValueFactory property="timestamp" /></cellValueFactory>
             </TableColumn>
             <TableColumn fx:id="detallesColumn" text="Detalles">
