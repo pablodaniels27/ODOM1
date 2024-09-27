@@ -95,6 +95,9 @@ public class MainController {
         loadContent("/views/ConfiguracionView.fxml");
     }
 
+    @FXML
+    public void showAuditoria() { loadContent("/views/Auditoria.fxml");}
+
     private void loadContent(String fxmlPath) {
         try {
             URL fxmlUrl = getClass().getResource(fxmlPath);
@@ -119,7 +122,11 @@ public class MainController {
         try {
             // Llamar al método start de la clase principal
             POSApplication mainApp = new POSApplication();
+            window.setWidth(1280);
+            window.setHeight(720);
+
             mainApp.start(window);
+            window.setFullScreen(true);
         } catch (Exception e) {
             e.printStackTrace();
         }
