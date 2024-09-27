@@ -18,8 +18,8 @@ import com.digitalpersona.onetouch.processing.DPFPFeatureExtraction;
 import com.digitalpersona.onetouch.processing.DPFPImageQualityException;
 
 public class CaptureForm extends JFrame {
-    private DPFPCapture capturer;
-    private JLabel statusLabel;
+    private final DPFPCapture capturer;
+    private final JLabel statusLabel;
 
     public CaptureForm() {
         super("Capture Form");

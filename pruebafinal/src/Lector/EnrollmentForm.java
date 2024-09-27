@@ -19,14 +19,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.EnumMap;
 
 public class EnrollmentForm extends JFrame {
-    private DPFPEnrollment enrollment;
+    private final DPFPEnrollment enrollment;
     private DPFPTemplate template;
-    private DPFPCapture capturer;
+    private final DPFPCapture capturer;
     private JLabel statusLabel;
     private JLabel idLabel;
     private JLabel imageLabel;
     private File saveLocation;
-    private EnumMap<DPFPFingerIndex, DPFPTemplate> templates;
+    private final EnumMap<DPFPFingerIndex, DPFPTemplate> templates;
     private String fingerprintID;
     private JButton saveTemplateButton;
     private JButton verifyButton;

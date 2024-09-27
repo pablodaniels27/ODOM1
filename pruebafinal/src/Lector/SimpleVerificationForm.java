@@ -14,8 +14,8 @@ import java.io.ObjectInputStream;
 import java.util.EnumMap;
 
 public class SimpleVerificationForm extends JFrame {
-    private EnumMap<DPFPFingerIndex, DPFPTemplate> templates;
-    private int farRequested;
+    private final EnumMap<DPFPFingerIndex, DPFPTemplate> templates;
+    private final int farRequested;
     private int farAchieved;
     private boolean matched;
     private JLabel statusLabel;
