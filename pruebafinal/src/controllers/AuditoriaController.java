@@ -3,16 +3,34 @@ package controllers;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.stage.Modality;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class AuditoriaController {
 
     @FXML
-    private TextField dateFilterField;
+    private TableColumn nombreCompletoEmpleado;
+
+    @FXML
+    private TableColumn nombreCompletoSupervisor;
+
+    @FXML
+    private TableColumn departamentoColumn;
+
+    @FXML
+    private DatePicker fechaInicioPicker;
+
+    @FXML
+    private DatePicker fechaFinPicker;
 
     @FXML
     private TextField userFilterField;
@@ -21,22 +39,10 @@ public class AuditoriaController {
     private ComboBox<String> actionFilterComboBox;
 
     @FXML
-    private TextField searchField;
-
-    @FXML
     private TableView<Auditoria> auditoriaTable;
 
     @FXML
-    private TableColumn<Auditoria, String> nombreCompletoColumn;
-
-    @FXML
-    private TableColumn<Auditoria, Integer> departamentoIdColumn;
-
-    @FXML
     private TableColumn<Auditoria, String> accionColumn;
-
-    @FXML
-    private TableColumn<Auditoria, Integer> targetEmployeeIdColumn;
 
     @FXML
     private TableColumn<Auditoria, String> timestampColumn;
@@ -44,107 +50,311 @@ public class AuditoriaController {
     @FXML
     private TableColumn<Auditoria, String> detallesColumn;
 
-    // Lista de datos de auditoría (simulación de una base de datos)
-    private ObservableList<Auditoria> auditoriaData = FXCollections.observableArrayList();
+    @FXML
+    private Button previousButton;
 
-    public void initialize() {
-        // Configurar las columnas
-        nombreCompletoColumn.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
-        departamentoIdColumn.setCellValueFactory(new PropertyValueFactory<>("departamentoId"));
+    @FXML
+    private HBox paginationBox;
+
+    @FXML
+    private Button nextButton;
+
+    @FXML
+    private Button searchButton;
+
+    private ObservableList<Auditoria> auditoriaData = FXCollections.observableArrayList();
+    private int itemsPerPage = 10;
+    private int currentPage = 1;
+    private int totalPages = 1;
+
+    @FXML
+    public void initialize() throws SQLException {
+        // Configurar las columnas con las propiedades correctas
+        nombreCompletoSupervisor.setCellValueFactory(new PropertyValueFactory<>("nombreSupervisor"));
+        nombreCompletoEmpleado.setCellValueFactory(new PropertyValueFactory<>("nombreCompletoEmpleado"));
+        departamentoColumn.setCellValueFactory(new PropertyValueFactory<>("departamentoNombre"));
         accionColumn.setCellValueFactory(new PropertyValueFactory<>("accion"));
-        targetEmployeeIdColumn.setCellValueFactory(new PropertyValueFactory<>("targetEmployeeId"));
         timestampColumn.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
         detallesColumn.setCellValueFactory(new PropertyValueFactory<>("detalles"));
 
-        // Inicializar combo box
+        // Configurar la columna detalles con estilo de enlace y mostrar un popup
+        detallesColumn.setCellFactory(tc -> new TableCell<Auditoria, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null || item.isEmpty()) {
+                    setText(null);
+                    setOnMouseClicked(null);
+                    setStyle("");
+                } else {
+                    setText("ver detalles");
+                    setStyle("-fx-text-fill: blue; -fx-underline: true;");
+                    setOnMouseClicked(event -> {
+                        if (!isEmpty()) {
+                            showDetailsPopup(item);
+                        }
+                    });
+                }
+            }
+        });
+
         actionFilterComboBox.getItems().addAll("Todos", "Agregar", "Modificar", "Eliminar", "Consultar");
 
-        // Cargar datos iniciales (puedes reemplazarlo con una consulta a la base de datos)
+        // Cargar datos iniciales
         cargarDatos();
 
         // Establecer los datos en la tabla
         auditoriaTable.setItems(auditoriaData);
+
+        // Configurar paginación
+        totalPages = (int) Math.ceil((double) auditoriaData.size() / itemsPerPage);
+        showPage(1);
+
+        // Configurar eventos de botones
+        previousButton.setOnAction(event -> handlePreviousPage());
+        nextButton.setOnAction(event -> handleNextPage());
+        searchButton.setOnAction(event -> validateAndSearch());
+    }
+
+    @FXML
+    private void handlePreviousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            showPage(currentPage);
+        }
+    }
+
+    @FXML
+    private void handleNextPage() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            showPage(currentPage);
+        }
+    }
+
+    @FXML
+    private void validateAndSearch() {
+        LocalDate fechaInicio = fechaInicioPicker.getValue();
+        LocalDate fechaFin = fechaFinPicker.getValue();
+
+        if (fechaInicio == null || fechaFin == null) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Advertencia");
+            alert.setHeaderText("Faltan fechas");
+            alert.setContentText("Por favor, selecciona una fecha de inicio y una fecha final.");
+            alert.showAndWait();
+            return;
+        }
+
+        if (fechaInicio.isAfter(fechaFin)) {
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+            alert.setTitle("Advertencia");
+            alert.setHeaderText("Rango de fechas inválido");
+            alert.setContentText("La fecha de inicio no puede ser posterior a la fecha final.");
+            alert.showAndWait();
+            return;
+        }
+
+        handleSearch();
     }
 
     @FXML
     private void handleSearch() {
-        String searchTerm = searchField.getText();
-        // Implementa la lógica para filtrar los datos según el término de búsqueda
-        System.out.println("Buscar: " + searchTerm);
-        // Aquí puedes implementar un filtrado real
+        String supervisorFilter = userFilterField.getText().trim();
+        String actionFilter = actionFilterComboBox.getValue();
+        LocalDate fechaInicio = fechaInicioPicker.getValue();
+        LocalDate fechaFin = fechaFinPicker.getValue();
+
+        ObservableList<Auditoria> filteredList = FXCollections.observableArrayList();
+
+        for (Auditoria auditoria : auditoriaData) {
+            boolean matchesSupervisor = true;
+            boolean matchesAction = true;
+            boolean matchesDateRange = true;
+
+            if (!supervisorFilter.isEmpty()) {
+                matchesSupervisor = auditoria.getNombreSupervisor().toLowerCase().contains(supervisorFilter.toLowerCase());
+            }
+
+            if (actionFilter != null && !actionFilter.equals("Todos")) {
+                matchesAction = auditoria.getAccion().equalsIgnoreCase(actionFilter);
+            }
+
+            if (fechaInicio != null && fechaFin != null) {
+                try {
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    LocalDate auditDate = LocalDate.parse(auditoria.getTimestamp().substring(0, 10), formatter);
+                    matchesDateRange = !auditDate.isBefore(fechaInicio) && !auditDate.isAfter(fechaFin);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    matchesDateRange = false;
+                }
+            }
+
+            if (matchesSupervisor && matchesAction && matchesDateRange) {
+                filteredList.add(auditoria);
+            }
+        }
+
+        auditoriaTable.setItems(filteredList);
+        totalPages = (int) Math.ceil((double) filteredList.size() / itemsPerPage);
+        currentPage = 1;
+        showPage(currentPage);
     }
 
-    private void cargarDatos() {
-        // Aquí puedes cargar los datos desde una base de datos. Por ahora, añadimos algunos datos de ejemplo.
-        auditoriaData.add(new Auditoria("Juan Pérez", 101, "Agregar", 1201, "2024-09-26 10:15:00", "Se agregó un nuevo empleado"));
-        auditoriaData.add(new Auditoria("Ana López", 102, "Modificar", 1202, "2024-09-25 14:30:00", "Se modificó la información del empleado"));
-        auditoriaData.add(new Auditoria("Carlos Ruiz", 103, "Eliminar", 1203, "2024-09-24 09:00:00", "Se eliminó un registro de asistencia"));
+    private void cargarDatos() throws SQLException {
+        auditoriaData.clear();
+
+        DatabaseConnection connectNow = new DatabaseConnection();
+        Connection connectDB = connectNow.getConnection();
+
+        String query = "SELECT l.supervisor_id, l.action, l.target_employee_id, l.timestamp, l.details, " +
+                "esuper.nombres AS supervisor_nombres, esuper.apellido_paterno AS supervisor_apellido_paterno, esuper.apellido_materno AS supervisor_apellido_materno, " +
+                "etarget.nombres AS empleado_nombres, etarget.apellido_paterno AS empleado_apellido_paterno, etarget.apellido_materno AS empleado_apellido_materno, " +
+                "d.nombre AS departamento_nombre " +
+                "FROM logs l " +
+                "JOIN empleados esuper ON l.supervisor_id = esuper.id " +
+                "JOIN empleados etarget ON l.target_employee_id = etarget.id " +
+                "JOIN departamentos d ON etarget.departamento_id = d.id " +
+                "ORDER BY l.timestamp DESC";
+
+        PreparedStatement preparedStatement = connectDB.prepareStatement(query);
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        while (resultSet.next()) {
+            String nombreCompletoSupervisor = resultSet.getString("supervisor_nombres") + " " +
+                    resultSet.getString("supervisor_apellido_paterno") + " " +
+                    resultSet.getString("supervisor_apellido_materno");
+
+            String nombreCompletoEmpleado = resultSet.getString("empleado_nombres") + " " +
+                    resultSet.getString("empleado_apellido_paterno") + " " +
+                    resultSet.getString("empleado_apellido_materno");
+
+            String departamentoNombre = resultSet.getString("departamento_nombre");
+            String accion = resultSet.getString("action");
+            String timestamp = resultSet.getString("timestamp");
+            String detalles = resultSet.getString("details");
+
+            auditoriaData.add(new Auditoria(nombreCompletoEmpleado, departamentoNombre, accion, nombreCompletoSupervisor, timestamp, detalles));
+        }
+
+        resultSet.close();
+        preparedStatement.close();
+        connectDB.close();
     }
 
-    // Clase Auditoria como parte del mismo archivo
+    private void showPage(int pageNumber) {
+        currentPage = pageNumber;
+        int fromIndex = (pageNumber - 1) * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, auditoriaData.size());
+
+        if (fromIndex > auditoriaData.size()) {
+            fromIndex = auditoriaData.size() - itemsPerPage;
+        }
+        if (fromIndex < 0) {
+            fromIndex = 0;
+        }
+
+        auditoriaTable.setItems(FXCollections.observableArrayList(auditoriaData.subList(fromIndex, toIndex)));
+
+        updatePaginationButtons();
+        previousButton.setDisable(pageNumber == 1);
+        nextButton.setDisable(pageNumber == totalPages);
+    }
+
+    private void updatePaginationButtons() {
+        paginationBox.getChildren().clear();
+        int visiblePages = 5;
+
+        int startPage = Math.max(2, currentPage - visiblePages / 2);
+        int endPage = Math.min(startPage + visiblePages - 1, totalPages - 1);
+
+        if (endPage - startPage + 1 < visiblePages) {
+            startPage = Math.max(2, endPage - visiblePages + 1);
+        }
+
+        Button firstPageButton = new Button("1");
+        firstPageButton.setOnAction(event -> showPage(1));
+        if (currentPage == 1) {
+            firstPageButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
+        }
+        paginationBox.getChildren().add(firstPageButton);
+
+        if (startPage > 2) {
+            paginationBox.getChildren().add(new Label("..."));
+        }
+
+        for (int i = startPage; i <= endPage; i++) {
+            final int pageIndex = i;
+            Button pageButton = new Button(String.valueOf(i));
+            pageButton.setOnAction(event -> showPage(pageIndex));
+
+            if (i == currentPage) {
+                pageButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
+            }
+            paginationBox.getChildren().add(pageButton);
+        }
+
+        if (endPage < totalPages - 1) {
+            paginationBox.getChildren().add(new Label("..."));
+        }
+
+        Button lastPageButton = new Button(String.valueOf(totalPages));
+        lastPageButton.setOnAction(event -> showPage(totalPages));
+        if (currentPage == totalPages) {
+            lastPageButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
+        }
+        paginationBox.getChildren().add(lastPageButton);
+    }
+
+    private void showDetailsPopup(String detalle) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Detalles");
+        alert.setHeaderText("Detalles de la Acción:");
+        alert.setContentText(detalle);
+        alert.initModality(Modality.APPLICATION_MODAL);
+        alert.showAndWait();
+    }
+
     public static class Auditoria {
-        private String nombreCompleto;
-        private int departamentoId;
+        private String nombreCompletoEmpleado;
+        private String departamentoNombre;
         private String accion;
-        private int targetEmployeeId;
+        private String nombreSupervisor;
         private String timestamp;
         private String detalles;
 
-        public Auditoria(String nombreCompleto, int departamentoId, String accion, int targetEmployeeId, String timestamp, String detalles) {
-            this.nombreCompleto = nombreCompleto;
-            this.departamentoId = departamentoId;
+        public Auditoria(String nombreCompletoEmpleado, String departamentoNombre, String accion, String nombreSupervisor, String timestamp, String detalles) {
+            this.nombreCompletoEmpleado = nombreCompletoEmpleado;
+            this.departamentoNombre = departamentoNombre;
             this.accion = accion;
-            this.targetEmployeeId = targetEmployeeId;
+            this.nombreSupervisor = nombreSupervisor;
             this.timestamp = timestamp;
             this.detalles = detalles;
         }
 
-        public String getNombreCompleto() {
-            return nombreCompleto;
+        public String getNombreCompletoEmpleado() {
+            return nombreCompletoEmpleado;
         }
 
-        public void setNombreCompleto(String nombreCompleto) {
-            this.nombreCompleto = nombreCompleto;
-        }
-
-        public int getDepartamentoId() {
-            return departamentoId;
-        }
-
-        public void setDepartamentoId(int departamentoId) {
-            this.departamentoId = departamentoId;
+        public String getDepartamentoNombre() {
+            return departamentoNombre;
         }
 
         public String getAccion() {
             return accion;
         }
 
-        public void setAccion(String accion) {
-            this.accion = accion;
-        }
-
-        public int getTargetEmployeeId() {
-            return targetEmployeeId;
-        }
-
-        public void setTargetEmployeeId(int targetEmployeeId) {
-            this.targetEmployeeId = targetEmployeeId;
+        public String getNombreSupervisor() {
+            return nombreSupervisor;
         }
 
         public String getTimestamp() {
             return timestamp;
         }
 
-        public void setTimestamp(String timestamp) {
-            this.timestamp = timestamp;
-        }
-
         public String getDetalles() {
             return detalles;
-        }
-
-        public void setDetalles(String detalles) {
-            this.detalles = detalles;
         }
     }
 }
