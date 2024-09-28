@@ -52,7 +52,7 @@
                     </items>
                 </ComboBox>
                 <!-- Botón de Buscar -->
-                <Button text="Buscar" onAction="#handleSearch" style="-fx-background-color: #0078d7; -fx-text-fill: white;" />
+                <Button fx:id="searchButton" text="Buscar" onAction="#validateAndSearch" />
             </HBox>
         </GridPane>
     </VBox>
