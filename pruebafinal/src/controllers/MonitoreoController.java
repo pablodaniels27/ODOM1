@@ -602,6 +602,15 @@ public class MonitoreoController {
                 employeeData.put("estado", resultSet.getString("estado"));
                 employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");
 
+                // Calcular el tiempo laborado
+                String horaEntrada = resultSet.getString("hora_entrada");
+                String horaSalida = resultSet.getString("hora_salida");
+                if (horaEntrada != null && horaSalida != null) {
+                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
+                } else {
+                    employeeData.put("tiempoLaborado", "N/A");
+                }
+
                 employees.add(employeeData);
             }
 
@@ -613,6 +622,7 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
 
 
 
