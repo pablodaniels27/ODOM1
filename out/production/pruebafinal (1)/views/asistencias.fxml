@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.asistenciasController" alignment="CENTER" spacing="20" style="-fx-padding: 20; -fx-background-color: #F5F5F5; -fx-font-family: 'Arial';">
+
+    <!-- Título -->
+    <Label text="Registro de entrada/salida" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #333;" />
+
+    <!-- Fecha y hora -->
+    <Label fx:id="dateTimeLabel" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #333;" />
+
+    <Label text="Seleccione el botón correspondiente a su registro" style="-fx-font-size: 16px; -fx-text-fill: #333;" />
+
+    <Label fx:id="actionMessageLabel" style="-fx-font-size: 14px; -fx-text-fill: #008000;" text="" />
+
+
+    <!-- Imagen de huella -->
+    <ImageView fx:id="fingerprintImageView" fitWidth="150" fitHeight="150" />
+
+    <!-- Botones de registro -->
+    <HBox spacing="10" alignment="CENTER">
+        <Button fx:id="registerEntryButton" text="Registrar entrada" style="-fx-background-color: #333333; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 10; -fx-padding: 10 20 10 20; -fx-cursor: hand;" onAction="#registerEntry"/>
+        <Button fx:id="registerExitButton" text="Registrar salida" style="-fx-background-color: #EFEFEF; -fx-text-fill: black; -fx-font-size: 14px; -fx-background-radius: 10; -fx-padding: 10 20 10 20; -fx-cursor: hand;" onAction="#registerExit"/>
+    </HBox>
+
+    <!-- Entradas/Salidas recientes -->
+    <VBox spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+        <Label text="Últimas acciones" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #333;" />
+        <Label fx:id="entryTimeLabel" text="Te registraste a las: 9:00 AM" style="-fx-font-size: 16px; -fx-text-fill: #333;" />
+        <Label fx:id="exitTimeLabel" text="Saliste a las: 6:00 PM" style="-fx-font-size: 16px; -fx-text-fill: #333;" />
+    </VBox>
+
+    <!-- Status label -->
+    <Label fx:id="statusLabel" text="Status" style="-fx-font-size: 14px; -fx-text-fill: #333;" />
+
+</VBox>

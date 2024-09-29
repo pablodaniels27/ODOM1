@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<AnchorPane fx:id="rootPane" xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="controllers.ConfiguraciónController"
+            prefHeight="400.0" prefWidth="600.0">
+
+    <children>
+        <VBox alignment="TOP_CENTER" spacing="20" prefWidth="600.0" prefHeight="400.0">
+            <!-- Título de la Configuración -->
+            <Label text="Configuración" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+
+            <!-- Opción de Estilo -->
+            <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="40">
+                <Label text="Estilo de la Interfaz:" />
+                <ChoiceBox fx:id="styleChoiceBox" prefWidth="200.0">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="Estilo Clásico" />
+                            <String fx:value="Estilo Moderno" />
+                        </FXCollections>
+                    </items>
+                </ChoiceBox>
+            </HBox>
+
+            <!-- Opción de Modo Oscuro -->
+            <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="40">
+                <Label text="Modo Oscuro:" />
+                <CheckBox fx:id="darkModeCheckBox" />
+            </HBox>
+
+            <!-- Opción de Tamaño de Fuente -->
+            <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="40">
+                <Label text="Tamaño de Fuente:" />
+                <Slider fx:id="fontSizeSlider" min="10" max="30" value="16" showTickLabels="true" showTickMarks="true" />
+            </HBox>
+
+            <!-- Opción de Idioma -->
+            <HBox alignment="CENTER_LEFT" spacing="10" prefHeight="40">
+                <Label text="Idioma:" />
+                <ChoiceBox fx:id="languageChoiceBox" prefWidth="150.0">
+                    <items>
+                        <FXCollections fx:factory="observableArrayList">
+                            <String fx:value="Español" />
+                            <String fx:value="Inglés" />
+                            <String fx:value="Francés" />
+                        </FXCollections>
+                    </items>
+                </ChoiceBox>
+            </HBox>
+
+            <!-- Botones de Guardar y Cancelar con la clase responsive-button -->
+            <HBox alignment="CENTER" spacing="20">
+                <Button text="Guardar" onAction="#saveSettings" styleClass="responsive-button" />
+                <Button text="Cancelar" onAction="#cancelSettings" styleClass="responsive-button" />
+            </HBox>
+        </VBox>
+    </children>
+</AnchorPane>

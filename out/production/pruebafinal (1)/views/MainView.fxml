@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane prefHeight="103.0" prefWidth="1090.0" stylesheets="@../resources/style.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController">
+    <!-- Main Content -->
+    <VBox fx:id="mainContainer" alignment="TOP_CENTER" layoutY="-10.0" prefHeight="146.0" prefWidth="1060.0" spacing="5" AnchorPane.bottomAnchor="-33.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0">
+        <!-- Línea separadora arriba del StackPane -->
+        <Separator orientation="HORIZONTAL" prefHeight="0.0" prefWidth="1060.0" />
+
+        <!-- StackPane para agregar el fondo semitransparente -->
+        <StackPane alignment="CENTER" style="-fx-background-color: #efeded; -fx-padding: 5;">
+            <HBox alignment="CENTER_LEFT" prefHeight="51.0" prefWidth="1050.0" spacing="10">
+                <Button ellipsisString="" onAction="#showInicio" styleClass="responsive-button" text="Inicio">
+                    <HBox.margin>
+                        <Insets bottom="5" left="0" right="10" top="5" />
+                    </HBox.margin>
+                </Button>
+                <Button ellipsisString="" onAction="#showRegistro" styleClass="responsive-button" text="Registro">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+                <Button ellipsisString="" onAction="#showRegistroSucursal" styleClass="responsive-button" text="Gestión de empleados">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+                <Button ellipsisString="" onAction="#showMonitoreo" styleClass="responsive-button" text="Monitoreo">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+                <Button ellipsisString="" onAction="#showTerminacion" styleClass="responsive-button" text="Asistencia">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+
+                <!-- Espaciador para empujar los botones de Configuración y Ayuda a la derecha -->
+                <Pane HBox.hgrow="ALWAYS" />
+
+                <!-- Botón Configuración con margen -->
+                <Button ellipsisString="" onAction="#showConfiguración" styleClass="responsive-button" text="Configuración">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+
+                <!-- Botón Ayuda con margen en el lado derecho -->
+                <Button ellipsisString="" onAction="#showAyuda" prefHeight="36.0" prefWidth="83.0" styleClass="responsive-button" text="Ayuda">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
+                <Button ellipsisString="" onAction="#cerrarSesion" prefHeight="36.0" prefWidth="69.0" styleClass="responsive-button" text="Salir" textOverrun="CENTER_ELLIPSIS">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                    <style>
+                        -fx-text-alignment: center;
+                        -fx-wrap-text: true;
+                    </style>
+               <font>
+                  <Font size="5.0" />
+               </font>
+                </Button>
+
+            </HBox>
+        </StackPane>
+
+        <!-- Línea separadora debajo del StackPane -->
+        <Separator orientation="HORIZONTAL" />
+
+        <StackPane fx:id="mainContent" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0">
+            <!-- Las vistas cargadas dinámicamente se insertarán aquí -->
+        </StackPane>
+    </VBox>
+</AnchorPane>

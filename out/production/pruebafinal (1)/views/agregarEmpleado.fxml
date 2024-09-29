@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2" xmlns:fx="http://javafx.com/fxml/1" spacing="10" alignment="CENTER" style="-fx-padding: 20;">
+    <Label text="Agregar Empleado" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+
+    <TextField fx:id="nombreField" promptText="Nombre" />
+    <TextField fx:id="apellidoPaternoField" promptText="Apellido Paterno" />
+    <TextField fx:id="apellidoMaternoField" promptText="Apellido Materno" />
+    <TextField fx:id="profesionField" promptText="Profesión" />
+
+    <Button text="Guardar" onAction="#guardarEmpleado" />
+</VBox>
+
