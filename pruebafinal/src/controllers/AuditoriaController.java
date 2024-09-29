@@ -5,7 +5,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 
 import java.sql.Connection;
@@ -13,18 +12,21 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class AuditoriaController {
 
     @FXML
-    private TableColumn nombreCompletoEmpleado;
+    private Label currentPageLabel;
 
     @FXML
-    private TableColumn nombreCompletoSupervisor;
+    private TableColumn<Auditoria, String> nombreCompletoEmpleado;
 
     @FXML
-    private TableColumn departamentoColumn;
+    private TableColumn<Auditoria, String> nombreCompletoSupervisor;
+
+    @FXML
+    private TableColumn<Auditoria, String> departamentoColumn;
 
     @FXML
     private DatePicker fechaInicioPicker;
@@ -54,15 +56,13 @@ public class AuditoriaController {
     private Button previousButton;
 
     @FXML
-    private HBox paginationBox;
-
-    @FXML
     private Button nextButton;
 
     @FXML
     private Button searchButton;
 
     private ObservableList<Auditoria> auditoriaData = FXCollections.observableArrayList();
+    private ObservableList<Auditoria> filteredData = FXCollections.observableArrayList();
     private int itemsPerPage = 10;
     private int currentPage = 1;
     private int totalPages = 1;
@@ -103,17 +103,36 @@ public class AuditoriaController {
         // Cargar datos iniciales
         cargarDatos();
 
-        // Establecer los datos en la tabla
-        auditoriaTable.setItems(auditoriaData);
+        // Copiar los datos cargados a la lista filtrada
+        filteredData.addAll(auditoriaData);
 
-        // Configurar paginación
-        totalPages = (int) Math.ceil((double) auditoriaData.size() / itemsPerPage);
+        // Configurar el tamaño fijo de las celdas
+        auditoriaTable.setFixedCellSize(25); // Ajusta este valor según el alto de tus celdas
+
+        // Añadir listener para ajustar itemsPerPage según el alto de la tabla
+        auditoriaTable.heightProperty().addListener((obs, oldVal, newVal) -> {
+            int newItemsPerPage = (int) (newVal.doubleValue() / auditoriaTable.getFixedCellSize());
+            if (newItemsPerPage != itemsPerPage && newItemsPerPage > 0) {
+                itemsPerPage = newItemsPerPage;
+                totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+                showPage(currentPage);
+            }
+        });
+
+        // Calcular itemsPerPage inicial
+        itemsPerPage = (int) (auditoriaTable.getHeight() / auditoriaTable.getFixedCellSize());
+        if (itemsPerPage <= 0) {
+            itemsPerPage = 10; // Valor por defecto si aún no se ha inicializado el alto
+        }
+
+        // Calcular total de páginas
+        totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
+
+        // Mostrar la primera página
         showPage(1);
-
-        // Configurar eventos de botones
-        previousButton.setOnAction(event -> handlePreviousPage());
-        nextButton.setOnAction(event -> handleNextPage());
-        searchButton.setOnAction(event -> validateAndSearch());
     }
 
     @FXML
@@ -134,10 +153,7 @@ public class AuditoriaController {
 
     @FXML
     private void validateAndSearch() {
-        LocalDate fechaInicio = fechaInicioPicker.getValue();
-        LocalDate fechaFin = fechaFinPicker.getValue();
-
-        if (fechaInicio == null || fechaFin == null) {
+        if (fechaInicioPicker.getValue() == null || fechaFinPicker.getValue() == null) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Advertencia");
             alert.setHeaderText("Faltan fechas");
@@ -146,7 +162,7 @@ public class AuditoriaController {
             return;
         }
 
-        if (fechaInicio.isAfter(fechaFin)) {
+        if (fechaInicioPicker.getValue().isAfter(fechaFinPicker.getValue())) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Advertencia");
             alert.setHeaderText("Rango de fechas inválido");
@@ -160,7 +176,7 @@ public class AuditoriaController {
 
     @FXML
     private void handleSearch() {
-        String supervisorFilter = userFilterField.getText().trim();
+        String supervisorFilter = userFilterField.getText().trim().toLowerCase();
         String actionFilter = actionFilterComboBox.getValue();
         LocalDate fechaInicio = fechaInicioPicker.getValue();
         LocalDate fechaFin = fechaFinPicker.getValue();
@@ -168,27 +184,16 @@ public class AuditoriaController {
         ObservableList<Auditoria> filteredList = FXCollections.observableArrayList();
 
         for (Auditoria auditoria : auditoriaData) {
-            boolean matchesSupervisor = true;
-            boolean matchesAction = true;
+            boolean matchesSupervisor = supervisorFilter.isEmpty() ||
+                    auditoria.getNombreSupervisor().toLowerCase().contains(supervisorFilter);
+
+            boolean matchesAction = actionFilter == null || actionFilter.equals("Todos") ||
+                    auditoria.getAccion().equalsIgnoreCase(actionFilter);
+
             boolean matchesDateRange = true;
-
-            if (!supervisorFilter.isEmpty()) {
-                matchesSupervisor = auditoria.getNombreSupervisor().toLowerCase().contains(supervisorFilter.toLowerCase());
-            }
-
-            if (actionFilter != null && !actionFilter.equals("Todos")) {
-                matchesAction = auditoria.getAccion().equalsIgnoreCase(actionFilter);
-            }
-
             if (fechaInicio != null && fechaFin != null) {
-                try {
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    LocalDate auditDate = LocalDate.parse(auditoria.getTimestamp().substring(0, 10), formatter);
-                    matchesDateRange = !auditDate.isBefore(fechaInicio) && !auditDate.isAfter(fechaFin);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    matchesDateRange = false;
-                }
+                LocalDate auditDate = LocalDate.parse(auditoria.getTimestamp().substring(0, 10));
+                matchesDateRange = !auditDate.isBefore(fechaInicio) && !auditDate.isAfter(fechaFin);
             }
 
             if (matchesSupervisor && matchesAction && matchesDateRange) {
@@ -196,8 +201,9 @@ public class AuditoriaController {
             }
         }
 
-        auditoriaTable.setItems(filteredList);
-        totalPages = (int) Math.ceil((double) filteredList.size() / itemsPerPage);
+        // Actualizar la lista filtrada y recalcular paginación
+        filteredData = filteredList;
+        totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
         currentPage = 1;
         showPage(currentPage);
     }
@@ -244,67 +250,32 @@ public class AuditoriaController {
     }
 
     private void showPage(int pageNumber) {
+        if (pageNumber < 1) {
+            pageNumber = 1;
+        }
+        if (pageNumber > totalPages) {
+            pageNumber = totalPages;
+        }
         currentPage = pageNumber;
-        int fromIndex = (pageNumber - 1) * itemsPerPage;
-        int toIndex = Math.min(fromIndex + itemsPerPage, auditoriaData.size());
 
-        if (fromIndex > auditoriaData.size()) {
-            fromIndex = auditoriaData.size() - itemsPerPage;
+        int fromIndex = (pageNumber - 1) * itemsPerPage;
+        int toIndex = Math.min(fromIndex + itemsPerPage, filteredData.size());
+
+        if (fromIndex > filteredData.size()) {
+            fromIndex = filteredData.size() - itemsPerPage;
         }
         if (fromIndex < 0) {
             fromIndex = 0;
         }
 
-        auditoriaTable.setItems(FXCollections.observableArrayList(auditoriaData.subList(fromIndex, toIndex)));
+        List<Auditoria> pageData = filteredData.subList(fromIndex, toIndex);
+        auditoriaTable.setItems(FXCollections.observableArrayList(pageData));
 
-        updatePaginationButtons();
-        previousButton.setDisable(pageNumber == 1);
-        nextButton.setDisable(pageNumber == totalPages);
-    }
+        // Actualizamos el label de la página actual
+        currentPageLabel.setText("Página " + currentPage + " de " + totalPages);
 
-    private void updatePaginationButtons() {
-        paginationBox.getChildren().clear();
-        int visiblePages = 5;
-
-        int startPage = Math.max(2, currentPage - visiblePages / 2);
-        int endPage = Math.min(startPage + visiblePages - 1, totalPages - 1);
-
-        if (endPage - startPage + 1 < visiblePages) {
-            startPage = Math.max(2, endPage - visiblePages + 1);
-        }
-
-        Button firstPageButton = new Button("1");
-        firstPageButton.setOnAction(event -> showPage(1));
-        if (currentPage == 1) {
-            firstPageButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
-        }
-        paginationBox.getChildren().add(firstPageButton);
-
-        if (startPage > 2) {
-            paginationBox.getChildren().add(new Label("..."));
-        }
-
-        for (int i = startPage; i <= endPage; i++) {
-            final int pageIndex = i;
-            Button pageButton = new Button(String.valueOf(i));
-            pageButton.setOnAction(event -> showPage(pageIndex));
-
-            if (i == currentPage) {
-                pageButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
-            }
-            paginationBox.getChildren().add(pageButton);
-        }
-
-        if (endPage < totalPages - 1) {
-            paginationBox.getChildren().add(new Label("..."));
-        }
-
-        Button lastPageButton = new Button(String.valueOf(totalPages));
-        lastPageButton.setOnAction(event -> showPage(totalPages));
-        if (currentPage == totalPages) {
-            lastPageButton.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
-        }
-        paginationBox.getChildren().add(lastPageButton);
+        previousButton.setDisable(currentPage == 1);
+        nextButton.setDisable(currentPage == totalPages || totalPages == 0);
     }
 
     private void showDetailsPopup(String detalle) {
