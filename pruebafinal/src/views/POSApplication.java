@@ -27,9 +27,10 @@ import java.util.Objects;
                 primaryStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/ODOM.jpg"))));
         primaryStage.setWidth(1280);
         primaryStage.setHeight(720);
+        primaryStage.setMaximized(true);
         // Establecer el tamaño mínimo de la ventana principal
-        primaryStage.setMinWidth(500);
-        primaryStage.setMinHeight(480);
+        primaryStage.setMinWidth(1280);
+        primaryStage.setMinHeight(720);
 
         primaryStage.show();
     }

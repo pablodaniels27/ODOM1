@@ -11,6 +11,7 @@ module pruebafinal {
     requires java.sql;
     requires com.github.benmanes.caffeine;
 
+
     opens Lector to javafx.fxml;
 
 

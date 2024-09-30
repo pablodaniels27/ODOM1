@@ -1,0 +1,19 @@
+.chart-bar {
+    -fx-bar-fill: gray; /* Default bar color */
+}
+
+.chart-bar.asistencia {
+    -fx-bar-fill: green;
+}
+
+.chart-bar.no-asistencia {
+    -fx-bar-fill: red;
+}
+
+.chart-bar.retardo {
+    -fx-bar-fill: yellow;
+}
+
+.chart-bar.justificacion {
+    -fx-bar-fill: blue;
+}

@@ -13,9 +13,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import Services.CacheService;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
+
+import java.sql.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,8 +81,8 @@ public class LoginController {
 
             primaryStage.setScene(scene);
             primaryStage.setTitle("ODOM. SA DE CV");
-            primaryStage.setMinWidth(1040);
-            primaryStage.setMinHeight(480);
+            primaryStage.setMinWidth(1280);
+            primaryStage.setMinHeight(780);
 
             primaryStage.show();
         } catch (Exception e) {
@@ -150,4 +149,5 @@ public class LoginController {
             e.printStackTrace();
         }
     }
+
 }

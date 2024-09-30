@@ -9,7 +9,7 @@ import java.awt.event.ActionListener;
 import java.util.EnumMap;
 
 public class MainForm extends JFrame {
-    private EnumMap<DPFPFingerIndex, DPFPTemplate> templates;
+    private final EnumMap<DPFPFingerIndex, DPFPTemplate> templates;
 
     public MainForm() {
         setTitle("Fingerprint Enrollment and Verification");

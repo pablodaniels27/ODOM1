@@ -20,8 +20,8 @@ public class SimpleVerificationFormController {
     @FXML
     private Label statusLabel;
 
-    private EnumMap<DPFPFingerIndex, DPFPTemplate> templates;
-    private int farRequested;
+    private final EnumMap<DPFPFingerIndex, DPFPTemplate> templates;
+    private final int farRequested;
     private int farAchieved;
     private boolean matched;
 

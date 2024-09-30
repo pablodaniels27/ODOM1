@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="103.0" prefWidth="1090.0" stylesheets="@../resources/style.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController">
+<AnchorPane prefHeight="103.0" prefWidth="1090.0" stylesheets="@../resources/style.css" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.MainController">
     <!-- Main Content -->
     <VBox fx:id="mainContainer" alignment="TOP_CENTER" layoutY="-10.0" prefHeight="146.0" prefWidth="1060.0" spacing="5" AnchorPane.bottomAnchor="-33.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-10.0">
         <!-- Línea separadora arriba del StackPane -->
@@ -38,6 +38,7 @@
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
+            <Button ellipsisString="" layoutX="540.0" layoutY="20.0" onAction="#showAuditoria"  styleClass="responsive-button" text="Auditoria" />
 
                 <!-- Espaciador para empujar los botones de Configuración y Ayuda a la derecha -->
                 <Pane HBox.hgrow="ALWAYS" />

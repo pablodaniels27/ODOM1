@@ -273,7 +273,7 @@ public class RegistroSucursalController {
         empleadoBox.setOnMouseClicked(event -> {
             if (selectedBox != null) {
                 selectedBox.setStyle("-fx-background-color: white; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
-                ((VBox) selectedBox.getChildren().get(3)).setVisible(false);
+                selectedBox.getChildren().get(3).setVisible(false);
             }
             empleadoBox.setStyle("-fx-background-color: #d1e7dd; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
             selectedBox = empleadoBox;
