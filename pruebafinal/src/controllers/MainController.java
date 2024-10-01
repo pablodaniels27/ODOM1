@@ -103,6 +103,12 @@ public class MainController {
     }
 
     @FXML
+    public void showAuditoria() { loadContent("/views/Auditoria.fxml");}
+
+
+
+
+    @FXML
     public void showEdicion(int empleadoId) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EdicionView.fxml"));
