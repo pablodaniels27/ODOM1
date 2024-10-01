@@ -11,8 +11,13 @@
                 <VBox alignment="TOP_LEFT" maxWidth="2000.0" minWidth="481.0" prefHeight="1080.0" prefWidth="711.0" spacing="10" style="-fx-padding: 10;" AnchorPane.bottomAnchor="20">
                     <!-- Mensajes -->
                     <Label styleClass="header-label" text="Lista de empleados" />
-                    <Label text="Aeropuerto internacional de la Ciudad de México" />
-                    <Label fx:id="currentDate" styleClass="date-label" />
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="Aeropuerto internacional de la Ciudad de México" />
+                        <Label fx:id="currentDate" styleClass="date-label" />
+                    </HBox>
+                    <HBox spacing="10">
+                        <TextField fx:id="searchBar" promptText="Buscar empleado..." style="-fx-font-size: 14px;" />
+                    </HBox>
 
                     <!-- ScrollPane para la lista de empleados -->
                     <ScrollPane fitToHeight="true" fitToWidth="true">

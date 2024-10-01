@@ -6,6 +6,8 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
@@ -49,6 +51,9 @@ public class InicioController {
 
     @FXML
     private Button nextMonthButton;
+
+    @FXML
+    private TextField searchBar;
 
     @FXML
     private Label mondayEntryLabel, mondayExitLabel;
@@ -97,13 +102,16 @@ public class InicioController {
             updateCalendar();
         });
 
+        // Agregar listener al campo de búsqueda
+        searchBar.setOnKeyReleased(this::handleSearch);
+
         // Cargar empleados desde la base de datos
-        loadEmployeesFromDatabase();
+        loadEmployeesFromDatabase("");
     }
 
     // Método para cargar empleados desde la base de datos
-    private void loadEmployeesFromDatabase() {
-        employees = getEmployeesFromDatabase();
+    private void loadEmployeesFromDatabase(String filter) {
+        employees = getEmployeesFromDatabase(filter);
         System.out.println("Number of employees loaded: " + employees.size());
 
         // Limpiar el contenedor de empleados antes de agregar nuevos elementos
@@ -134,11 +142,14 @@ public class InicioController {
 
         return vbox;
     }
-    // Dentro de tu controlador 'InicioController'
 
+    // Método para manejar la búsqueda
+    private void handleSearch(KeyEvent event) {
+        String searchText = searchBar.getText().trim();
+        loadEmployeesFromDatabase(searchText);
+    }
 
-
-    // Método que maneja la selección de un empleado en la lista
+    // Método para manejar la selección de un empleado en la lista
     private void handleEmployeeSelection(MouseEvent event, Employee employee) {
         if (employee != null) {
             this.selectedEmployee = employee;
@@ -199,10 +210,6 @@ public class InicioController {
         }
     }
 
-
-
-
-
     // Método para manejar la selección de una semana en el calendario
     private void handleWeekSelection(LocalDate selectedDate) {
         // Limpiar la selección previa
@@ -244,7 +251,6 @@ public class InicioController {
             }
         }
     }
-
 
     // Método para cargar las asistencias de la semana seleccionada
     private void loadWeekAttendance(LocalDate startOfWeek) {
@@ -327,13 +333,23 @@ public class InicioController {
     }
 
     // Método para obtener los empleados desde la base de datos
-    private List<Employee> getEmployeesFromDatabase() {
+    private List<Employee> getEmployeesFromDatabase(String filter) {
         List<Employee> employees = new ArrayList<>();
         String query = "SELECT id, CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno) AS full_name, profesion FROM empleados";
 
+        // Si hay un filtro, añadir la condición a la consulta SQL
+        if (!filter.isEmpty()) {
+            query += " WHERE CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno) LIKE ?";
+        }
+
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query);
-             ResultSet resultSet = preparedStatement.executeQuery()) {
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            if (!filter.isEmpty()) {
+                preparedStatement.setString(1, "%" + filter + "%");
+            }
+
+            ResultSet resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
@@ -350,6 +366,6 @@ public class InicioController {
     }
 
     // Clase para representar un empleado
-    public record Employee(int id, String fullName, String profession){
+    public record Employee(int id, String fullName, String profession) {
     }
 }
