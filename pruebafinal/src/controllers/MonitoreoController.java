@@ -602,6 +602,15 @@ public class MonitoreoController {
                 employeeData.put("estado", resultSet.getString("estado"));
                 employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");
 
+                // Calcular el tiempo laborado
+                String horaEntrada = resultSet.getString("hora_entrada");
+                String horaSalida = resultSet.getString("hora_salida");
+                if (horaEntrada != null && horaSalida != null) {
+                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
+                } else {
+                    employeeData.put("tiempoLaborado", "N/A");
+                }
+
                 employees.add(employeeData);
             }
 
@@ -613,6 +622,7 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
 
 
 
@@ -1065,37 +1075,55 @@ public class MonitoreoController {
             incluirEmpleados = true;
         }
 
-        // Obtener coincidencias desde la base de datos
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            // Consulta SQL que concatena los campos de nombres y apellidos
-            StringBuilder query = new StringBuilder("SELECT CONCAT(TRIM(nombres), ' ', TRIM(apellido_paterno), ' ', TRIM(apellido_materno)) AS nombreCompleto, jerarquia_id ");
-            query.append("FROM empleados WHERE ");
+        // Obtener el departamento seleccionado
+        String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
 
-            // Filtrar por nombre completo usando CONCAT en lugar de buscar por partes
-            query.append("CONCAT(LOWER(TRIM(nombres)), ' ', LOWER(TRIM(apellido_paterno)), ' ', LOWER(TRIM(apellido_materno))) LIKE ?");
+        // Consulta SQL que concatena los campos de nombres y apellidos
+        StringBuilder query = new StringBuilder("SELECT CONCAT(TRIM(nombres), ' ', TRIM(apellido_paterno), ' ', TRIM(apellido_materno)) AS nombreCompleto, jerarquia_id, d.nombre as departamento ");
+        query.append("FROM empleados e ");
+        query.append("JOIN departamentos d ON e.departamento_id = d.id ");
+        query.append("WHERE ");
 
-            // Filtros para supervisores o empleados
-            if (incluirSupervisores || incluirEmpleados) {
-                query.append(" AND (");
-                if (incluirSupervisores) {
-                    query.append("jerarquia_id = 2");  // Supervisores
-                }
-                if (incluirSupervisores && incluirEmpleados) {
-                    query.append(" OR ");
-                }
-                if (incluirEmpleados) {
-                    query.append("jerarquia_id = 3");  // Empleados
-                }
-                query.append(")");
+        // Filtrar por nombre completo usando CONCAT en lugar de buscar por partes
+        query.append("CONCAT(LOWER(TRIM(nombres)), ' ', LOWER(TRIM(apellido_paterno)), ' ', LOWER(TRIM(apellido_materno))) LIKE ? ");
+
+        // Filtros para supervisores o empleados
+        if (incluirSupervisores || incluirEmpleados) {
+            query.append("AND (");
+            if (incluirSupervisores) {
+                query.append("jerarquia_id = 2");  // Supervisores
             }
+            if (incluirSupervisores && incluirEmpleados) {
+                query.append(" OR ");
+            }
+            if (incluirEmpleados) {
+                query.append("jerarquia_id = 3");  // Empleados
+            }
+            query.append(") ");
+        }
 
-            PreparedStatement preparedStatement = connection.prepareStatement(query.toString());
+        // Filtrar por departamento, si no se seleccionó "Todos los departamentos"
+        if (!departamentoSeleccionado.equals("Todos los departamentos")) {
+            query.append("AND d.nombre = ? ");
+        }
+
+        query.append("ORDER BY nombreCompleto ASC");
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query.toString())) {
+
+            int paramIndex = 1;
 
             // Crear el patrón de búsqueda
             String searchPattern = "%" + searchQuery.toLowerCase() + "%";
 
             // Asignar el patrón de búsqueda
-            preparedStatement.setString(1, searchPattern);
+            preparedStatement.setString(paramIndex++, searchPattern);
+
+            // Si el departamento seleccionado no es "Todos los departamentos", agregarlo como parámetro
+            if (!departamentoSeleccionado.equals("Todos los departamentos")) {
+                preparedStatement.setString(paramIndex++, departamentoSeleccionado);
+            }
 
             // Ejecutar la consulta
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -1103,7 +1131,11 @@ public class MonitoreoController {
 
             // Procesar los resultados
             while (resultSet.next()) {
-                results.add(resultSet.getString("nombreCompleto") + "," + resultSet.getInt("jerarquia_id"));  // Añadir la jerarquía a los resultados
+                String nombreCompleto = resultSet.getString("nombreCompleto");
+                int jerarquiaId = resultSet.getInt("jerarquia_id");
+                String departamento = resultSet.getString("departamento");
+
+                results.add(nombreCompleto + "," + jerarquiaId + "," + departamento);  // Añadir el nombre completo, jerarquía, y departamento a los resultados
             }
 
             if (!results.isEmpty()) {
@@ -1116,6 +1148,7 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
 
     // Método para mostrar sugerencias en el ContextMenu
     private void populateSuggestions(ObservableList<String> suggestions) {
@@ -1130,20 +1163,26 @@ public class MonitoreoController {
         boolean incluirSupervisores = supervisoresCheckBox.isSelected();
         boolean incluirEmpleados = empleadosCheckBox.isSelected();
 
-        // Si ninguno de los checkboxes está seleccionado, mostramos todo (supervisores y empleados)
+        // Si ninguno de los checkboxes está seleccionado, mostramos todos (supervisores y empleados)
         if (!incluirSupervisores && !incluirEmpleados) {
             incluirSupervisores = true;
             incluirEmpleados = true;
         }
 
+        // Obtener el departamento seleccionado
+        String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
+
         for (String suggestion : suggestions) {
-            // Dividir la sugerencia para obtener el nombre completo y la jerarquía
+            // Dividir la sugerencia para obtener el nombre completo, la jerarquía y el departamento
             String[] suggestionParts = suggestion.split(",");
             String nombreCompleto = suggestionParts[0];
             int jerarquiaId = Integer.parseInt(suggestionParts[1]);  // Jerarquía: 2 = Supervisor, 3 = Empleado
+            String departamento = suggestionParts.length > 2 ? suggestionParts[2] : ""; // Obtener el departamento si está presente
 
-            // Filtrar según el estado de los checkboxes
-            if ((incluirSupervisores && jerarquiaId == 2) || (incluirEmpleados && jerarquiaId == 3)) {
+            // Filtrar según el estado de los checkboxes y el departamento seleccionado
+            boolean perteneceAlDepartamento = departamentoSeleccionado.equals("Todos los departamentos") || departamentoSeleccionado.equals(departamento);
+
+            if (perteneceAlDepartamento && ((incluirSupervisores && jerarquiaId == 2) || (incluirEmpleados && jerarquiaId == 3))) {
                 // Crear un Label para cada sugerencia en lugar de un MenuItem
                 Label item = new Label(nombreCompleto);
                 item.setStyle("-fx-padding: 5px; -fx-background-color: white;"); // Añadir algo de estilo
@@ -1179,6 +1218,7 @@ public class MonitoreoController {
             suggestionsMenu.show(searchField, boundsInScreen.getMinX(), boundsInScreen.getMaxY());
         }
     }
+
 
 
 
