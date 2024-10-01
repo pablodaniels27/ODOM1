@@ -2,17 +2,20 @@ package controllers;
 
 import Services.CacheService;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -45,6 +48,13 @@ public class RegistroSucursalController {
     private int empleadosOffset = 0;
     private int supervisoresOffset = 0;
     private static final int ITEMS_PER_PAGE = 14;
+
+    private MainController mainController;
+
+    public void setMainController(MainController mainController) {
+        this.mainController = mainController;
+    }
+
 
     @FXML
     public void initialize() {
@@ -241,6 +251,7 @@ public class RegistroSucursalController {
         Button editarButton = new Button("Editar");
         Button eliminarButton = new Button("Dar baja");
         eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId));
+        editarButton.setOnAction(event -> cargarVistaEdicion(empleadoId));
         botonesContainer.getChildren().addAll(editarButton, eliminarButton);
 
         empleadoBox.getChildren().addAll(statusIcon, textContainer, spacer, botonesContainer);
@@ -272,6 +283,7 @@ public class RegistroSucursalController {
         return empleadoBox;
     }
 
+
     private void darDeBajaEmpleado(int empleadoId) {
         try (Connection connection = DatabaseConnection.getConnection()) {
             // Cambiar el estatus del empleado a 'Baja'
@@ -288,4 +300,35 @@ public class RegistroSucursalController {
             e.printStackTrace();
         }
     }
+
+    private void cargarVistaEdicion(int empleadoId) {
+        try {
+            // Obtener la raíz de la escena para encontrar el contenedor principal
+            Node root = empleadosContainer.getScene().getRoot();
+            if (root instanceof Parent) {
+                Parent parent = (Parent) root;
+                StackPane mainContent = (StackPane) parent.lookup("#mainContent"); // Usa el ID 'mainContent' para localizar el contenedor
+
+                // Cargar la vista de edición
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EdicionView.fxml"));
+                Parent editRoot = loader.load();
+
+                // Obtener el controlador de la vista de edición y pasar los datos del empleado
+                EdicionController edicionController = loader.getController();
+                edicionController.cargarDatosEmpleado(empleadoId);
+
+                // Cargar la vista de edición en el contenedor principal
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(editRoot);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
+
 }
