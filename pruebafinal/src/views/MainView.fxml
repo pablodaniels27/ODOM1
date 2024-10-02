@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -65,11 +64,17 @@
                         -fx-text-alignment: center;
                         -fx-wrap-text: true;
                     </style>
-               <font>
-                  <Font size="5.0" />
-               </font>
+                    <font>
+                        <Font size="5.0" />
+                    </font>
                 </Button>
 
+                <!-- Botón de edición (inicialmente invisible) -->
+                <Button fx:id="editButton" ellipsisString="" onAction="#handleEditAction" styleClass="responsive-button" text="Editar" visible="false">
+                    <HBox.margin>
+                        <Insets bottom="10" left="0" right="10" top="10" />
+                    </HBox.margin>
+                </Button>
             </HBox>
         </StackPane>
 
