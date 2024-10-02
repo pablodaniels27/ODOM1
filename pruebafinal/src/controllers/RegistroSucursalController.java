@@ -5,7 +5,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -20,8 +19,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class RegistroSucursalController {
@@ -54,7 +51,6 @@ public class RegistroSucursalController {
     public void setMainController(MainController mainController) {
         this.mainController = mainController;
     }
-
 
     @FXML
     public void initialize() {
@@ -146,9 +142,6 @@ public class RegistroSucursalController {
                 String profesion = resultSet.getString("profesion");
                 int estatusId = resultSet.getInt("estatus_id");
 
-                String nombreCompleto = nombre + " " + apellidoPaterno;
-
-                // No necesitamos hacer la comparación aquí ya que el filtro se aplica directamente en SQL
                 HBox empleadoBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
                 empleadosContainer.getChildren().add(empleadoBox);
             }
@@ -186,8 +179,6 @@ public class RegistroSucursalController {
                 String profesion = resultSet.getString("profesion");
                 int estatusId = resultSet.getInt("estatus_id");
 
-                String nombreCompleto = nombre + " " + apellidoPaterno;
-
                 HBox supervisorBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
                 supervisoresContainer.getChildren().add(supervisorBox);
             }
@@ -195,7 +186,6 @@ public class RegistroSucursalController {
             e.printStackTrace();
         }
     }
-
 
     private HBox crearEmpleadoBox(int empleadoId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
         HBox empleadoBox = new HBox();
@@ -250,7 +240,7 @@ public class RegistroSucursalController {
 
         Button editarButton = new Button("Editar");
         Button eliminarButton = new Button("Dar baja");
-        eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId));
+        eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId, empleadoBox));
         editarButton.setOnAction(event -> cargarVistaEdicion(empleadoId));
         botonesContainer.getChildren().addAll(editarButton, eliminarButton);
 
@@ -283,8 +273,7 @@ public class RegistroSucursalController {
         return empleadoBox;
     }
 
-
-    private void darDeBajaEmpleado(int empleadoId) {
+    private void darDeBajaEmpleado(int empleadoId, HBox empleadoBox) {
         try (Connection connection = DatabaseConnection.getConnection()) {
             // Cambiar el estatus del empleado a 'Baja'
             String sql = "UPDATE empleados SET estatus_id = 4 WHERE id = ?";
@@ -292,9 +281,9 @@ public class RegistroSucursalController {
             statement.setInt(1, empleadoId);
             statement.executeUpdate();
 
-            // Refrescar la lista de empleados después de la actualización
-            cargarEmpleados(searchEmpleadosField.getText());
-            cargarSupervisores(searchSupervisoresField.getText());
+            // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
+            empleadosContainer.getChildren().remove(empleadoBox);
+            supervisoresContainer.getChildren().remove(empleadoBox);
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -303,21 +292,17 @@ public class RegistroSucursalController {
 
     private void cargarVistaEdicion(int empleadoId) {
         try {
-            // Obtener la raíz de la escena para encontrar el contenedor principal
             Node root = empleadosContainer.getScene().getRoot();
             if (root instanceof Parent) {
                 Parent parent = (Parent) root;
-                StackPane mainContent = (StackPane) parent.lookup("#mainContent"); // Usa el ID 'mainContent' para localizar el contenedor
+                StackPane mainContent = (StackPane) parent.lookup("#mainContent");
 
-                // Cargar la vista de edición
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EdicionView.fxml"));
                 Parent editRoot = loader.load();
 
-                // Obtener el controlador de la vista de edición y pasar los datos del empleado
                 EdicionController edicionController = loader.getController();
                 edicionController.cargarDatosEmpleado(empleadoId);
 
-                // Cargar la vista de edición en el contenedor principal
                 mainContent.getChildren().clear();
                 mainContent.getChildren().add(editRoot);
             }
@@ -325,10 +310,4 @@ public class RegistroSucursalController {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
 }

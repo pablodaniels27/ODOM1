@@ -480,7 +480,6 @@ public class AuditoriaController {
                     .append(detalles).append("\n");
         }
 
-
         // Copiar el contenido al portapapeles
         Clipboard clipboard = Clipboard.getSystemClipboard();
         ClipboardContent content = new ClipboardContent();
