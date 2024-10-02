@@ -80,6 +80,7 @@
                         <TableColumn fx:id="timestampColumn" text="Horario" />
                         <TableColumn fx:id="detallesColumn" text="Detalles"/>
 
+
                     </columns>
                 </TableView>
             </AnchorPane>

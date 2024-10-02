@@ -509,6 +509,7 @@ public class AuditoriaController {
             cargarDatos(); // Cargar todos los registros desde la base de datos
             filteredData.setAll(auditoriaData); // Copiar los datos cargados a la lista filtrada
 
+
             // Calcular total de páginas y mostrar la primera página
             totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
             currentPage = 1;
