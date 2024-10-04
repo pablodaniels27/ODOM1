@@ -6,13 +6,17 @@ import controllers.InicioController;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.sql.*;
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.*;
 
 public class BaseDAO {
 
-    //Estos metodos controla monitoreo
+    //Estos metodos controla monitoreo//////
 
     public static int obtenerIdTipoAsistencia(String tipoAsistencia) throws SQLException {
         String query = "SELECT id FROM tipos_asistencia WHERE nombre = ?";
@@ -56,6 +60,7 @@ public class BaseDAO {
         }
     }
 
+    //este metodo tambien se usa en Registro controller
     public static List<String> obtenerDepartamentos() throws SQLException {
         String query = "SELECT nombre FROM departamentos";
         List<String> departamentos = new ArrayList<>();
@@ -592,6 +597,359 @@ public class BaseDAO {
 
         return auditoriaList;
     }
+    //TERMINA AUDITORIA/////////////////////////
+    //REGISTRO CONTROLLER/
+
+    public static List<String> obtenerPuestos() throws SQLException {
+        String query = "SELECT nombre FROM jerarquias";
+        List<String> puestos = new ArrayList<>();
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                puestos.add(resultSet.getString("nombre"));
+            }
+        }
+
+        return puestos;
+    }
+
+    public static int obtenerIdDepartamento(String departamentoNombre) throws SQLException {
+        String query = "SELECT id FROM departamentos WHERE nombre = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, departamentoNombre);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt("id");
+            }
+        }
+        return 0; // Retornar 0 si no se encuentra el departamento
+    }
+
+    public static int obtenerIdPuesto(String puestoNombre) throws SQLException {
+        String query = "SELECT id FROM jerarquias WHERE nombre = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, puestoNombre);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt("id");
+            }
+        }
+        return 0; // Retornar 0 si no se encuentra el puesto
+    }
+
+    public static int insertarEmpleado(String nombre, String apellidoMaterno, String apellidoPaterno, Date fechaNacimiento, String pais, String ciudad, String email,
+                                       String lada, String telefono, String rfc, String curp, String profesion, int departamentoId, int jerarquiaId) throws SQLException {
+        String query = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, estatus_id) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
+            statement.setString(1, nombre);
+            statement.setString(2, apellidoMaterno);
+            statement.setString(3, apellidoPaterno);
+            statement.setDate(4, fechaNacimiento);
+            statement.setString(5, pais);
+            statement.setString(6, ciudad);
+            statement.setString(7, email);
+            statement.setString(8, lada);
+            statement.setString(9, telefono);
+            statement.setString(10, rfc);
+            statement.setString(11, curp);
+            statement.setString(12, profesion);
+            statement.setInt(13, departamentoId);
+            statement.setInt(14, jerarquiaId);
+
+            int rowsAffected = statement.executeUpdate();
+            if (rowsAffected > 0) {
+                ResultSet generatedKeys = statement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                }
+            }
+        }
+        return -1; // Retornar -1 si no se pudo insertar el empleado
+    }
+
+    public static byte[] serializarTemplate(Object template) {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+
+            oos.writeObject(template);
+            oos.flush();
+            return bos.toByteArray();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null; // Retornar null si hay un error en la serialización
+        }
+    }
+
+    public static int insertarHuella(int empleadoId, byte[] serializedTemplate, byte[] fingerprintImageBytes) throws SQLException {
+        String query = "INSERT INTO huellas (empleado_id, huella, huella_imagen) VALUES (?, ?, ?)";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
+            statement.setInt(1, empleadoId);
+            statement.setBytes(2, serializedTemplate);
+            statement.setBytes(3, fingerprintImageBytes);
+
+            int rowsAffected = statement.executeUpdate();
+            if (rowsAffected > 0) {
+                ResultSet generatedKeys = statement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                }
+            }
+        }
+        return -1; // Retornar -1 si no se pudo insertar la huella
+    }
+
+    public static void actualizarHuellaEmpleado(int empleadoId, int huellaId) throws SQLException {
+        String query = "UPDATE empleados SET huella = ? WHERE id = ?";
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, huellaId);
+            statement.setInt(2, empleadoId);
+            statement.executeUpdate();
+        }
+    }
+
+    //aqui termina registroController///
+    //REGISTRO SUCURSAL//////////////////////////////////7
+
+    public static List<Map<String, Object>> obtenerEmpleados(String filtro, int limit, int offset) throws SQLException {
+        List<Map<String, Object>> empleados = new ArrayList<>();
+        String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados " +
+                "WHERE jerarquia_id = 3 AND estatus_id != 4 " +
+                "AND (nombres LIKE ? OR apellido_paterno LIKE ?) " +
+                "LIMIT ? OFFSET ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            String filtroSQL = "%" + filtro + "%";
+            statement.setString(1, filtroSQL);
+            statement.setString(2, filtroSQL);
+            statement.setInt(3, limit);
+            statement.setInt(4, offset);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Map<String, Object> empleado = new HashMap<>();
+                empleado.put("id", resultSet.getInt("id"));
+                empleado.put("nombres", resultSet.getString("nombres"));
+                empleado.put("apellido_paterno", resultSet.getString("apellido_paterno"));
+                empleado.put("profesion", resultSet.getString("profesion"));
+                empleado.put("estatus_id", resultSet.getInt("estatus_id"));
+                empleados.add(empleado);
+            }
+        }
+
+        return empleados;
+    }
+
+    public static List<Map<String, Object>> obtenerSupervisores(String filtro, int limit, int offset) throws SQLException {
+        List<Map<String, Object>> supervisores = new ArrayList<>();
+        String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados " +
+                "WHERE jerarquia_id = 2 AND estatus_id != 4 " +
+                "AND (nombres LIKE ? OR apellido_paterno LIKE ?) " +
+                "LIMIT ? OFFSET ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            String filtroSQL = "%" + filtro + "%";
+            statement.setString(1, filtroSQL);
+            statement.setString(2, filtroSQL);
+            statement.setInt(3, limit);
+            statement.setInt(4, offset);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Map<String, Object> supervisor = new HashMap<>();
+                supervisor.put("id", resultSet.getInt("id"));
+                supervisor.put("nombres", resultSet.getString("nombres"));
+                supervisor.put("apellido_paterno", resultSet.getString("apellido_paterno"));
+                supervisor.put("profesion", resultSet.getString("profesion"));
+                supervisor.put("estatus_id", resultSet.getInt("estatus_id"));
+                supervisores.add(supervisor);
+            }
+        }
+
+        return supervisores;
+    }
+
+    public static void darDeBajaEmpleado(int empleadoId) throws SQLException {
+        String sql = "UPDATE empleados SET estatus_id = 4 WHERE id = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, empleadoId);
+            statement.executeUpdate();
+        }
+    }
+
+    //termina gestion de empleados
+    //EDICION CONTROLLER///////////////////
+    public static Map<String, Integer> obtenerDepartamentosid() throws SQLException {
+        String sql = "SELECT id, nombre FROM departamentos";
+        Map<String, Integer> departamentos = new HashMap<>();
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String nombre = resultSet.getString("nombre");
+                departamentos.put(nombre, id);
+            }
+        }
+
+        return departamentos;
+    }
+
+    public static Map<String, Integer> obtenerPuestosid() throws SQLException {
+        String sql = "SELECT id, nombre FROM jerarquias";
+        Map<String, Integer> puestos = new HashMap<>();
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String nombre = resultSet.getString("nombre");
+                puestos.put(nombre, id);
+            }
+        }
+
+        return puestos;
+    }
+
+    public static Map<String, Integer> obtenerEstatusEmpleados() throws SQLException {
+        String sql = "SELECT id, nombre FROM estatus_empleado";
+        Map<String, Integer> estatus = new HashMap<>();
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String nombre = resultSet.getString("nombre");
+                estatus.put(nombre, id);
+            }
+        }
+
+        return estatus;
+    }
+
+    public static Map<String, Object> obtenerDatosEmpleado(int empleadoId) throws SQLException {
+        String sql = "SELECT * FROM empleados WHERE id = ?";
+        Map<String, Object> empleadoData = new HashMap<>();
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, empleadoId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                empleadoData.put("nombres", resultSet.getString("nombres"));
+                empleadoData.put("apellido_paterno", resultSet.getString("apellido_paterno"));
+                empleadoData.put("apellido_materno", resultSet.getString("apellido_materno"));
+                empleadoData.put("pais", resultSet.getString("pais"));
+                empleadoData.put("ciudad", resultSet.getString("ciudad"));
+                empleadoData.put("lada", resultSet.getString("lada"));
+                empleadoData.put("telefono", resultSet.getString("telefono"));
+                empleadoData.put("correo_electronico", resultSet.getString("correo_electronico"));
+                empleadoData.put("rfc", resultSet.getString("rfc"));
+                empleadoData.put("curp", resultSet.getString("curp"));
+                empleadoData.put("profesion", resultSet.getString("profesion"));
+                empleadoData.put("fecha_nacimiento", resultSet.getDate("fecha_nacimiento"));
+                empleadoData.put("departamento_id", resultSet.getInt("departamento_id"));
+                empleadoData.put("jerarquia_id", resultSet.getInt("jerarquia_id"));
+                empleadoData.put("estatus_id", resultSet.getInt("estatus_id"));
+            } else {
+                return null;
+            }
+        }
+
+        return empleadoData;
+    }
+
+    public static byte[] obtenerHuellaImagen(int empleadoId) throws SQLException {
+        String sql = "SELECT huella_imagen FROM huellas WHERE empleado_id = ?";
+        byte[] imageBytes = null;
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setInt(1, empleadoId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                imageBytes = resultSet.getBytes("huella_imagen");
+            }
+        }
+
+        return imageBytes;
+    }
+
+    public static boolean actualizarEmpleado(Map<String, Object> empleadoData) throws SQLException {
+        String sql = "UPDATE empleados SET nombres = ?, apellido_paterno = ?, apellido_materno = ?, pais = ?, ciudad = ?, " +
+                "lada = ?, telefono = ?, correo_electronico = ?, rfc = ?, curp = ?, profesion = ?, fecha_nacimiento = ?, " +
+                "departamento_id = ?, jerarquia_id = ?, estatus_id = ? WHERE id = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setString(1, (String) empleadoData.get("nombres"));
+            statement.setString(2, (String) empleadoData.get("apellido_paterno"));
+            statement.setString(3, (String) empleadoData.get("apellido_materno"));
+            statement.setString(4, (String) empleadoData.get("pais"));
+            statement.setString(5, (String) empleadoData.get("ciudad"));
+            statement.setString(6, (String) empleadoData.get("lada"));
+            statement.setString(7, (String) empleadoData.get("telefono"));
+            statement.setString(8, (String) empleadoData.get("correo_electronico"));
+            statement.setString(9, (String) empleadoData.get("rfc"));
+            statement.setString(10, (String) empleadoData.get("curp"));
+            statement.setString(11, (String) empleadoData.get("profesion"));
+            statement.setDate(12, (java.sql.Date) empleadoData.get("fecha_nacimiento"));
+            statement.setInt(13, (int) empleadoData.get("departamento_id"));
+            statement.setInt(14, (int) empleadoData.get("jerarquia_id"));
+            statement.setInt(15, (int) empleadoData.get("estatus_id"));
+            statement.setInt(16, (int) empleadoData.get("id"));
+
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
