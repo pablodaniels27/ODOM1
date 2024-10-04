@@ -1,9 +1,21 @@
 package Usuarios;
 
-public class Lider  {
+public class Lider extends Supervisor {
 
-    // Constructor que llama al constructor de la clase base
+    // Constructor
+    public Lider(int id, String nombres, String apellidoPaterno, String apellidoMaterno, String correoElectronico, String departamento) {
+        super(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico, departamento);
+    }
+
+    // Funcionalidades de un Líder
+    public void asignarSupervisores() {
+        System.out.println("Líder puede asignar o remover supervisores.");
+    }
 
 
-    // Métodos específicos de la clase Lider
+    // Sin restricciones
+    public void accesoCompleto() {
+        System.out.println("Líder tiene acceso completo a todas las configuraciones del sistema.");
+    }
 }
+

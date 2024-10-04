@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -30,9 +31,11 @@ import javafx.scene.control.ContextMenu;
 
 import java.util.Map;
 
-import static Usuarios.Supervisor.getCurrentSupervisorId;
+
 
 import javafx.scene.input.KeyEvent;
+
+import static Usuarios.Supervisor.getCurrentSupervisorId;
 
 public class MonitoreoController {
 
@@ -402,43 +405,20 @@ public class MonitoreoController {
             employeeData.put("tipoAsistencia", newTipoAsistencia);
             employeeData.put("notas", notas); // Actualizar también las notas
 
-            // Llamar a la base de datos para actualizar el tipo de asistencia y guardar las notas
-            try (Connection connection = DatabaseConnection.getConnection()) {
-                // Obtener el id correspondiente al tipo de asistencia seleccionado
-                String query = "SELECT id FROM tipos_asistencia WHERE nombre = ?";
-                PreparedStatement preparedStatement = connection.prepareStatement(query);
-                preparedStatement.setString(1, newTipoAsistencia);
+            // Llamar al DAO para actualizar el tipo de asistencia y guardar las notas
+            try {
+                int tipoAsistenciaId = BaseDAO.obtenerIdTipoAsistencia(newTipoAsistencia);
+                if (tipoAsistenciaId != -1) {
+                    int empleadoId = Integer.parseInt(employeeData.get("id").toString());
+                    String fechaEntrada = employeeData.get("fechaEntrada").toString();
 
-                ResultSet resultSet = preparedStatement.executeQuery();
+                    // Actualizar el tipo de asistencia del empleado
+                    BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
 
-                if (resultSet.next()) {
-                    int tipoAsistenciaId = resultSet.getInt("id");
-
-                    // Actualizar en la tabla entradas_salidas SOLO para la fecha seleccionada
-                    String updateQuery = "UPDATE entradas_salidas SET tipo_asistencia_id = ? WHERE empleado_id = ? AND dia_id = (SELECT id FROM dias WHERE fecha = ?)";
-                    PreparedStatement updateStatement = connection.prepareStatement(updateQuery);
-                    updateStatement.setInt(1, tipoAsistenciaId); // El nuevo ID del tipo de asistencia
-                    updateStatement.setInt(2, Integer.parseInt(employeeData.get("id").toString())); // ID del empleado
-                    updateStatement.setString(3, employeeData.get("fechaEntrada").toString()); // Fecha seleccionada
-
-                    updateStatement.executeUpdate();
-                    updateStatement.close();
+                    // Registrar el cambio en los logs
+                    int supervisorId = getCurrentSupervisorId(); // Obtener el ID del supervisor actual
+                    BaseDAO.registrarCambioLog(supervisorId, "Cambio de tipo de asistencia", empleadoId, notas);
                 }
-
-                preparedStatement.close();
-                resultSet.close();
-
-                // Guardar las notas en la tabla de logs
-                String insertLogQuery = "INSERT INTO logs (supervisor_id, action, target_employee_id, details) VALUES (?, ?, ?, ?)";
-                PreparedStatement logStatement = connection.prepareStatement(insertLogQuery);
-                logStatement.setInt(1, getCurrentSupervisorId()); // Obtener el ID del supervisor actual
-                logStatement.setString(2, "Cambio de tipo de asistencia");
-                logStatement.setInt(3, Integer.parseInt(employeeData.get("id").toString()));
-                logStatement.setString(4, notas); // Almacenar las notas
-
-                logStatement.executeUpdate();
-                logStatement.close();
-
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -448,15 +428,13 @@ public class MonitoreoController {
         });
     }
 
+
     private void cargarDepartamentos() {
         departamentoChoiceBox.getItems().add("Todos los departamentos"); // Agregar opción para todos los departamentos
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String query = "SELECT nombre FROM departamentos";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-            while (resultSet.next()) {
-                departamentoChoiceBox.getItems().add(resultSet.getString("nombre"));
-            }
+
+        try {
+            List<String> departamentos = BaseDAO.obtenerDepartamentos();
+            departamentoChoiceBox.getItems().addAll(departamentos);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -465,59 +443,29 @@ public class MonitoreoController {
         departamentoChoiceBox.getSelectionModel().selectFirst();
     }
 
+
     private void loadAllEntries() throws SQLException {
         employees.clear();
-        DatabaseConnection connectNow = new DatabaseConnection();
-        Connection connectDB = connectNow.getConnection();
 
-        // Consulta SQL para obtener todas las entradas/salidas, incluyendo las notas desde la tabla 'logs'
-        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
-                "dias.fecha, es.id as estado_id, en.hora_entrada, en.hora_salida, t.nombre as tipo_asistencia, ts.nombre as tipo_salida, " +
-                "l.details as notas " +  // Ahora las notas vienen de la tabla 'logs'
-                "FROM entradas_salidas en " +
-                "JOIN empleados e ON en.empleado_id = e.id " +
-                "JOIN dias ON en.dia_id = dias.id " +
-                "JOIN estatus_empleado es ON e.estatus_id = es.id " +
-                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
-                "LEFT JOIN logs l ON l.target_employee_id = e.id " +  // JOIN para obtener las notas desde la tabla 'logs'
-                "AND l.action = 'Cambio de tipo de asistencia' " +  // Filtro para obtener solo los registros relacionados con el cambio de tipo de asistencia
-                "ORDER BY dias.fecha DESC, en.hora_entrada DESC";
-
-
-        Statement statement = connectDB.createStatement();
-        ResultSet resultSet = statement.executeQuery(query);
-
-        while (resultSet.next()) {
-            Map<String, Object> employeeData = new HashMap<>();
-            employeeData.put("id", String.valueOf(resultSet.getInt("id")));
-            employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno"));
-            employeeData.put("fechaEntrada", resultSet.getString("fecha"));
-            employeeData.put("horaEntrada", resultSet.getString("hora_entrada"));
-            employeeData.put("horaSalida", resultSet.getString("hora_salida"));
-
-            // Calcular el tiempo laborado
-            String horaEntrada = resultSet.getString("hora_entrada");
-            String horaSalida = resultSet.getString("hora_salida");
-            if (horaEntrada != null && horaSalida != null) {
-                employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
-            } else {
-                employeeData.put("tiempoLaborado", "N/A");
+        try {
+            List<Map<String, Object>> entries = BaseDAO.obtenerTodasLasEntradas();
+            for (Map<String, Object> employeeData : entries) {
+                // Calcular el tiempo laborado si hay hora de entrada y salida
+                String horaEntrada = (String) employeeData.get("horaEntrada");
+                String horaSalida = (String) employeeData.get("horaSalida");
+                if (horaEntrada != null && horaSalida != null) {
+                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
+                } else {
+                    employeeData.put("tiempoLaborado", "N/A");
+                }
+                employees.add(employeeData);
             }
-
-            employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
-            employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
-            employeeData.put("estado", resultSet.getString("estado"));
-
-            // Añadir las notas
-            employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");  // Si no hay notas, mostrar vacío
-
-            employees.add(employeeData);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
+
         // Después de cargar los empleados, calcula el total de páginas
         totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
-
-        connectDB.close();
 
         // Mostrar la primera página de resultados
         showPage(1);
@@ -526,91 +474,18 @@ public class MonitoreoController {
 
     private void searchByDateAndDepartment(String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados, String fechaInicio, String fechaFin) throws SQLException {
         employees.clear();
-        DatabaseConnection connectNow = new DatabaseConnection();
-        Connection connectDB = connectNow.getConnection();
 
-        // Construcción básica de la consulta SQL
-        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, es.nombre as estado, " +
-                "dias.fecha, es.id as estado_id, en.hora_entrada, en.hora_salida, t.nombre as tipo_asistencia, ts.nombre as tipo_salida, " +
-                "l.details as notas " +  // Notas desde logs
-                "FROM entradas_salidas en " +
-                "JOIN empleados e ON en.empleado_id = e.id " +
-                "JOIN dias ON en.dia_id = dias.id " +
-                "JOIN estatus_empleado es ON e.estatus_id = es.id " +
-                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
-                "LEFT JOIN logs l ON l.target_employee_id = e.id AND l.action = 'Cambio de tipo de asistencia' " +
-                "WHERE dias.fecha BETWEEN ? AND ? ";  // Filtro por fechas (siempre se requieren)
-
-        // Filtro opcional por departamento (solo si no es "Todos los departamentos")
-        if (!departamentoSeleccionado.equals("Todos los departamentos")) {
-            query += "AND e.departamento_id IN (SELECT id FROM departamentos WHERE nombre = ?) ";
-        }
-
-        // Filtros para supervisores o empleados
-        if (incluirSupervisores || incluirEmpleados) {
-            query += "AND (";
-            if (incluirSupervisores) {
-                query += "e.jerarquia_id = 2 ";  // Supervisores
-            }
-            if (incluirSupervisores && incluirEmpleados) {
-                query += "OR ";
-            }
-            if (incluirEmpleados) {
-                query += "e.jerarquia_id = 3 ";  // Empleados
-            }
-            query += ") ";
-        }
-
-        // Filtro por búsqueda en nombre completo (concatenando nombres y apellidos)
-        if (!searchQuery.isEmpty()) {
-            query += "AND CONCAT(LOWER(TRIM(e.nombres)), ' ', LOWER(TRIM(e.apellido_paterno)), ' ', LOWER(TRIM(e.apellido_materno))) LIKE ? ";
-        }
-
-        query += "ORDER BY dias.fecha ASC";  // Ordenar por fecha
-
-        // Preparar la consulta y asignar los parámetros
-        try (PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
-            int paramIndex = 1;
-
-            // Siempre asignamos los parámetros de fecha
-            preparedStatement.setString(paramIndex++, fechaInicio);
-            preparedStatement.setString(paramIndex++, fechaFin);
-
-            // Si se filtra por departamento
-            if (!departamentoSeleccionado.equals("Todos los departamentos")) {
-                preparedStatement.setString(paramIndex++, departamentoSeleccionado);
-            }
-
-            // Si hay un valor de búsqueda, asignamos el patrón de búsqueda
-            if (!searchQuery.isEmpty()) {
-                String searchPattern = "%" + searchQuery.toLowerCase() + "%";
-                preparedStatement.setString(paramIndex++, searchPattern);
-            }
-
-            // Ejecutar la consulta y procesar los resultados
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                Map<String, Object> employeeData = new HashMap<>();
-                employeeData.put("id", String.valueOf(resultSet.getInt("id")));
-                employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno"));
-                employeeData.put("fechaEntrada", resultSet.getString("fecha"));
-                employeeData.put("horaEntrada", resultSet.getString("hora_entrada"));
-                employeeData.put("horaSalida", resultSet.getString("hora_salida"));
-                employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
-                employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
-                employeeData.put("estado", resultSet.getString("estado"));
-                employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");
-
-                // Calcular el tiempo laborado
-                String horaEntrada = resultSet.getString("hora_entrada");
-                String horaSalida = resultSet.getString("hora_salida");
+        try {
+            List<Map<String, Object>> searchResults = BaseDAO.buscarPorFechaYDepartamento(departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados, fechaInicio, fechaFin);
+            for (Map<String, Object> employeeData : searchResults) {
+                // Calcular el tiempo laborado si hay hora de entrada y salida
+                String horaEntrada = (String) employeeData.get("horaEntrada");
+                String horaSalida = (String) employeeData.get("horaSalida");
                 if (horaEntrada != null && horaSalida != null) {
                     employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
                 } else {
                     employeeData.put("tiempoLaborado", "N/A");
                 }
-
                 employees.add(employeeData);
             }
 
@@ -622,10 +497,6 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
-
-
-
-
 
     private String calculateTiempoLaborado(String horaEntrada, String horaSalida) {
         // Formato esperado: "HH:mm:ss"
@@ -652,8 +523,6 @@ public class MonitoreoController {
             return "Formato de hora inválido";
         }
     }
-
-
 
 
     private Callback<TableColumn.CellDataFeatures<Map<String, Object>, String>, ObservableValue<String>> createCellValueFactory(String key) {
@@ -691,7 +560,6 @@ public class MonitoreoController {
         // Después de cargar los empleados, calcula el total de páginas
         totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
     }
-
 
     private void updatePaginationButtons() {
         paginationBox.getChildren().clear(); // Limpiar los botones anteriores
@@ -782,7 +650,6 @@ public class MonitoreoController {
         }
     }
 
-
     private void highlightButton(Button button) {
         button.setStyle("-fx-background-color: orange; -fx-text-fill: white;");
     }
@@ -827,93 +694,31 @@ public class MonitoreoController {
     public void mostrarNombresPorAsistencia(String departamento, String tipoAsistencia, String searchQuery) {
         System.out.println("Método mostrarNombresPorAsistencia llamado con Departamento: " + departamento + ", Tipo de Asistencia: " + tipoAsistencia + ", Filtro de búsqueda: " + searchQuery);
 
-        // Usar un Set para evitar duplicados
-        Set<String> empleadosUnicos = new HashSet<>();
-
-        // Consulta SQL base para obtener los nombres de las personas, incluyendo filtro por fechas
-        String query = "SELECT e.nombres, e.apellido_paterno, e.apellido_materno " +
-                "FROM entradas_salidas en " +
-                "JOIN empleados e ON en.empleado_id = e.id " +
-                "JOIN departamentos d ON e.departamento_id = d.id " +
-                "JOIN dias ON en.dia_id = dias.id " + // Relacionar con la tabla de días para el rango de fechas
-                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                "WHERE d.nombre = ? AND t.nombre = ? " +  // Filtrar por departamento y tipo de asistencia
-                "AND dias.fecha BETWEEN ? AND ? ";
-
-        // Añadir condiciones adicionales para supervisores o empleados
-        if (supervisoresCheckBox.isSelected() || empleadosCheckBox.isSelected()) {
-            query += " AND (";
-            if (supervisoresCheckBox.isSelected()) {
-                query += "e.jerarquia_id = 2";
-            }
-            if (supervisoresCheckBox.isSelected() && empleadosCheckBox.isSelected()) {
-                query += " OR ";
-            }
-            if (empleadosCheckBox.isSelected()) {
-                query += "e.jerarquia_id = 3";
-            }
-            query += ")";
-        }
-
-        // Si hay una búsqueda, agregar el filtro al query para buscar por nombre, apellido o nombre completo
-        if (searchQuery != null && !searchQuery.isEmpty()) {
-            query += " AND (e.nombres LIKE ? OR e.apellido_paterno LIKE ? OR e.apellido_materno LIKE ? OR CONCAT(e.nombres, ' ', e.apellido_paterno, ' ', e.apellido_materno) LIKE ?)";
-        }
-
-        try (Connection connectDB = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
-
-            int paramIndex = 1;
-
-            // Asignar los parámetros de la consulta
-            preparedStatement.setString(paramIndex++, departamento);
-            preparedStatement.setString(paramIndex++, tipoAsistencia);
-
+        try {
             // Obtener los valores del rango de fechas
             String fechaInicio = (fechaInicioPicker.getValue() != null) ? fechaInicioPicker.getValue().toString() : "1900-01-01"; // Valor por defecto si no hay fecha seleccionada
             String fechaFin = (fechaFinPicker.getValue() != null) ? fechaFinPicker.getValue().toString() : "2100-12-31"; // Valor por defecto si no hay fecha seleccionada
 
-            // Asignar las fechas a los parámetros de la consulta
-            preparedStatement.setString(paramIndex++, fechaInicio);
-            preparedStatement.setString(paramIndex++, fechaFin);
+            boolean incluirSupervisores = supervisoresCheckBox.isSelected();
+            boolean incluirEmpleados = empleadosCheckBox.isSelected();
 
-            // Si hay un valor de búsqueda, agregarlo como parámetro
-            if (searchQuery != null && !searchQuery.isEmpty()) {
-                String searchPattern = "%" + searchQuery.trim() + "%";
-                preparedStatement.setString(paramIndex++, searchPattern); // e.nombres LIKE ?
-                preparedStatement.setString(paramIndex++, searchPattern); // e.apellido_paterno LIKE ?
-                preparedStatement.setString(paramIndex++, searchPattern); // e.apellido_materno LIKE ?
-                preparedStatement.setString(paramIndex++, searchPattern); // CONCAT(...) LIKE ?
+            Set<String> empleadosUnicos = BaseDAO.buscarNombresPorAsistencia(departamento, tipoAsistencia, fechaInicio, fechaFin, searchQuery, incluirSupervisores, incluirEmpleados);
+
+            // Convertir el Set en una lista observable para el TableView
+            ObservableList<Empleado> empleados = FXCollections.observableArrayList();
+            for (String nombre : empleadosUnicos) {
+                empleados.add(new Empleado(nombre));  // Agregar el nombre único al TableView
             }
 
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                String nombreCompleto = resultSet.getString("nombres") + " " +
-                        resultSet.getString("apellido_paterno") + " " +
-                        resultSet.getString("apellido_materno");
+            // Asignar los datos al TableView
+            personTableView.setItems(empleados);
 
-                // Agregar al Set, que no permitirá duplicados
-                empleadosUnicos.add(nombreCompleto);
-            }
+            System.out.println("Nombres únicos añadidos al TableView: " + empleados.size());
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        // Convertir el Set en una lista observable para el TableView
-        ObservableList<Empleado> empleados = FXCollections.observableArrayList();
-        for (String nombre : empleadosUnicos) {
-            empleados.add(new Empleado(nombre));  // Agregar el nombre único al TableView
-        }
-
-        // Asignar los datos al TableView
-        personTableView.setItems(empleados);
-
-        System.out.println("Nombres únicos añadidos al TableView: " + empleados.size());
     }
-
-
-
 
     // Clase auxiliar para representar empleados
     public static class Empleado {
@@ -950,90 +755,24 @@ public class MonitoreoController {
         asistenciaLabel.setText("Tipo de Asistencia: " + tipoAsistencia);
         System.out.println("Mostrando fechas para el empleado: " + nombreEmpleado + ", Departamento: " + departamento + ", Tipo de Asistencia: " + tipoAsistencia + ", Fecha Inicio: " + fechaInicio + ", Fecha Fin: " + fechaFin);
 
-        // Crear un Set para evitar duplicados
-        Set<String> fechasUnicas = new HashSet<>();
+        try {
+            Set<String> fechasUnicas = BaseDAO.buscarFechasPorEmpleado(departamento, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
 
-        // Base de la consulta SQL para obtener las fechas del empleado
-        String query = "SELECT dias.fecha " +
-                "FROM entradas_salidas en " +
-                "JOIN empleados e ON en.empleado_id = e.id " +
-                "JOIN departamentos d ON e.departamento_id = d.id " +
-                "JOIN dias ON en.dia_id = dias.id " +
-                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                "WHERE t.nombre = ? " + // Filtro por tipo de asistencia
-                "AND (e.nombres = ? AND e.apellido_paterno = ? AND e.apellido_materno = ?) " + // Filtrar por nombre completo
-                "AND dias.fecha BETWEEN ? AND ?";  // Filtrar por rango de fechas
-
-        // Si el departamento no es "Todos los departamentos", agregar el filtro de departamento
-        if (!departamento.equals("Todos los departamentos")) {
-            query += " AND d.nombre = ?";
-        }
-
-        try (Connection connectDB = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
-
-            System.out.println("Ejecutando consulta SQL: " + query);
-
-            // Asignar los parámetros
-            preparedStatement.setString(1, tipoAsistencia);
-
-            // Separar el nombre completo en partes: nombres, apellido paterno y materno
-            String[] partesNombre = nombreEmpleado.split(" ");
-            if (partesNombre.length < 3) {
-                System.out.println("Nombre completo no válido: " + nombreEmpleado);
-                return; // Detener si el nombre no tiene al menos 3 partes
-            }
-            preparedStatement.setString(2, partesNombre[0]); // Nombres
-            preparedStatement.setString(3, partesNombre[1]); // Apellido Paterno
-            preparedStatement.setString(4, partesNombre[2]); // Apellido Materno
-
-            preparedStatement.setString(5, fechaInicio);  // Fecha de inicio
-            preparedStatement.setString(6, fechaFin);     // Fecha de fin
-
-            // Si el departamento no es "Todos los departamentos", asignar también el valor del departamento
-            if (!departamento.equals("Todos los departamentos")) {
-                preparedStatement.setString(7, departamento);
+            // Convertir el Set en una lista observable para el TableView
+            ObservableList<Fecha> fechas = FXCollections.observableArrayList();
+            for (String fecha : fechasUnicas) {
+                fechas.add(new Fecha(fecha));
             }
 
-            System.out.println("Parámetros asignados: ");
-            System.out.println("Departamento: " + (departamento.equals("Todos los departamentos") ? "Todos" : departamento));
-            System.out.println("Tipo de Asistencia: " + tipoAsistencia);
-            System.out.println("Nombre del Empleado: " + nombreEmpleado);
-            System.out.println("Fecha Inicio: " + fechaInicio);
-            System.out.println("Fecha Fin: " + fechaFin);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-            int counter = 0;
-            while (resultSet.next()) {
-                String fecha = resultSet.getString("fecha");
-                fechasUnicas.add(fecha);  // Añadir al Set para evitar duplicados
-                counter++;
-                System.out.println("Fecha encontrada: " + fecha);
-            }
-
-            if (counter == 0) {
-                System.out.println("No se encontraron fechas para el empleado: " + nombreEmpleado + " con el tipo de asistencia: " + tipoAsistencia);
-            } else {
-                System.out.println("Total de fechas encontradas: " + counter);
-            }
+            // Asignar los datos al dateTableView
+            dateTableView.setItems(fechas);
+            System.out.println("Fechas asignadas al TableView");
 
         } catch (SQLException e) {
-            System.err.println("Error al ejecutar la consulta SQL para obtener fechas: ");
+            System.err.println("Error al obtener fechas: ");
             e.printStackTrace();
         }
-
-        // Convertir el Set en una lista observable para el TableView
-        ObservableList<Fecha> fechas = FXCollections.observableArrayList();
-        for (String fecha : fechasUnicas) {
-            fechas.add(new Fecha(fecha));
-        }
-
-        // Asignar los datos al dateTableView
-        dateTableView.setItems(fechas);
-        System.out.println("Fechas asignadas al TableView");
     }
-
-
 
     public String obtenerDepartamentoSeleccionado() {
         // Aquí puedes retornar el departamento seleccionado
@@ -1069,7 +808,6 @@ public class MonitoreoController {
         boolean incluirSupervisores = supervisoresCheckBox.isSelected();
         boolean incluirEmpleados = empleadosCheckBox.isSelected();
 
-        // Si ninguno está seleccionado, asumimos que se deben mostrar todos
         if (!incluirSupervisores && !incluirEmpleados) {
             incluirSupervisores = true;
             incluirEmpleados = true;
@@ -1078,77 +816,18 @@ public class MonitoreoController {
         // Obtener el departamento seleccionado
         String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
 
-        // Consulta SQL que concatena los campos de nombres y apellidos
-        StringBuilder query = new StringBuilder("SELECT CONCAT(TRIM(nombres), ' ', TRIM(apellido_paterno), ' ', TRIM(apellido_materno)) AS nombreCompleto, jerarquia_id, d.nombre as departamento ");
-        query.append("FROM empleados e ");
-        query.append("JOIN departamentos d ON e.departamento_id = d.id ");
-        query.append("WHERE ");
-
-        // Filtrar por nombre completo usando CONCAT en lugar de buscar por partes
-        query.append("CONCAT(LOWER(TRIM(nombres)), ' ', LOWER(TRIM(apellido_paterno)), ' ', LOWER(TRIM(apellido_materno))) LIKE ? ");
-
-        // Filtros para supervisores o empleados
-        if (incluirSupervisores || incluirEmpleados) {
-            query.append("AND (");
-            if (incluirSupervisores) {
-                query.append("jerarquia_id = 2");  // Supervisores
-            }
-            if (incluirSupervisores && incluirEmpleados) {
-                query.append(" OR ");
-            }
-            if (incluirEmpleados) {
-                query.append("jerarquia_id = 3");  // Empleados
-            }
-            query.append(") ");
-        }
-
-        // Filtrar por departamento, si no se seleccionó "Todos los departamentos"
-        if (!departamentoSeleccionado.equals("Todos los departamentos")) {
-            query.append("AND d.nombre = ? ");
-        }
-
-        query.append("ORDER BY nombreCompleto ASC");
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query.toString())) {
-
-            int paramIndex = 1;
-
-            // Crear el patrón de búsqueda
-            String searchPattern = "%" + searchQuery.toLowerCase() + "%";
-
-            // Asignar el patrón de búsqueda
-            preparedStatement.setString(paramIndex++, searchPattern);
-
-            // Si el departamento seleccionado no es "Todos los departamentos", agregarlo como parámetro
-            if (!departamentoSeleccionado.equals("Todos los departamentos")) {
-                preparedStatement.setString(paramIndex++, departamentoSeleccionado);
-            }
-
-            // Ejecutar la consulta
-            ResultSet resultSet = preparedStatement.executeQuery();
-            ObservableList<String> results = FXCollections.observableArrayList();
-
-            // Procesar los resultados
-            while (resultSet.next()) {
-                String nombreCompleto = resultSet.getString("nombreCompleto");
-                int jerarquiaId = resultSet.getInt("jerarquia_id");
-                String departamento = resultSet.getString("departamento");
-
-                results.add(nombreCompleto + "," + jerarquiaId + "," + departamento);  // Añadir el nombre completo, jerarquía, y departamento a los resultados
-            }
+        try {
+            ObservableList<String> results = BaseDAO.buscarNombresPorConsulta(searchQuery, departamentoSeleccionado, incluirSupervisores, incluirEmpleados);
 
             if (!results.isEmpty()) {
                 populateSuggestions(results);
             } else {
                 suggestionsMenu.hide();
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
 
     // Método para mostrar sugerencias en el ContextMenu
     private void populateSuggestions(ObservableList<String> suggestions) {
@@ -1218,10 +897,5 @@ public class MonitoreoController {
             suggestionsMenu.show(searchField, boundsInScreen.getMinX(), boundsInScreen.getMaxY());
         }
     }
-
-
-
-
-
 
 }

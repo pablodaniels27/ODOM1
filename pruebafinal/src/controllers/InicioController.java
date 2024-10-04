@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -12,16 +13,14 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class InicioController {
 
@@ -256,26 +255,17 @@ public class InicioController {
     private void loadWeekAttendance(LocalDate startOfWeek) {
         if (selectedEmployee == null) return;
 
-        String query = "SELECT dia.fecha, es.hora_entrada, es.hora_salida " +
-                "FROM entradas_salidas es " +
-                "JOIN dias dia ON es.dia_id = dia.id " +
-                "WHERE es.empleado_id = ? AND dia.fecha BETWEEN ? AND ?";
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
-            preparedStatement.setInt(1, selectedEmployee.id()); // Suponiendo que tienes el ID del empleado en la clase Employee
-            preparedStatement.setDate(2, java.sql.Date.valueOf(startOfWeek));
-            preparedStatement.setDate(3, java.sql.Date.valueOf(startOfWeek.plusDays(6)));
-
-            ResultSet resultSet = preparedStatement.executeQuery();
+        try {
+            // Obtener los datos de asistencia semanal del empleado desde el DAO
+            List<Map<String, Object>> attendanceRecords = BaseDAO.obtenerAsistenciaSemanal(selectedEmployee.id(), startOfWeek, startOfWeek.plusDays(6));
 
             clearAttendanceLabels();
 
-            while (resultSet.next()) {
-                LocalDate date = resultSet.getDate("fecha").toLocalDate();
-                String horaEntrada = resultSet.getString("hora_entrada");
-                String horaSalida = resultSet.getString("hora_salida");
+            // Procesar los resultados y actualizar los labels correspondientes
+            for (Map<String, Object> record : attendanceRecords) {
+                LocalDate date = ((Date) record.get("fecha")).toLocalDate();
+                String horaEntrada = (String) record.get("hora_entrada");
+                String horaSalida = (String) record.get("hora_salida");
 
                 // Asignar las horas de entrada y salida a los labels correspondientes
                 switch (date.getDayOfWeek()) {
@@ -314,6 +304,7 @@ public class InicioController {
         }
     }
 
+
     // Limpiar los labels de asistencias
     private void clearAttendanceLabels() {
         mondayEntryLabel.setText("");
@@ -334,36 +325,15 @@ public class InicioController {
 
     // Método para obtener los empleados desde la base de datos
     private List<Employee> getEmployeesFromDatabase(String filter) {
-        List<Employee> employees = new ArrayList<>();
-        String query = "SELECT id, CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno) AS full_name, profesion FROM empleados";
-
-        // Si hay un filtro, añadir la condición a la consulta SQL
-        if (!filter.isEmpty()) {
-            query += " WHERE CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno) LIKE ?";
-        }
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
-            if (!filter.isEmpty()) {
-                preparedStatement.setString(1, "%" + filter + "%");
-            }
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String fullName = resultSet.getString("full_name");
-                String profession = resultSet.getString("profesion");
-
-                employees.add(new Employee(id, fullName, profession));
-            }
+        try {
+            // Obtener la lista de empleados desde el DAO
+            return BaseDAO.obtenerEmpleados(filter);
         } catch (SQLException e) {
             e.printStackTrace();
+            return new ArrayList<>();
         }
-
-        return employees;
     }
+
 
     // Clase para representar un empleado
     public record Employee(int id, String fullName, String profession) {

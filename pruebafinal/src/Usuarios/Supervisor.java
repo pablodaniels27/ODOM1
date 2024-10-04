@@ -7,42 +7,22 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class Supervisor {
-    private int id;
-    private String nombre;
-    private String apellido;
-
+public class Supervisor extends Empleado {
     // Constructor
-    public Supervisor(int id, String nombre, String apellido) {
-        this.id = id;
-        this.nombre = nombre;
-        this.apellido = apellido;
+    public Supervisor(int id, String nombres, String apellidoPaterno, String apellidoMaterno, String correoElectronico, String departamento) {
+        super(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico, departamento);
     }
 
-    // Getters y Setters
-    public int getId() {
-        return id;
+    // Funcionalidades de un Supervisor
+    public void gestionarEmpleados() {
+        System.out.println("Supervisor puede gestionar empleados: aprobar asistencias, justificar faltas, etc.");
     }
 
-    public void setId(int id) {
-        this.id = id;
+    // Restricciones
+    public void accesoRestringidoALider() {
+        System.out.println("No puede realizar tareas de líder como asignar supervisores.");
     }
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public String getApellido() {
-        return apellido;
-    }
-
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
-    }
 
     // Método para obtener el ID del supervisor actual
     // Obtener el ID de un supervisor específico desde la base de datos
@@ -82,6 +62,6 @@ public class Supervisor {
 
 }
 
-    // Métodos específicos de la clase Supervisor
+
 
 
