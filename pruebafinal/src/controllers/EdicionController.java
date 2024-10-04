@@ -14,6 +14,7 @@ import javafx.scene.control.Alert;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,6 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
 
 public class EdicionController {
 
@@ -146,10 +149,34 @@ public class EdicionController {
                 int estatusId = resultSet.getInt("estatus_id");
                 estatusChoiceBox.setValue(getKeyByValue(estatusMap, estatusId));
 
+                // Cargar la huella y mostrarla
+                cargarHuella(empleadoId);
+
                 // Guardar los valores originales
                 guardarDatosOriginales();
             }
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void cargarHuella(int empleadoId) {
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            String sql = "SELECT huella_imagen FROM huellas WHERE empleado_id = ?";
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, empleadoId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                byte[] imageBytes = resultSet.getBytes("huella_imagen");
+                if (imageBytes != null) {
+                    ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+                    BufferedImage bufferedImage = ImageIO.read(bis);
+                    Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+                    fingerprintImageView.setImage(image);
+                }
+            }
+        } catch (SQLException | IOException e) {
             e.printStackTrace();
         }
     }
