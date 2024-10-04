@@ -12,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 
 public class BaseDAO {
@@ -934,6 +935,151 @@ public class BaseDAO {
             return rowsAffected > 0;
         }
     }
+
+    //TERMINA EDICION//
+    //IDENTIFICARSE CONTROLLER///////
+
+    public static List<Map<String, Object>> obtenerHuellasEmpleadosActivos() throws SQLException {
+        String sql = "SELECT h.huella, e.id, e.nombres, e.apellido_paterno " +
+                "FROM huellas h " +
+                "JOIN empleados e ON h.empleado_id = e.id " +
+                "WHERE e.estatus_id = 1";
+
+        List<Map<String, Object>> huellas = new ArrayList<>();
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                Map<String, Object> huellaData = new HashMap<>();
+                huellaData.put("huella", resultSet.getBytes("huella"));
+                huellaData.put("id", resultSet.getInt("id"));
+                huellaData.put("nombres", resultSet.getString("nombres"));
+                huellaData.put("apellido_paterno", resultSet.getString("apellido_paterno"));
+
+                huellas.add(huellaData);
+            }
+        }
+
+        return huellas;
+    }
+
+    ///termina IDENTIFICARSE///
+    //Asistencias Controller//
+
+    public static Optional<Map<String, LocalTime>> obtenerRegistrosDelDia(int empleadoId, LocalDate fecha) throws SQLException {
+        String sql = "SELECT hora_entrada, hora_salida FROM entradas_salidas " +
+                "JOIN dias ON entradas_salidas.dia_id = dias.id " +
+                "WHERE entradas_salidas.empleado_id = ? AND dias.fecha = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, empleadoId);
+            statement.setDate(2, java.sql.Date.valueOf(fecha));
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                Map<String, LocalTime> recordData = new HashMap<>();
+                recordData.put("hora_entrada", resultSet.getTime("hora_entrada").toLocalTime());
+                recordData.put("hora_salida", resultSet.getTime("hora_salida") != null ? resultSet.getTime("hora_salida").toLocalTime() : null);
+
+                return Optional.of(recordData);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    public static void insertarEntradaAsistencia(int empleadoId, LocalDate fecha, LocalTime horaEntrada) throws SQLException {
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            int diaId = obtenerDiaId(connection, fecha);
+
+            // Insertar entrada en la base de datos
+            String sql = "INSERT INTO entradas_salidas (empleado_id, dia_id, hora_entrada, tipo_asistencia_id) " +
+                    "VALUES (?, ?, ?, 1)";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setInt(1, empleadoId);
+                statement.setInt(2, diaId);
+                statement.setTime(3, java.sql.Time.valueOf(horaEntrada));
+                statement.executeUpdate();
+            }
+        }
+    }
+
+    private static int obtenerDiaId(Connection connection, LocalDate fecha) throws SQLException {
+        String sql = "SELECT id FROM dias WHERE fecha = ?";
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setDate(1, java.sql.Date.valueOf(fecha));
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt("id");
+            } else {
+                // Insertar el día si no existe en la tabla
+                String insertDiaSql = "INSERT INTO dias (fecha) VALUES (?)";
+                try (PreparedStatement insertStatement = connection.prepareStatement(insertDiaSql, Statement.RETURN_GENERATED_KEYS)) {
+                    insertStatement.setDate(1, java.sql.Date.valueOf(fecha));
+                    insertStatement.executeUpdate();
+                    ResultSet generatedKeys = insertStatement.getGeneratedKeys();
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1);
+                    } else {
+                        throw new SQLException("No se pudo insertar el día y obtener su ID.");
+                    }
+                }
+            }
+        }
+    }
+
+    public static void actualizarSalidaAsistencia(int empleadoId, LocalDate fecha, LocalTime horaSalida) throws SQLException {
+        try (Connection connection = DatabaseConnection.getConnection()) {
+            int diaId = obtenerDiaId(connection, fecha);
+
+            // Actualizar la salida en la base de datos
+            String sql = "UPDATE entradas_salidas SET hora_salida = ?, tipo_salida_id = 4 WHERE empleado_id = ? AND dia_id = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setTime(1, java.sql.Time.valueOf(horaSalida));
+                statement.setInt(2, empleadoId);
+                statement.setInt(3, diaId);
+                statement.executeUpdate();
+            }
+        }
+    }
+    public static Optional<Map<String, LocalTime>> obtenerHorariosDeAsistencia(int empleadoId, LocalDate fecha) throws SQLException {
+        String sql = "SELECT hora_entrada, hora_salida FROM entradas_salidas " +
+                "JOIN dias ON entradas_salidas.dia_id = dias.id " +
+                "WHERE entradas_salidas.empleado_id = ? AND dias.fecha = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, empleadoId);
+            statement.setDate(2, java.sql.Date.valueOf(fecha));
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                LocalTime entrada = resultSet.getTime("hora_entrada") != null ? resultSet.getTime("hora_entrada").toLocalTime() : null;
+                LocalTime salida = resultSet.getTime("hora_salida") != null ? resultSet.getTime("hora_salida").toLocalTime() : null;
+
+                Map<String, LocalTime> horarios = new HashMap<>();
+                horarios.put("entrada", entrada);
+                horarios.put("salida", salida);
+
+                return Optional.of(horarios);
+            }
+        }
+        return Optional.empty();
+    }
+
+
+
+
+
+
+
+
+
 
 
 
