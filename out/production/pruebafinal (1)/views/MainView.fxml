@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
@@ -33,12 +34,12 @@
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-                <Button ellipsisString="" onAction="#showTerminacion" styleClass="responsive-button" text="Asistencia">
+                <Button ellipsisString="" onAction="#showTerminacion" styleClass="responsive-button" text="Permisos">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-            <Button ellipsisString="" layoutX="540.0" layoutY="20.0" onAction="#showAuditoria"  styleClass="responsive-button" text="Auditoria" />
+            <Button ellipsisString="" layoutX="540.0" layoutY="20.0" onAction="#showAuditoria" styleClass="responsive-button" text="Auditoria" />
 
                 <!-- Espaciador para empujar los botones de Configuración y Ayuda a la derecha -->
                 <Pane HBox.hgrow="ALWAYS" />
