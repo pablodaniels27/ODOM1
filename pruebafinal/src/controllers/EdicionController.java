@@ -1,7 +1,6 @@
 package controllers;
 
 import com.digitalpersona.onetouch.DPFPGlobal;
-import com.digitalpersona.onetouch.DPFPSample;
 import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
@@ -11,9 +10,11 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.control.Alert;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,6 +23,10 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
 
 public class EdicionController {
 
@@ -144,7 +149,7 @@ public class EdicionController {
                 int estatusId = resultSet.getInt("estatus_id");
                 estatusChoiceBox.setValue(getKeyByValue(estatusMap, estatusId));
 
-                // Cargar la huella del empleado
+                // Cargar la huella y mostrarla
                 cargarHuella(empleadoId);
 
                 // Guardar los valores originales
@@ -157,34 +162,21 @@ public class EdicionController {
 
     private void cargarHuella(int empleadoId) {
         try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT huella FROM huellas WHERE empleado_id = ?";
+            String sql = "SELECT huella_imagen FROM huellas WHERE empleado_id = ?";
             PreparedStatement statement = connection.prepareStatement(sql);
             statement.setInt(1, empleadoId);
             ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
-                byte[] templateBytes = resultSet.getBytes("huella");
-
-                if (templateBytes != null) {
-                    try (ByteArrayInputStream bais = new ByteArrayInputStream(templateBytes);
-                         ObjectInputStream ois = new ObjectInputStream(bais)) {
-
-                        byte[] serializedTemplate = (byte[]) ois.readObject();
-                        DPFPTemplate template = DPFPGlobal.getTemplateFactory().createTemplate(serializedTemplate);
-
-                        // Obtener la imagen de la huella desde el template
-                        BufferedImage bufferedImage = (BufferedImage) DPFPGlobal.getSampleConversionFactory().createImage((DPFPSample) template);
-                        if (bufferedImage != null) {
-                            Image fingerprintImage = SwingFXUtils.toFXImage(bufferedImage, null);
-                            fingerprintImageView.setImage(fingerprintImage);
-                        }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                byte[] imageBytes = resultSet.getBytes("huella_imagen");
+                if (imageBytes != null) {
+                    ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+                    BufferedImage bufferedImage = ImageIO.read(bis);
+                    Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+                    fingerprintImageView.setImage(image);
                 }
             }
-        } catch (SQLException e) {
+        } catch (SQLException | IOException e) {
             e.printStackTrace();
         }
     }
@@ -237,9 +229,64 @@ public class EdicionController {
         estatusChoiceBox.setValue((String) datosOriginales.get("estatus"));
     }
 
+    // Método para validar los campos antes de guardar los cambios
+    private boolean validarCampos() {
+        // Validación de Lada
+        String lada = ladaField.getText();
+        if (!lada.matches("\\d{2,3}")) {
+            mostrarError("Lada inválida. Debe tener entre 2 a 3 dígitos.");
+            return false;
+        }
+
+        // Validación de Teléfono
+        String telefono = telefonoField.getText();
+        if (!telefono.matches("\\d{7,8}")) {
+            mostrarError("Teléfono inválido. Debe tener 7 u 8 dígitos.");
+            return false;
+        }
+
+        // Validación de RFC
+        String rfc = rfcField.getText();
+        if (!rfc.matches("[A-ZÑ&]{3,4}\\d{6}[A-Z0-9]{3}")) {
+            mostrarError("RFC inválido. Debe cumplir con el formato estándar de 4 letras y 9 dígitos.");
+            return false;
+        }
+
+        // Validación de CURP
+        String curp = curpField.getText();
+        if (!curp.matches("[A-Z][AEIOU][A-Z]{2}\\d{6}[HM][A-Z]{5}[A-Z0-9]{2}")) {
+            mostrarError("CURP inválido. Debe cumplir con el formato estándar de 18 caracteres alfanuméricos.");
+            return false;
+        }
+
+        // Validación de correo electrónico
+        String email = emailField.getText();
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$");
+        Matcher matcher = pattern.matcher(email);
+        if (!matcher.find()) {
+            mostrarError("Correo electrónico inválido. Ingrese un correo válido.");
+            return false;
+        }
+
+        return true; // Validaciones exitosas
+    }
+
+    private void mostrarError(String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error de validación");
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+    }
+
     // Método para guardar los cambios en la base de datos
     @FXML
     private void guardarCambios() {
+        // Validar los campos antes de guardar
+        if (!validarCampos()) {
+            return; // No se guardarán los cambios si la validación falla
+        }
+
         try (Connection connection = DatabaseConnection.getConnection()) {
             String sql = "UPDATE empleados SET nombres = ?, apellido_paterno = ?, apellido_materno = ?, pais = ?, ciudad = ?, " +
                     "lada = ?, telefono = ?, correo_electronico = ?, rfc = ?, curp = ?, profesion = ?, fecha_nacimiento = ?, " +

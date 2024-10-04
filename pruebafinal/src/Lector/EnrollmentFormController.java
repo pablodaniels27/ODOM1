@@ -17,9 +17,12 @@ import javafx.stage.Stage;
 
 import java.awt.image.BufferedImage;
 import javafx.scene.image.Image;
+import javax.imageio.ImageIO;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectOutputStream;
 
 public class EnrollmentFormController {
@@ -42,7 +45,6 @@ public class EnrollmentFormController {
     private DPFPCapture capturer;
     private DPFPEnrollment enrollment;
     private DPFPTemplate template;
-    private String uniqueID;
     private BufferedImage bufferedImage;
 
     private RegistroController registroController;
@@ -128,15 +130,21 @@ public class EnrollmentFormController {
                             template = enrollment.getTemplate();
                             saveTemplateButton.setDisable(false);
 
-                            uniqueID = java.util.UUID.randomUUID().toString();
-                            idLabel.setText("ID: " + uniqueID);
-
-                            // Enviar el template al RegistroController
+                            // Enviar el template y la imagen de la huella al RegistroController
                             if (registroController != null) {
                                 registroController.setTemplate(template);
+                                if (bufferedImage != null) {
+                                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                                        ImageIO.write(bufferedImage, "png", baos);
+                                        byte[] imageBytes = baos.toByteArray();
+                                        registroController.setFingerprintImageBytes(imageBytes);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                             }
 
-                            statusLabel.setText("Template is ready. ID: " + uniqueID + ". Click 'Save Template' to save it.");
+                            statusLabel.setText("Template is ready. Click 'Save Template' to save it.");
                             stopCapture();
                             break;
 
@@ -180,6 +188,13 @@ public class EnrollmentFormController {
         }
     }
 
+
+
+    @FXML
+    private void handleSaveTemplateButtonAction(ActionEvent event) {
+        saveTemplate();
+    }
+
     private void showFingerprintImage(DPFPSample sample) {
         java.awt.Image awtImage = DPFPGlobal.getSampleConversionFactory().createImage(sample);
 
@@ -200,11 +215,6 @@ public class EnrollmentFormController {
         }
     }
 
-    @FXML
-    private void handleSaveTemplateButtonAction(ActionEvent event) {
-        saveTemplate();
-    }
-
     private void saveTemplate() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Guardar plantilla de huella digital");
@@ -216,7 +226,6 @@ public class EnrollmentFormController {
             try (FileOutputStream fileOut = new FileOutputStream(file);
                  ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
 
-                // Serializar el template en el archivo .ser
                 out.writeObject(template.serialize());
 
                 statusLabel.setText("Template guardado exitosamente en " + file.getAbsolutePath());

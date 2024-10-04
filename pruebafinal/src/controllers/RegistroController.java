@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,24 +48,29 @@ public class RegistroController {
     private TextField profesionField;
 
     @FXML
+    private ImageView fingerprintImageView;
+
+
+    @FXML
     private ChoiceBox<String> departamentoChoiceBox;
     @FXML
     private ChoiceBox<String> puestoChoiceBox;
 
-    @FXML
-    private ImageView fingerprintImageView;
-
     private DPFPTemplate template; // Variable para almacenar el template de la huella digital
+    private byte[] fingerprintImageBytes; // Variable para almacenar la imagen de la huella en bytes
 
     @FXML
     private void initialize() {
         cargarDepartamentos();
         cargarPuestos();
-        configurarDatePicker();
     }
 
     public void setTemplate(DPFPTemplate template) {
         this.template = template;
+    }
+
+    public void setFingerprintImageBytes(byte[] fingerprintImageBytes) {
+        this.fingerprintImageBytes = fingerprintImageBytes;
     }
 
     private void cargarDepartamentos() {
@@ -93,42 +97,6 @@ public class RegistroController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    private void configurarDatePicker() {
-        LocalDate today = LocalDate.now();
-        LocalDate maxDate = today.minusYears(15); // Limitar a fechas anteriores a 15 años
-        LocalDate minDate = today.minusYears(100); // Limitar a fechas de hace 100 años
-
-        // Preconfigurar la fecha del DatePicker al mínimo valor disponible
-        fechaNacimientoPicker.setValue(maxDate);
-
-        // Fijar el enfoque en el DatePicker para que el calendario empiece en el borde más bajo
-        fechaNacimientoPicker.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                fechaNacimientoPicker.show();
-            }
-        });
-
-        fechaNacimientoPicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
-            @Override
-            public DateCell call(DatePicker param) {
-                return new DateCell() {
-                    @Override
-                    public void updateItem(LocalDate date, boolean empty) {
-                        super.updateItem(date, empty);
-                        if (date.isAfter(maxDate) || date.isBefore(minDate)) {
-                            setDisable(true); // Deshabilitar fechas fuera de rango
-                        }
-                    }
-                };
-            }
-        });
-    }
-
-    @FXML
-    public void updateFingerprintImage(javafx.scene.image.Image image) {
-        fingerprintImageView.setImage(image);
     }
 
     @FXML
@@ -180,33 +148,33 @@ public class RegistroController {
                 jerarquiaId = puestoResult.getInt("id");
             }
 
-            // Insertar los datos del empleado sin huella aún, incluyendo el estatus activo
+            // Insertar los datos del empleado sin la huella aún
             String empleadoSql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, estatus_id) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
-            PreparedStatement statement = connection.prepareStatement(empleadoSql, Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, nombre);
-            statement.setString(2, apellidoMaterno);
-            statement.setString(3, apellidoPaterno);
-            statement.setDate(4, fechaNacimiento);
-            statement.setString(5, pais);
-            statement.setString(6, ciudad);
-            statement.setString(7, email);
-            statement.setString(8, lada);
-            statement.setString(9, telefono);
-            statement.setString(10, rfc);
-            statement.setString(11, curp);
-            statement.setString(12, profesion);
-            statement.setInt(13, departamentoId);
-            statement.setInt(14, jerarquiaId);
+            PreparedStatement empleadoStatement = connection.prepareStatement(empleadoSql, Statement.RETURN_GENERATED_KEYS);
+            empleadoStatement.setString(1, nombre);
+            empleadoStatement.setString(2, apellidoMaterno);
+            empleadoStatement.setString(3, apellidoPaterno);
+            empleadoStatement.setDate(4, fechaNacimiento);
+            empleadoStatement.setString(5, pais);
+            empleadoStatement.setString(6, ciudad);
+            empleadoStatement.setString(7, email);
+            empleadoStatement.setString(8, lada);
+            empleadoStatement.setString(9, telefono);
+            empleadoStatement.setString(10, rfc);
+            empleadoStatement.setString(11, curp);
+            empleadoStatement.setString(12, profesion);
+            empleadoStatement.setInt(13, departamentoId);
+            empleadoStatement.setInt(14, jerarquiaId);
 
-            int rowsAffected = statement.executeUpdate();
+            int rowsAffected = empleadoStatement.executeUpdate();
 
             if (rowsAffected == 0) {
                 throw new SQLException("No se pudo insertar el empleado, no se generaron filas.");
             }
 
             // Obtener el ID del empleado recién insertado
-            ResultSet generatedKeys = statement.getGeneratedKeys();
+            ResultSet generatedKeys = empleadoStatement.getGeneratedKeys();
             int empleadoId = 0;
             if (generatedKeys.next()) {
                 empleadoId = generatedKeys.getInt(1);
@@ -222,10 +190,11 @@ public class RegistroController {
                     oos.flush();
                     byte[] serializedTemplate = bos.toByteArray();
 
-                    String huellaSql = "INSERT INTO huellas (empleado_id, huella) VALUES (?, ?)";
+                    String huellaSql = "INSERT INTO huellas (empleado_id, huella, huella_imagen) VALUES (?, ?, ?)";
                     PreparedStatement huellaStatement = connection.prepareStatement(huellaSql, Statement.RETURN_GENERATED_KEYS);
                     huellaStatement.setInt(1, empleadoId);
                     huellaStatement.setBytes(2, serializedTemplate);
+                    huellaStatement.setBytes(3, fingerprintImageBytes);
                     huellaStatement.executeUpdate();
 
                     ResultSet huellaGeneratedKeys = huellaStatement.getGeneratedKeys();
@@ -246,28 +215,6 @@ public class RegistroController {
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    public void handleIngresarHuellaButton(ActionEvent event) {
-        openEnrollmentForm();
-    }
-
-    private void openEnrollmentForm() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EnrollmentForm.fxml"));
-            Parent root = loader.load();
-
-            EnrollmentFormController controller = loader.getController();
-            controller.setRegistroController(this); // Pasar el controlador de Registro al de Enrollment
-
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Enrollment Form");
-            stage.show();
-        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -313,13 +260,7 @@ public class RegistroController {
         return true; // Validaciones exitosas
     }
 
-    private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error de validación");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
+
 
     @FXML
     private void rellenarCampos() {
@@ -335,5 +276,40 @@ public class RegistroController {
         profesionField.setText("Ingeniero");
         departamentoChoiceBox.getSelectionModel().selectFirst();
         puestoChoiceBox.getSelectionModel().select(2);
+    }
+
+    @FXML
+    public void handleIngresarHuellaButton(ActionEvent event) {
+        openEnrollmentForm();
+    }
+
+    private void openEnrollmentForm() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EnrollmentForm.fxml"));
+            Parent root = loader.load();
+
+            EnrollmentFormController controller = loader.getController();
+            controller.setRegistroController(this);
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Enrollment Form");
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void updateFingerprintImage(javafx.scene.image.Image image) {
+        fingerprintImageView.setImage(image);
+    }
+
+    private void mostrarError(String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error de validación");
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
 }
