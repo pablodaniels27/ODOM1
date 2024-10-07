@@ -145,10 +145,23 @@ public class MonitoreoController {
 
     @FXML
     public void initialize() {
-
-        // Configurar el evento del searchField para capturar teclas presionadas
         configureSearchField();
+        configureNotasColumn();
+        configureTableColumns();
+        configureTipoAsistenciaColumn();
+        configureListeners();
+        configureGraficosController();
+        configureCheckBoxes();
+        configurePagination();
+        configureChoiceBox();
+        configureButtons();
+        loadInitialEntries();
+        cargarDepartamentos(); // Cargar departamentos en el ChoiceBox
+    }
 
+
+
+    private void configureNotasColumn() {
         // Configurar la columna de notas con un enlace y estilo para mostrar un popup
         notasColum.setCellFactory(tc -> new TableCell<Map<String, Object>, String>() {
             @Override
@@ -158,7 +171,7 @@ public class MonitoreoController {
                     setText(null); // No hay nota, dejar vacío
                 } else {
                     setText("ver nota");
-                    setStyle("-fx-text-fill: blue; -fx-underline: true;"); // Estilo tipo enlace
+                    setStyle("-fx-text-fill: blue; -fx-underline: true;");
                     setOnMouseClicked(event -> {
                         if (!isEmpty()) {
                             showNotePopup(item); // Mostrar el popup con la nota
@@ -167,60 +180,13 @@ public class MonitoreoController {
                 }
             }
         });
-
-        // Vincular datos de la columna de notas
         notasColum.setCellValueFactory(createCellValueFactory("notas"));
+    }
 
-        // Configurar las columnas de nombre completo y fecha
+    private void configureTableColumns() {
+        // Configurar las columnas de la tabla
         nombreCompletoColumn.setCellValueFactory(new PropertyValueFactory<>("nombreCompleto"));
         fechaColumn.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-
-        // Verificar que la columna tipoAsistenciaColumn no sea null
-        if (tipoAsistenciaColumn == null) {
-            System.out.println("Error: tipoAsistenciaColumn es null.");
-            return;
-        } else {
-            System.out.println("tipoAsistenciaColumn se cargó correctamente.");
-        }
-
-        // Listener para seleccionar un empleado en la tabla personTableView
-        personTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                String nombreEmpleado = newSelection.getNombreCompleto();
-                System.out.println("Empleado seleccionado: " + nombreEmpleado);
-
-                String tipoAsistencia = obtenerTipoAsistenciaSeleccionado();
-                String departamentoSeleccionado = obtenerDepartamentoSeleccionado();
-
-                if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
-                    String fechaInicio = fechaInicioPicker.getValue().toString();
-                    String fechaFin = fechaFinPicker.getValue().toString();
-
-                    // Mostrar las fechas filtradas por rango y empleado
-                    mostrarFechasPorEmpleado(departamentoSeleccionado, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
-                } else {
-                    System.out.println("Por favor, selecciona un rango de fechas válido.");
-                }
-            }
-        });
-
-        // Configurar el controlador de gráficos
-        graficosController = new GraficosController();
-        graficosController.setMonitoreoController(this);
-
-        // Configurar los CheckBoxes para supervisores y empleados
-        supervisoresCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                empleadosCheckBox.setSelected(false); // Desmarcar empleadosCheckBox
-            }
-        });
-        empleadosCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal) {
-                supervisoresCheckBox.setSelected(false); // Desmarcar supervisoresCheckBox
-            }
-        });
-
-        // Configurar columnas de la tabla de empleados
         nombreColumn.setCellValueFactory(createCellValueFactory("nombreCompleto"));
         idColumn.setCellValueFactory(createCellValueFactory("id"));
         fechaEntradaColumn.setCellValueFactory(createCellValueFactory("fechaEntrada"));
@@ -230,95 +196,10 @@ public class MonitoreoController {
         tipoAsistenciaColumn.setCellValueFactory(createCellValueFactory("tipoAsistencia"));
         tipoSalidaColumn.setCellValueFactory(createCellValueFactory("tipoSalida"));
         estadoColumn.setCellValueFactory(createCellValueFactory("estado"));
-
-        // Asignar los empleados a la tabla employeeTableView
         employeeTableView.setItems(employees);
+    }
 
-        // Cargar departamentos en el ChoiceBox
-        cargarDepartamentos();
-        departamentoChoiceBox.getSelectionModel().selectedItemProperty();
-
-        // Configurar el ChoiceBox para seleccionar la cantidad de ítems por página
-        itemsPerPageChoiceBox.setItems(FXCollections.observableArrayList(10, 20, 30, 40));
-        itemsPerPageChoiceBox.setValue(itemsPerPage);
-        itemsPerPageChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            itemsPerPage = newVal;
-            totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
-            showPage(1); // Mostrar la primera página
-        });
-
-        // Configurar el comportamiento del botón de gráficos
-        graphViewButton.setOnAction(event -> toggleGraphView());
-
-        // Cargar todos los registros al inicio
-        try {
-            employees.clear();
-            loadAllEntries();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        // Configurar el botón de búsqueda
-        searchButton.setOnAction(event -> {
-            try {
-                if (fechaInicioPicker.getValue() == null || fechaFinPicker.getValue() == null) {
-                    // Mostrar una alerta si falta alguna fecha
-                    Alert alert = new Alert(Alert.AlertType.WARNING);
-                    alert.setTitle("Advertencia");
-                    alert.setHeaderText("Faltan fechas");
-                    alert.setContentText("Por favor, selecciona una fecha de inicio y una fecha final.");
-                    alert.showAndWait();
-                    return;
-                }
-
-                // Limpiar las selecciones y los datos de las tablas
-                personTableView.getSelectionModel().clearSelection();
-                dateTableView.getSelectionModel().clearSelection();
-                personTableView.getItems().clear();
-                dateTableView.getItems().clear();
-
-                // Obtener los valores de los filtros
-                String departamentoSeleccionado = departamentoChoiceBox.getValue();
-                if (departamentoSeleccionado != null) {
-                    selectedDepartmentLabel.setText("Departamento: " + departamentoSeleccionado);
-                }
-
-                String searchQuery = searchField.getText().trim();
-                boolean incluirSupervisores = supervisoresCheckBox.isSelected();
-                boolean incluirEmpleados = empleadosCheckBox.isSelected();
-                String fechaInicio = fechaInicioPicker.getValue() != null ? fechaInicioPicker.getValue().toString() : "";
-                String fechaFin = fechaFinPicker.getValue() != null ? fechaFinPicker.getValue().toString() : "";
-
-                // Buscar y cargar datos en la tabla
-                searchByDateAndDepartment(departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados, fechaInicio, fechaFin);
-
-                // Actualizar el gráfico con los filtros seleccionados
-                graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados);
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
-
-        // Configurar botones de paginación
-        previousButton.setOnAction(event -> {
-            if (currentPage > 1) {
-                currentPage--;
-                showPage(currentPage);
-            }
-        });
-
-        nextButton.setOnAction(event -> {
-            if (currentPage < totalPages) {
-                currentPage++;
-                showPage(currentPage);
-            }
-        });
-
-        // Calcular el total de páginas y mostrar la primera página
-        totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
-        showPage(1);
-
+    private void configureTipoAsistenciaColumn() {
         // Configurar el tipo de asistencia con evento para cambiarlo
         tipoAsistenciaColumn.setCellFactory(tc -> {
             TableCell<Map<String, Object>, String> cell = new TableCell<>() {
@@ -332,7 +213,6 @@ public class MonitoreoController {
                     }
                 }
             };
-
             cell.setOnMouseClicked(event -> {
                 if (!cell.isEmpty()) {
                     Map<String, Object> employeeData = employeeTableView.getItems().get(cell.getIndex());
@@ -340,9 +220,125 @@ public class MonitoreoController {
                     showTipoAsistenciaPopup(employeeData); // Mostrar el popup para cambiar el tipo de asistencia
                 }
             });
-
             return cell;
         });
+    }
+
+    private void configureListeners() {
+        // Listener para seleccionar un empleado en la tabla personTableView
+        personTableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                handleSelection(newSelection);
+            }
+        });
+    }
+
+    private void handleSelection(Object newSelection) {
+        String nombreEmpleado = ((Empleado)newSelection).getNombreCompleto();
+        System.out.println("Empleado seleccionado: " + nombreEmpleado);
+
+        String tipoAsistencia = obtenerTipoAsistenciaSeleccionado();
+        String departamentoSeleccionado = obtenerDepartamentoSeleccionado();
+
+        if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
+            String fechaInicio = fechaInicioPicker.getValue().toString();
+            String fechaFin = fechaFinPicker.getValue().toString();
+
+            mostrarFechasPorEmpleado(departamentoSeleccionado, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
+        } else {
+            System.out.println("Por favor, selecciona un rango de fechas válido.");
+        }
+    }
+
+    private void configureGraficosController() {
+        graficosController = new GraficosController();
+        graficosController.setMonitoreoController(this);
+    }
+
+    private void configureCheckBoxes() {
+        // Configurar los CheckBoxes para supervisores y empleados
+        supervisoresCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (supervisoresCheckBox.isSelected()) {
+                empleadosCheckBox.setSelected(false); // Desmarcar empleadosCheckBox
+            }
+        });
+        empleadosCheckBox.selectedProperty().addListener((obs, oldVal, newVal) -> {
+            if (empleadosCheckBox.isSelected()) {
+                supervisoresCheckBox.setSelected(false); // Desmarcar supervisoresCheckBox
+            }
+        });
+    }
+
+    private void configurePagination() {
+        previousButton.setOnAction(event -> {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        });
+        nextButton.setOnAction(event -> {
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage);
+            }
+        });
+        totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
+        showPage(1);
+    }
+
+    private void configureChoiceBox() {
+        itemsPerPageChoiceBox.setItems(FXCollections.observableArrayList(25, 50, 100, 200));
+        itemsPerPageChoiceBox.setValue(itemsPerPage);
+        itemsPerPageChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            itemsPerPage = newVal;
+            totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
+            showPage(1); // Mostrar la primera página
+        });
+    }
+
+    private void configureButtons() {
+        graphViewButton.setOnAction(event -> toggleGraphView());
+        searchButton.setOnAction(event -> performSearch());
+    }
+
+    private void performSearch() {
+        try {
+            if (fechaInicioPicker.getValue() == null || fechaFinPicker.getValue() == null) {
+                showAlert("Advertencia", "Faltan fechas", "Por favor, selecciona una fecha de inicio y una fecha final.");
+                return;
+            }
+            personTableView.getSelectionModel().clearSelection();
+            dateTableView.getSelectionModel().clearSelection();
+            personTableView.getItems().clear();
+            dateTableView.getItems().clear();
+            String departamentoSeleccionado = departamentoChoiceBox.getValue();
+            String searchQuery = searchField.getText().trim();
+            boolean incluirSupervisores = supervisoresCheckBox.isSelected();
+            boolean incluirEmpleados = empleadosCheckBox.isSelected();
+            String fechaInicio = fechaInicioPicker.getValue().toString();
+            String fechaFin = fechaFinPicker.getValue().toString();
+            searchByDateAndDepartment(departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados, fechaInicio, fechaFin);
+            graficosController.createBarChart(chartPane, fechaInicio, fechaFin, departamentoSeleccionado, searchQuery, incluirSupervisores, incluirEmpleados);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadInitialEntries() {
+        try {
+            employees.clear();
+            loadAllEntries();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showAlert(String title, String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 
     private void configureSearchField() {
@@ -739,14 +735,14 @@ public class MonitoreoController {
 
     // Clase auxiliar para representar las fechas
     public static class Fecha {
-        private final String fecha;
+        private final String fecha2;
 
         public Fecha(String fecha) {
-            this.fecha = fecha;
+            this.fecha2 = fecha;
         }
 
         public String getFecha() {
-            return fecha;
+            return fecha2;
         }
     }
 

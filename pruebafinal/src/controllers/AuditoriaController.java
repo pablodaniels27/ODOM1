@@ -81,7 +81,7 @@ public class AuditoriaController {
 
 
     @FXML
-    public void initialize() throws SQLException {
+    public void initialize() {
         // Configurar las columnas con las propiedades correctas
         nombreCompletoSupervisor.setCellValueFactory(new PropertyValueFactory<>("nombreSupervisor"));
         nombreCompletoEmpleado.setCellValueFactory(new PropertyValueFactory<>("nombreCompletoEmpleado"));
@@ -176,8 +176,6 @@ public class AuditoriaController {
             item.setOnMouseClicked(event -> {
                 searchField.setText(suggestion);
                 suggestionsMenu.hide();
-                // Opcionalmente, puedes ejecutar la búsqueda aquí
-                // handleSearch();
             });
 
             suggestionBox.getChildren().add(item);
