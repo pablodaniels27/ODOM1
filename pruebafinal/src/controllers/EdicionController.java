@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import com.digitalpersona.onetouch.DPFPGlobal;
 import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.embed.swing.SwingFXUtils;
@@ -49,7 +50,6 @@ public class EdicionController {
     // Mapa para almacenar los valores originales de los campos
     private final Map<String, Object> datosOriginales = new HashMap<>();
     private int empleadoId;
-    private MainController mainController;
 
     @FXML
     public void initialize() {
@@ -63,14 +63,14 @@ public class EdicionController {
     }
 
     private void cargarDepartamentos() {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombre FROM departamentos";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            ResultSet resultSet = statement.executeQuery();
+        try {
+            // Obtener la lista de departamentos desde el DAO
+            Map<String, Integer> departamentos = BaseDAO.obtenerDepartamentosid();
 
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String nombre = resultSet.getString("nombre");
+            // Agregar los departamentos al ChoiceBox y al mapa
+            for (Map.Entry<String, Integer> entry : departamentos.entrySet()) {
+                String nombre = entry.getKey();
+                int id = entry.getValue();
                 departamentoChoiceBox.getItems().add(nombre);
                 departamentoMap.put(nombre, id);
             }
@@ -79,15 +79,16 @@ public class EdicionController {
         }
     }
 
-    private void cargarPuestos() {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombre FROM jerarquias";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            ResultSet resultSet = statement.executeQuery();
 
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String nombre = resultSet.getString("nombre");
+    private void cargarPuestos() {
+        try {
+            // Obtener la lista de puestos desde el DAO
+            Map<String, Integer> puestos = BaseDAO.obtenerPuestosid();
+
+            // Agregar los puestos al ChoiceBox y al mapa
+            for (Map.Entry<String, Integer> entry : puestos.entrySet()) {
+                String nombre = entry.getKey();
+                int id = entry.getValue();
                 puestoChoiceBox.getItems().add(nombre);
                 puestoMap.put(nombre, id);
             }
@@ -96,15 +97,16 @@ public class EdicionController {
         }
     }
 
-    private void cargarEstatus() {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT id, nombre FROM estatus_empleado";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            ResultSet resultSet = statement.executeQuery();
 
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String nombre = resultSet.getString("nombre");
+    private void cargarEstatus() {
+        try {
+            // Obtener la lista de estatus desde el DAO
+            Map<String, Integer> estatus = BaseDAO.obtenerEstatusEmpleados();
+
+            // Agregar los estatus al ChoiceBox y al mapa
+            for (Map.Entry<String, Integer> entry : estatus.entrySet()) {
+                String nombre = entry.getKey();
+                int id = entry.getValue();
                 estatusChoiceBox.getItems().add(nombre);
                 estatusMap.put(nombre, id);
             }
@@ -113,37 +115,36 @@ public class EdicionController {
         }
     }
 
+
     // Método para establecer los valores actuales en los campos
     public void cargarDatosEmpleado(int empleadoId) {
         this.empleadoId = empleadoId;
 
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT * FROM empleados WHERE id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, empleadoId);
-            ResultSet resultSet = statement.executeQuery();
+        try {
+            // Obtener los datos del empleado desde el DAO
+            Map<String, Object> empleadoData = BaseDAO.obtenerDatosEmpleado(empleadoId);
 
-            if (resultSet.next()) {
-                nombreField.setText(resultSet.getString("nombres"));
-                apellidoPaternoField.setText(resultSet.getString("apellido_paterno"));
-                apellidoMaternoField.setText(resultSet.getString("apellido_materno"));
-                paisField.setText(resultSet.getString("pais"));
-                ciudadField.setText(resultSet.getString("ciudad"));
-                ladaField.setText(resultSet.getString("lada"));
-                telefonoField.setText(resultSet.getString("telefono"));
-                emailField.setText(resultSet.getString("correo_electronico"));
-                rfcField.setText(resultSet.getString("rfc"));
-                curpField.setText(resultSet.getString("curp"));
-                profesionField.setText(resultSet.getString("profesion"));
-                fechaNacimientoPicker.setValue(resultSet.getDate("fecha_nacimiento").toLocalDate());
+            if (empleadoData != null) {
+                nombreField.setText((String) empleadoData.get("nombres"));
+                apellidoPaternoField.setText((String) empleadoData.get("apellido_paterno"));
+                apellidoMaternoField.setText((String) empleadoData.get("apellido_materno"));
+                paisField.setText((String) empleadoData.get("pais"));
+                ciudadField.setText((String) empleadoData.get("ciudad"));
+                ladaField.setText((String) empleadoData.get("lada"));
+                telefonoField.setText((String) empleadoData.get("telefono"));
+                emailField.setText((String) empleadoData.get("correo_electronico"));
+                rfcField.setText((String) empleadoData.get("rfc"));
+                curpField.setText((String) empleadoData.get("curp"));
+                profesionField.setText((String) empleadoData.get("profesion"));
+                fechaNacimientoPicker.setValue(((java.sql.Date) empleadoData.get("fecha_nacimiento")).toLocalDate());
 
-                int departamentoId = resultSet.getInt("departamento_id");
+                int departamentoId = (int) empleadoData.get("departamento_id");
                 departamentoChoiceBox.setValue(getKeyByValue(departamentoMap, departamentoId));
 
-                int puestoId = resultSet.getInt("jerarquia_id");
+                int puestoId = (int) empleadoData.get("jerarquia_id");
                 puestoChoiceBox.setValue(getKeyByValue(puestoMap, puestoId));
 
-                int estatusId = resultSet.getInt("estatus_id");
+                int estatusId = (int) empleadoData.get("estatus_id");
                 estatusChoiceBox.setValue(getKeyByValue(estatusMap, estatusId));
 
                 // Cargar la huella y mostrarla
@@ -157,26 +158,21 @@ public class EdicionController {
         }
     }
 
-    private void cargarHuella(int empleadoId) {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT huella_imagen FROM huellas WHERE empleado_id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, empleadoId);
-            ResultSet resultSet = statement.executeQuery();
 
-            if (resultSet.next()) {
-                byte[] imageBytes = resultSet.getBytes("huella_imagen");
-                if (imageBytes != null) {
-                    ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
-                    BufferedImage bufferedImage = ImageIO.read(bis);
-                    Image image = SwingFXUtils.toFXImage(bufferedImage, null);
-                    fingerprintImageView.setImage(image);
-                }
+    private void cargarHuella(int empleadoId) {
+        try {
+            byte[] imageBytes = BaseDAO.obtenerHuellaImagen(empleadoId);
+            if (imageBytes != null) {
+                ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
+                BufferedImage bufferedImage = ImageIO.read(bis);
+                Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+                fingerprintImageView.setImage(image);
             }
         } catch (SQLException | IOException e) {
             e.printStackTrace();
         }
     }
+
 
     private String getKeyByValue(Map<String, Integer> map, int value) {
         for (Map.Entry<String, Integer> entry : map.entrySet()) {
@@ -307,61 +303,48 @@ public class EdicionController {
                     return; // No se guardarán los cambios si la validación falla
                 }
 
-                // Guardar cambios en la base de datos
-                try (Connection connection = DatabaseConnection.getConnection()) {
-                    String sql = "UPDATE empleados SET nombres = ?, apellido_paterno = ?, apellido_materno = ?, pais = ?, ciudad = ?, " +
-                            "lada = ?, telefono = ?, correo_electronico = ?, rfc = ?, curp = ?, profesion = ?, fecha_nacimiento = ?, " +
-                            "departamento_id = ?, jerarquia_id = ?, estatus_id = ? WHERE id = ?";
-                    PreparedStatement statement = connection.prepareStatement(sql);
-                    statement.setString(1, nombreField.getText());
-                    statement.setString(2, apellidoPaternoField.getText());
-                    statement.setString(3, apellidoMaternoField.getText());
-                    statement.setString(4, paisField.getText());
-                    statement.setString(5, ciudadField.getText());
-                    statement.setString(6, ladaField.getText());
-                    statement.setString(7, telefonoField.getText());
-                    statement.setString(8, emailField.getText());
-                    statement.setString(9, rfcField.getText());
-                    statement.setString(10, curpField.getText());
-                    statement.setString(11, profesionField.getText());
-                    statement.setDate(12, java.sql.Date.valueOf(fechaNacimientoPicker.getValue()));
-                    statement.setInt(13, departamentoMap.get(departamentoChoiceBox.getValue()));
-                    statement.setInt(14, puestoMap.get(puestoChoiceBox.getValue()));
-                    statement.setInt(15, estatusMap.get(estatusChoiceBox.getValue()));
-                    statement.setInt(16, empleadoId);
+                try {
+                    // Crear un mapa con los datos actualizados del empleado
+                    Map<String, Object> empleadoData = new HashMap<>();
+                    empleadoData.put("nombres", nombreField.getText());
+                    empleadoData.put("apellido_paterno", apellidoPaternoField.getText());
+                    empleadoData.put("apellido_materno", apellidoMaternoField.getText());
+                    empleadoData.put("pais", paisField.getText());
+                    empleadoData.put("ciudad", ciudadField.getText());
+                    empleadoData.put("lada", ladaField.getText());
+                    empleadoData.put("telefono", telefonoField.getText());
+                    empleadoData.put("correo_electronico", emailField.getText());
+                    empleadoData.put("rfc", rfcField.getText());
+                    empleadoData.put("curp", curpField.getText());
+                    empleadoData.put("profesion", profesionField.getText());
+                    empleadoData.put("fecha_nacimiento", java.sql.Date.valueOf(fechaNacimientoPicker.getValue()));
+                    empleadoData.put("departamento_id", departamentoMap.get(departamentoChoiceBox.getValue()));
+                    empleadoData.put("jerarquia_id", puestoMap.get(puestoChoiceBox.getValue()));
+                    empleadoData.put("estatus_id", estatusMap.get(estatusChoiceBox.getValue()));
+                    empleadoData.put("id", empleadoId);
 
-                    int rowsAffected = statement.executeUpdate();
-                    if (rowsAffected > 0) {
-                        // Mostrar popup de éxito
+                    // Llamar al DAO para guardar los cambios
+                    boolean success = BaseDAO.actualizarEmpleado(empleadoData);
+                    if (success) {
+                        System.out.println("Los cambios se han guardado correctamente.");
+
+                        // Mostrar alerta de éxito
                         Alert exitoAlert = new Alert(Alert.AlertType.INFORMATION);
-                        exitoAlert.setTitle("Cambios guardados");
+                        exitoAlert.setTitle("Éxito");
                         exitoAlert.setHeaderText(null);
                         exitoAlert.setContentText("Los cambios fueron guardados exitosamente.");
                         exitoAlert.showAndWait();
 
-                        // Actualizar los datos originales con los nuevos valores
-                        guardarDatosOriginales();
-                        // Redirigir a la vista de gestión de empleados utilizando el MainController
-
-                        mainController.showRegistroSucursal();
                     } else {
-                        mostrarError("No se pudo actualizar el registro.");
+                        System.out.println("No se pudo actualizar el registro.");
                     }
 
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-            } else {
-                // Si el usuario cancela la acción, no se guarda nada
-                System.out.println("El guardado fue cancelado por el usuario.");
             }
         });
     }
-
-    public void setMainController(MainController mainController) {
-        this.mainController = mainController;
-    }
-
 
     // Método para verificar si hay cambios entre los valores actuales y los originales
     private boolean hayCambios() {
@@ -381,5 +364,4 @@ public class EdicionController {
                 !puestoChoiceBox.getValue().equals(datosOriginales.get("puesto")) ||
                 !estatusChoiceBox.getValue().equals(datosOriginales.get("estatus"));
     }
-
 }
