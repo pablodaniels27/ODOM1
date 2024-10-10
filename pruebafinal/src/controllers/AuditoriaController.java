@@ -480,6 +480,7 @@ public class AuditoriaController {
                     .append(detalles).append("\n");
         }
 
+
         // Copiar el contenido al portapapeles
         Clipboard clipboard = Clipboard.getSystemClipboard();
         ClipboardContent content = new ClipboardContent();
@@ -508,7 +509,6 @@ public class AuditoriaController {
         try {
             cargarDatos(); // Cargar todos los registros desde la base de datos
             filteredData.setAll(auditoriaData); // Copiar los datos cargados a la lista filtrada
-
 
             // Calcular total de páginas y mostrar la primera página
             totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
