@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import com.digitalpersona.onetouch.*;
 import com.digitalpersona.onetouch.capture.*;
 import com.digitalpersona.onetouch.capture.event.*;
@@ -23,9 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class IdentificarseController {
 
@@ -79,20 +78,14 @@ public class IdentificarseController {
         DPFPFeatureSet features = extractFeatures(sample, DPFPDataPurpose.DATA_PURPOSE_VERIFICATION);
 
         if (features != null) {
-            try (Connection connection = DatabaseConnection.getConnection()) {
-                // Filtramos los empleados con estatus_id = 1
-                String sql = "SELECT h.huella, e.id, e.nombres, e.apellido_paterno " +
-                        "FROM huellas h " +
-                        "JOIN empleados e ON h.empleado_id = e.id " +
-                        "WHERE e.estatus_id = 1";
-                PreparedStatement statement = connection.prepareStatement(sql);
-                ResultSet resultSet = statement.executeQuery();
+            try {
+                List<Map<String, Object>> huellas = BaseDAO.obtenerHuellasEmpleadosActivos();
 
                 boolean found = false;
                 int empleadoId = -1;
 
-                while (resultSet.next()) {
-                    byte[] templateBytes = resultSet.getBytes("huella");
+                for (Map<String, Object> huellaData : huellas) {
+                    byte[] templateBytes = (byte[]) huellaData.get("huella");
 
                     if (templateBytes != null) {
                         try (ByteArrayInputStream bais = new ByteArrayInputStream(templateBytes);
@@ -104,9 +97,9 @@ public class IdentificarseController {
                             DPFPVerificationResult result = verifier.verify(features, template);
 
                             if (result.isVerified()) {
-                                String nombreEmpleado = resultSet.getString("nombres");
-                                String apellidoPaterno = resultSet.getString("apellido_paterno");
-                                empleadoId = resultSet.getInt("id");
+                                String nombreEmpleado = (String) huellaData.get("nombres");
+                                String apellidoPaterno = (String) huellaData.get("apellido_paterno");
+                                empleadoId = (int) huellaData.get("id");
 
                                 int finalEmpleadoId = empleadoId;
                                 Platform.runLater(() -> {
@@ -135,7 +128,6 @@ public class IdentificarseController {
             Platform.runLater(() -> statusLabel.setText("No se pudieron extraer características de la huella."));
         }
     }
-
 
     private DPFPFeatureSet extractFeatures(DPFPSample sample, DPFPDataPurpose purpose) {
         DPFPFeatureExtraction extractor = DPFPGlobal.getFeatureExtractionFactory().createFeatureExtraction();

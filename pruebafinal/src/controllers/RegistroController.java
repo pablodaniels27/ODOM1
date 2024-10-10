@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import Lector.EnrollmentFormController;
 import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.event.ActionEvent;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,30 +76,26 @@ public class RegistroController {
     }
 
     private void cargarDepartamentos() {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String query = "SELECT nombre FROM departamentos";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                departamentoChoiceBox.getItems().add(resultSet.getString("nombre"));
-            }
+        departamentoChoiceBox.getItems().clear(); // Limpiar los ítems previamente cargados
+        try {
+            List<String> departamentos = BaseDAO.obtenerDepartamentos();
+            departamentoChoiceBox.getItems().addAll(departamentos);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+
     private void cargarPuestos() {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String query = "SELECT nombre FROM jerarquias";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                puestoChoiceBox.getItems().add(resultSet.getString("nombre"));
-            }
+        puestoChoiceBox.getItems().clear(); // Limpiar los ítems previamente cargados
+        try {
+            List<String> puestos = BaseDAO.obtenerPuestos();
+            puestoChoiceBox.getItems().addAll(puestos);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     @FXML
     private void enviarDatos() {
@@ -127,91 +125,26 @@ public class RegistroController {
         String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
         String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
 
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            // Obtener el ID del departamento
-            String departamentoQuery = "SELECT id FROM departamentos WHERE nombre = ?";
-            PreparedStatement departamentoStatement = connection.prepareStatement(departamentoQuery);
-            departamentoStatement.setString(1, departamentoSeleccionado);
-            ResultSet departamentoResult = departamentoStatement.executeQuery();
-            int departamentoId = 0;
-            if (departamentoResult.next()) {
-                departamentoId = departamentoResult.getInt("id");
-            }
+        try {
+            // Obtener el ID del departamento y el puesto
+            int departamentoId = BaseDAO.obtenerIdDepartamento(departamentoSeleccionado);
+            int jerarquiaId = BaseDAO.obtenerIdPuesto(puestoSeleccionado);
 
-            // Obtener el ID del puesto
-            String puestoQuery = "SELECT id FROM jerarquias WHERE nombre = ?";
-            PreparedStatement puestoStatement = connection.prepareStatement(puestoQuery);
-            puestoStatement.setString(1, puestoSeleccionado);
-            ResultSet puestoResult = puestoStatement.executeQuery();
-            int jerarquiaId = 0;
-            if (puestoResult.next()) {
-                jerarquiaId = puestoResult.getInt("id");
-            }
-
-            // Insertar los datos del empleado sin la huella aún
-            String empleadoSql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, estatus_id) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
-            PreparedStatement empleadoStatement = connection.prepareStatement(empleadoSql, Statement.RETURN_GENERATED_KEYS);
-            empleadoStatement.setString(1, nombre);
-            empleadoStatement.setString(2, apellidoMaterno);
-            empleadoStatement.setString(3, apellidoPaterno);
-            empleadoStatement.setDate(4, fechaNacimiento);
-            empleadoStatement.setString(5, pais);
-            empleadoStatement.setString(6, ciudad);
-            empleadoStatement.setString(7, email);
-            empleadoStatement.setString(8, lada);
-            empleadoStatement.setString(9, telefono);
-            empleadoStatement.setString(10, rfc);
-            empleadoStatement.setString(11, curp);
-            empleadoStatement.setString(12, profesion);
-            empleadoStatement.setInt(13, departamentoId);
-            empleadoStatement.setInt(14, jerarquiaId);
-
-            int rowsAffected = empleadoStatement.executeUpdate();
-
-            if (rowsAffected == 0) {
+            // Insertar empleado en la base de datos
+            int empleadoId = BaseDAO.insertarEmpleado(nombre, apellidoMaterno, apellidoPaterno, fechaNacimiento, pais, ciudad, email, lada, telefono, rfc, curp, profesion, departamentoId, jerarquiaId);
+            if (empleadoId == -1) {
                 throw new SQLException("No se pudo insertar el empleado, no se generaron filas.");
             }
 
-            // Obtener el ID del empleado recién insertado
-            ResultSet generatedKeys = empleadoStatement.getGeneratedKeys();
-            int empleadoId = 0;
-            if (generatedKeys.next()) {
-                empleadoId = generatedKeys.getInt(1);
-            }
-
-            // Insertar la huella en la tabla 'huellas'
-            int huellaId = 0;
+            // Insertar la huella en la base de datos
             if (template != null) {
-                try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                     ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-
-                    oos.writeObject(template.serialize()); // Serializar el template
-                    oos.flush();
-                    byte[] serializedTemplate = bos.toByteArray();
-
-                    String huellaSql = "INSERT INTO huellas (empleado_id, huella, huella_imagen) VALUES (?, ?, ?)";
-                    PreparedStatement huellaStatement = connection.prepareStatement(huellaSql, Statement.RETURN_GENERATED_KEYS);
-                    huellaStatement.setInt(1, empleadoId);
-                    huellaStatement.setBytes(2, serializedTemplate);
-                    huellaStatement.setBytes(3, fingerprintImageBytes);
-                    huellaStatement.executeUpdate();
-
-                    ResultSet huellaGeneratedKeys = huellaStatement.getGeneratedKeys();
-                    if (huellaGeneratedKeys.next()) {
-                        huellaId = huellaGeneratedKeys.getInt(1); // Obtener el ID generado de la huella
+                byte[] serializedTemplate = BaseDAO.serializarTemplate(template);
+                if (serializedTemplate != null) {
+                    int huellaId = BaseDAO.insertarHuella(empleadoId, serializedTemplate, fingerprintImageBytes);
+                    if (huellaId != -1) {
+                        BaseDAO.actualizarHuellaEmpleado(empleadoId, huellaId);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return;  // Early return on serialization failure
                 }
-
-                // Actualizar el campo huella_id en la tabla empleados
-                String updateEmpleadoHuellaSQL = "UPDATE empleados SET huella = ? WHERE id = ?";
-                PreparedStatement updateEmpleadoHuellaStmt = connection.prepareStatement(updateEmpleadoHuellaSQL);
-                updateEmpleadoHuellaStmt.setInt(1, huellaId);
-                updateEmpleadoHuellaStmt.setInt(2, empleadoId);
-                updateEmpleadoHuellaStmt.executeUpdate();
             }
 
         } catch (SQLException e) {
