@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import Services.CacheService;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class RegistroSucursalController {
@@ -117,30 +120,14 @@ public class RegistroSucursalController {
             empleadosContainer.getChildren().clear();
         }
 
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            // Modificamos el SQL para que busque solo en las columnas nombres y apellido_paterno
-            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados " +
-                    "WHERE jerarquia_id = 3 AND estatus_id != 4 " +
-                    "AND (nombres LIKE ? OR apellido_paterno LIKE ?) " +
-                    "LIMIT ? OFFSET ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-
-            // Usamos el filtro para comparar con los nombres y apellido paterno
-            String filtroSQL = "%" + filtro + "%";
-            statement.setString(1, filtroSQL);
-            statement.setString(2, filtroSQL);
-
-            statement.setInt(3, ITEMS_PER_PAGE);
-            statement.setInt(4, empleadosOffset * ITEMS_PER_PAGE);
-
-            ResultSet resultSet = statement.executeQuery();
-
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String nombre = resultSet.getString("nombres");
-                String apellidoPaterno = resultSet.getString("apellido_paterno");
-                String profesion = resultSet.getString("profesion");
-                int estatusId = resultSet.getInt("estatus_id");
+        try {
+            List<Map<String, Object>> empleados = BaseDAO.obtenerEmpleados(filtro, ITEMS_PER_PAGE, empleadosOffset * ITEMS_PER_PAGE);
+            for (Map<String, Object> empleado : empleados) {
+                int id = (int) empleado.get("id");
+                String nombre = (String) empleado.get("nombres");
+                String apellidoPaterno = (String) empleado.get("apellido_paterno");
+                String profesion = (String) empleado.get("profesion");
+                int estatusId = (int) empleado.get("estatus_id");
 
                 HBox empleadoBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
                 empleadosContainer.getChildren().add(empleadoBox);
@@ -150,34 +137,20 @@ public class RegistroSucursalController {
         }
     }
 
+
     private void cargarSupervisores(String filtro) {
         if (supervisoresOffset == 0) {
             supervisoresContainer.getChildren().clear();
         }
 
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            // Similar ajuste al método de cargarEmpleados, búsqueda solo en nombres y apellido_paterno
-            String sql = "SELECT id, nombres, apellido_paterno, profesion, estatus_id FROM empleados " +
-                    "WHERE jerarquia_id = 2 AND estatus_id != 4 " +
-                    "AND (nombres LIKE ? OR apellido_paterno LIKE ?) " +
-                    "LIMIT ? OFFSET ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-
-            String filtroSQL = "%" + filtro + "%";
-            statement.setString(1, filtroSQL);
-            statement.setString(2, filtroSQL);
-
-            statement.setInt(3, ITEMS_PER_PAGE);
-            statement.setInt(4, supervisoresOffset * ITEMS_PER_PAGE);
-
-            ResultSet resultSet = statement.executeQuery();
-
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String nombre = resultSet.getString("nombres");
-                String apellidoPaterno = resultSet.getString("apellido_paterno");
-                String profesion = resultSet.getString("profesion");
-                int estatusId = resultSet.getInt("estatus_id");
+        try {
+            List<Map<String, Object>> supervisores = BaseDAO.obtenerSupervisores(filtro, ITEMS_PER_PAGE, supervisoresOffset * ITEMS_PER_PAGE);
+            for (Map<String, Object> supervisor : supervisores) {
+                int id = (int) supervisor.get("id");
+                String nombre = (String) supervisor.get("nombres");
+                String apellidoPaterno = (String) supervisor.get("apellido_paterno");
+                String profesion = (String) supervisor.get("profesion");
+                int estatusId = (int) supervisor.get("estatus_id");
 
                 HBox supervisorBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
                 supervisoresContainer.getChildren().add(supervisorBox);
@@ -186,6 +159,7 @@ public class RegistroSucursalController {
             e.printStackTrace();
         }
     }
+
 
     private HBox crearEmpleadoBox(int empleadoId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
         HBox empleadoBox = new HBox();
@@ -274,21 +248,18 @@ public class RegistroSucursalController {
     }
 
     private void darDeBajaEmpleado(int empleadoId, HBox empleadoBox) {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            // Cambiar el estatus del empleado a 'Baja'
-            String sql = "UPDATE empleados SET estatus_id = 4 WHERE id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, empleadoId);
-            statement.executeUpdate();
+        try {
+            // Cambiar el estatus del empleado a 'Baja' usando el método en el DAO
+            BaseDAO.darDeBajaEmpleado(empleadoId);
 
             // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
             empleadosContainer.getChildren().remove(empleadoBox);
             supervisoresContainer.getChildren().remove(empleadoBox);
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     private void cargarVistaEdicion(int empleadoId) {
         try {

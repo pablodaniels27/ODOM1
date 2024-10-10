@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -80,7 +81,7 @@ public class AuditoriaController {
 
 
     @FXML
-    public void initialize() throws SQLException {
+    public void initialize() {
         // Configurar las columnas con las propiedades correctas
         nombreCompletoSupervisor.setCellValueFactory(new PropertyValueFactory<>("nombreSupervisor"));
         nombreCompletoEmpleado.setCellValueFactory(new PropertyValueFactory<>("nombreCompletoEmpleado"));
@@ -144,36 +145,21 @@ public class AuditoriaController {
             return;
         }
 
-        String query = "SELECT DISTINCT CONCAT(esuper.nombres, ' ', esuper.apellido_paterno, ' ', esuper.apellido_materno) AS supervisorNombre " +
-                "FROM logs l " +
-                "JOIN empleados esuper ON l.supervisor_id = esuper.id " +
-                "WHERE CONCAT(LOWER(TRIM(esuper.nombres)), ' ', LOWER(TRIM(esuper.apellido_paterno)), ' ', LOWER(TRIM(esuper.apellido_materno))) LIKE ? " +
-                "ORDER BY supervisorNombre ASC";
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
-            String searchPattern = "%" + searchQuery.toLowerCase() + "%";
-            preparedStatement.setString(1, searchPattern);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-            ObservableList<String> results = FXCollections.observableArrayList();
-
-            while (resultSet.next()) {
-                String supervisorNombre = resultSet.getString("supervisorNombre");
-                results.add(supervisorNombre);
-            }
+        try {
+            // Obtener la lista de supervisores desde el DAO
+            ObservableList<String> results = BaseDAO.buscarSupervisores(searchQuery);
 
             if (!results.isEmpty()) {
                 populateSuggestions(results);
             } else {
                 suggestionsMenu.hide();
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+
     private void populateSuggestions(ObservableList<String> suggestions) {
         suggestionsMenu.getItems().clear();
 
@@ -190,8 +176,6 @@ public class AuditoriaController {
             item.setOnMouseClicked(event -> {
                 searchField.setText(suggestion);
                 suggestionsMenu.hide();
-                // Opcionalmente, puedes ejecutar la búsqueda aquí
-                // handleSearch();
             });
 
             suggestionBox.getChildren().add(item);
@@ -288,46 +272,18 @@ public class AuditoriaController {
     }
 
 
-    private void cargarDatos() throws SQLException {
+    private void cargarDatos() {
         auditoriaData.clear();
 
-        DatabaseConnection connectNow = new DatabaseConnection();
-        Connection connectDB = connectNow.getConnection();
-
-        String query = "SELECT l.supervisor_id, l.action, l.target_employee_id, l.timestamp, l.details, " +
-                "esuper.nombres AS supervisor_nombres, esuper.apellido_paterno AS supervisor_apellido_paterno, esuper.apellido_materno AS supervisor_apellido_materno, " +
-                "etarget.nombres AS empleado_nombres, etarget.apellido_paterno AS empleado_apellido_paterno, etarget.apellido_materno AS empleado_apellido_materno, " +
-                "d.nombre AS departamento_nombre " +
-                "FROM logs l " +
-                "JOIN empleados esuper ON l.supervisor_id = esuper.id " +
-                "JOIN empleados etarget ON l.target_employee_id = etarget.id " +
-                "JOIN departamentos d ON etarget.departamento_id = d.id " +
-                "ORDER BY l.timestamp DESC";
-
-        PreparedStatement preparedStatement = connectDB.prepareStatement(query);
-        ResultSet resultSet = preparedStatement.executeQuery();
-
-        while (resultSet.next()) {
-            String nombreCompletoSupervisor = resultSet.getString("supervisor_nombres") + " " +
-                    resultSet.getString("supervisor_apellido_paterno") + " " +
-                    resultSet.getString("supervisor_apellido_materno");
-
-            String nombreCompletoEmpleado = resultSet.getString("empleado_nombres") + " " +
-                    resultSet.getString("empleado_apellido_paterno") + " " +
-                    resultSet.getString("empleado_apellido_materno");
-
-            String departamentoNombre = resultSet.getString("departamento_nombre");
-            String accion = resultSet.getString("action");
-            String timestamp = resultSet.getString("timestamp");
-            String detalles = resultSet.getString("details");
-
-            auditoriaData.add(new Auditoria(nombreCompletoEmpleado, departamentoNombre, accion, nombreCompletoSupervisor, timestamp, detalles));
+        try {
+            // Obtener los datos de auditoría desde el DAO
+            List<Auditoria> datos = BaseDAO.obtenerDatosAuditoria();
+            auditoriaData.addAll(datos);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        resultSet.close();
-        preparedStatement.close();
-        connectDB.close();
     }
+
 
     private void showPage(int pageNumber) {
         if (pageNumber < 1) {
@@ -480,7 +436,6 @@ public class AuditoriaController {
                     .append(detalles).append("\n");
         }
 
-
         // Copiar el contenido al portapapeles
         Clipboard clipboard = Clipboard.getSystemClipboard();
         ClipboardContent content = new ClipboardContent();
@@ -491,7 +446,7 @@ public class AuditoriaController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Portapapeles");
         alert.setHeaderText(null);
-        alert.setContentText("Los detalles han sido copiados al portapapeles en formato tabular.");
+        alert.setContentText("Los detalles han sido copiados al portapapeles.");
         alert.showAndWait();
     }
 
@@ -506,26 +461,13 @@ public class AuditoriaController {
         actionFilterComboBox.getSelectionModel().selectFirst(); // Seleccionar "Todos" si está disponible
 
         // Volver a cargar los datos iniciales
-        try {
-            cargarDatos(); // Cargar todos los registros desde la base de datos
-            filteredData.setAll(auditoriaData); // Copiar los datos cargados a la lista filtrada
+        cargarDatos(); // Cargar todos los registros desde la base de datos
+        filteredData.setAll(auditoriaData); // Copiar los datos cargados a la lista filtrada
 
-            // Calcular total de páginas y mostrar la primera página
-            totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
-            currentPage = 1;
-            showPage(currentPage);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Mostrar una alerta si ocurre un error al cargar los datos
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Error");
-            alert.setHeaderText("No se pudieron cargar los datos");
-            alert.setContentText("Por favor, verifica la conexión a la base de datos.");
-            alert.showAndWait();
-        }
+        // Calcular total de páginas y mostrar la primera página
+        totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
+        currentPage = 1;
+        showPage(currentPage);
     }
-
-
-
 
 }

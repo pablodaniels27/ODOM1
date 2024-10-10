@@ -2,7 +2,7 @@ package controllers;
 
 import javafx.fxml.FXML;
 
-public class TerminacionController {
+public class PermisosController {
 
     @FXML
     public void initialize() {
