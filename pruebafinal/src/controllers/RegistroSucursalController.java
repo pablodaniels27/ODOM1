@@ -5,10 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -274,21 +271,39 @@ public class RegistroSucursalController {
     }
 
     private void darDeBajaEmpleado(int empleadoId, HBox empleadoBox) {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            // Cambiar el estatus del empleado a 'Baja'
-            String sql = "UPDATE empleados SET estatus_id = 4 WHERE id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, empleadoId);
-            statement.executeUpdate();
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Baja de empleado");
+        confirmacion.setHeaderText("¿Está seguro de dar de baja al empleado?");
+        confirmacion.setContentText("El empleado será dado de baja y no aparecerá en la lista de empleados activos.");
 
-            // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
-            empleadosContainer.getChildren().remove(empleadoBox);
-            supervisoresContainer.getChildren().remove(empleadoBox);
+        // Opción Sí o No en el popup
+        ButtonType botonSi = new ButtonType("Continuar");
+        ButtonType botonNo = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirmacion.getButtonTypes().setAll(botonSi, botonNo);
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // Mostrar la alerta y esperar la respuesta del usuario
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == botonSi) {
+                // Si el usuario confirma, procedemos a dar de baja al empleado
+                try (Connection connection = DatabaseConnection.getConnection()) {
+                    String sql = "UPDATE empleados SET estatus_id = 4 WHERE id = ?";
+                    PreparedStatement statement = connection.prepareStatement(sql);
+                    statement.setInt(1, empleadoId);
+                    statement.executeUpdate();
+
+                    // Remover el empleado de la vista
+                    empleadosContainer.getChildren().remove(empleadoBox);
+                    supervisoresContainer.getChildren().remove(empleadoBox);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // Si el usuario selecciona 'No', no se realiza ninguna acción.
+                System.out.println("La acción de dar de baja fue cancelada.");
+            }
+        });
     }
+
 
     private void cargarVistaEdicion(int empleadoId) {
         try {

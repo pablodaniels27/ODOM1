@@ -4,13 +4,9 @@ import com.digitalpersona.onetouch.DPFPGlobal;
 import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.control.Alert;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -53,6 +49,7 @@ public class EdicionController {
     // Mapa para almacenar los valores originales de los campos
     private final Map<String, Object> datosOriginales = new HashMap<>();
     private int empleadoId;
+    private MainController mainController;
 
     @FXML
     public void initialize() {
@@ -282,42 +279,107 @@ public class EdicionController {
     // Método para guardar los cambios en la base de datos
     @FXML
     private void guardarCambios() {
-        // Validar los campos antes de guardar
-        if (!validarCampos()) {
-            return; // No se guardarán los cambios si la validación falla
+        // Validar si hay cambios antes de guardar
+        if (!hayCambios()) {
+            Alert sinCambiosAlert = new Alert(Alert.AlertType.INFORMATION);
+            sinCambiosAlert.setTitle("Sin cambios detectados");
+            sinCambiosAlert.setHeaderText(null);
+            sinCambiosAlert.setContentText("No se han detectado cambios en el formulario.");
+            sinCambiosAlert.showAndWait();
+            return;
         }
 
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "UPDATE empleados SET nombres = ?, apellido_paterno = ?, apellido_materno = ?, pais = ?, ciudad = ?, " +
-                    "lada = ?, telefono = ?, correo_electronico = ?, rfc = ?, curp = ?, profesion = ?, fecha_nacimiento = ?, " +
-                    "departamento_id = ?, jerarquia_id = ?, estatus_id = ? WHERE id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setString(1, nombreField.getText());
-            statement.setString(2, apellidoPaternoField.getText());
-            statement.setString(3, apellidoMaternoField.getText());
-            statement.setString(4, paisField.getText());
-            statement.setString(5, ciudadField.getText());
-            statement.setString(6, ladaField.getText());
-            statement.setString(7, telefonoField.getText());
-            statement.setString(8, emailField.getText());
-            statement.setString(9, rfcField.getText());
-            statement.setString(10, curpField.getText());
-            statement.setString(11, profesionField.getText());
-            statement.setDate(12, java.sql.Date.valueOf(fechaNacimientoPicker.getValue()));
-            statement.setInt(13, departamentoMap.get(departamentoChoiceBox.getValue()));
-            statement.setInt(14, puestoMap.get(puestoChoiceBox.getValue()));
-            statement.setInt(15, estatusMap.get(estatusChoiceBox.getValue()));
-            statement.setInt(16, empleadoId);
+        // Mostrar confirmación antes de guardar
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Confirmar cambios");
+        confirmacion.setHeaderText("¿Desea guardar los cambios?");
+        confirmacion.setContentText("Haga clic en 'Confirmar cambios' para guardar o 'Cancelar' para descartar.");
 
-            int rowsAffected = statement.executeUpdate();
-            if (rowsAffected > 0) {
-                System.out.println("Los cambios se han guardado correctamente.");
+        // Botones de confirmación
+        ButtonType botonConfirmar = new ButtonType("Confirmar cambios");
+        ButtonType botonCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirmacion.getButtonTypes().setAll(botonConfirmar, botonCancelar);
+
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == botonConfirmar) {
+                // Validar los campos antes de guardar
+                if (!validarCampos()) {
+                    return; // No se guardarán los cambios si la validación falla
+                }
+
+                // Guardar cambios en la base de datos
+                try (Connection connection = DatabaseConnection.getConnection()) {
+                    String sql = "UPDATE empleados SET nombres = ?, apellido_paterno = ?, apellido_materno = ?, pais = ?, ciudad = ?, " +
+                            "lada = ?, telefono = ?, correo_electronico = ?, rfc = ?, curp = ?, profesion = ?, fecha_nacimiento = ?, " +
+                            "departamento_id = ?, jerarquia_id = ?, estatus_id = ? WHERE id = ?";
+                    PreparedStatement statement = connection.prepareStatement(sql);
+                    statement.setString(1, nombreField.getText());
+                    statement.setString(2, apellidoPaternoField.getText());
+                    statement.setString(3, apellidoMaternoField.getText());
+                    statement.setString(4, paisField.getText());
+                    statement.setString(5, ciudadField.getText());
+                    statement.setString(6, ladaField.getText());
+                    statement.setString(7, telefonoField.getText());
+                    statement.setString(8, emailField.getText());
+                    statement.setString(9, rfcField.getText());
+                    statement.setString(10, curpField.getText());
+                    statement.setString(11, profesionField.getText());
+                    statement.setDate(12, java.sql.Date.valueOf(fechaNacimientoPicker.getValue()));
+                    statement.setInt(13, departamentoMap.get(departamentoChoiceBox.getValue()));
+                    statement.setInt(14, puestoMap.get(puestoChoiceBox.getValue()));
+                    statement.setInt(15, estatusMap.get(estatusChoiceBox.getValue()));
+                    statement.setInt(16, empleadoId);
+
+                    int rowsAffected = statement.executeUpdate();
+                    if (rowsAffected > 0) {
+                        // Mostrar popup de éxito
+                        Alert exitoAlert = new Alert(Alert.AlertType.INFORMATION);
+                        exitoAlert.setTitle("Cambios guardados");
+                        exitoAlert.setHeaderText(null);
+                        exitoAlert.setContentText("Los cambios fueron guardados exitosamente.");
+                        exitoAlert.showAndWait();
+
+                        // Actualizar los datos originales con los nuevos valores
+                        guardarDatosOriginales();
+                        // Redirigir a la vista de gestión de empleados utilizando el MainController
+
+                        mainController.showRegistroSucursal();
+                    } else {
+                        mostrarError("No se pudo actualizar el registro.");
+                    }
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             } else {
-                System.out.println("No se pudo actualizar el registro.");
+                // Si el usuario cancela la acción, no se guarda nada
+                System.out.println("El guardado fue cancelado por el usuario.");
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        });
     }
+
+    public void setMainController(MainController mainController) {
+        this.mainController = mainController;
+    }
+
+
+    // Método para verificar si hay cambios entre los valores actuales y los originales
+    private boolean hayCambios() {
+        return !nombreField.getText().equals(datosOriginales.get("nombre")) ||
+                !apellidoPaternoField.getText().equals(datosOriginales.get("apellidoPaterno")) ||
+                !apellidoMaternoField.getText().equals(datosOriginales.get("apellidoMaterno")) ||
+                !paisField.getText().equals(datosOriginales.get("pais")) ||
+                !ciudadField.getText().equals(datosOriginales.get("ciudad")) ||
+                !ladaField.getText().equals(datosOriginales.get("lada")) ||
+                !telefonoField.getText().equals(datosOriginales.get("telefono")) ||
+                !emailField.getText().equals(datosOriginales.get("email")) ||
+                !rfcField.getText().equals(datosOriginales.get("rfc")) ||
+                !curpField.getText().equals(datosOriginales.get("curp")) ||
+                !profesionField.getText().equals(datosOriginales.get("profesion")) ||
+                !fechaNacimientoPicker.getValue().equals(datosOriginales.get("fechaNacimiento")) ||
+                !departamentoChoiceBox.getValue().equals(datosOriginales.get("departamento")) ||
+                !puestoChoiceBox.getValue().equals(datosOriginales.get("puesto")) ||
+                !estatusChoiceBox.getValue().equals(datosOriginales.get("estatus"));
+    }
+
 }
