@@ -3,23 +3,34 @@ package Usuarios;
 public class Usuario {
     private int id;
     private String nombres;
-    private String apellidoPaterno;
-    private String apellidoMaterno;
-    private String correoElectronico;
+    private String correo;
+    private String tipoUsuario;  // "Empleado", "Supervisor", "Lider"
 
-    // Constructor
-    public Usuario(int id, String nombres, String apellidoPaterno, String apellidoMaterno, String correoElectronico) {
+    public Usuario(int id, String nombre, String correo, String tipoUsuario) {
         this.id = id;
-        this.nombres = nombres;
-        this.apellidoPaterno = apellidoPaterno;
-        this.apellidoMaterno = apellidoMaterno;
-        this.correoElectronico = correoElectronico;
+        this.nombres = nombre;
+        this.correo = correo;
+        this.tipoUsuario = tipoUsuario;
     }
 
-    // Getters y Setters
-    public int getId() { return id; }
-    public String getNombres() { return nombres; }
-    public String getApellidoPaterno() { return apellidoPaterno; }
-    public String getApellidoMaterno() { return apellidoMaterno; }
-    public String getCorreoElectronico() { return correoElectronico; }
+    public int getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombres;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public String getTipoUsuario() {
+        return tipoUsuario;
+    }
+
+    // Este método puede ser sobrescrito por las subclases si es necesario
+    public boolean tienePermiso(String permiso) {
+        return false; // Usuario base no tiene permisos especiales
+    }
 }

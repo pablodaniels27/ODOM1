@@ -1,31 +1,29 @@
 package Usuarios;
 
+import DAO.UsuariosDAO;
 import controllers.DatabaseConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Set;
 
-public class Supervisor extends Empleado {
-    // Constructor
-    public Supervisor(int id, String nombres, String apellidoPaterno, String apellidoMaterno, String correoElectronico, String departamento) {
-        super(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico, departamento);
+public class Supervisor extends Usuario {
+    private UsuariosDAO usuariosDAO;
+
+    public Supervisor(int id, String nombre, String correo, UsuariosDAO usuariosDAO) {
+        super(id, nombre, correo, "Supervisor");
+        this.usuariosDAO = usuariosDAO;
     }
 
-    // Funcionalidades de un Supervisor
-    public void gestionarEmpleados() {
-        System.out.println("Supervisor puede gestionar empleados: aprobar asistencias, justificar faltas, etc.");
+    @Override
+    public boolean tienePermiso(String permiso) {
+        // Carga los permisos desde la base de datos usando UsuariosDAO
+        Permisos permisos = usuariosDAO.cargarPermisos(getId());
+        return permisos.tienePermiso(permiso);
     }
 
-    // Restricciones
-    public void accesoRestringidoALider() {
-        System.out.println("No puede realizar tareas de líder como asignar supervisores.");
-    }
-
-
-    // Método para obtener el ID del supervisor actual
-    // Obtener el ID de un supervisor específico desde la base de datos
     public static int getCurrentSupervisorId() {
         // Hacer la consulta directamente para obtener un supervisor de la base de datos
         try (Connection connection = DatabaseConnection.getConnection()) {
@@ -59,9 +57,4 @@ public class Supervisor extends Empleado {
             throw new RuntimeException("Error al obtener el ID del supervisor.", e);
         }
     }
-
 }
-
-
-
-
