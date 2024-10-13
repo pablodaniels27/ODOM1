@@ -36,6 +36,10 @@ public class GraficosController {
         // Crear el gráfico de barras
         BarChart<String, Number> barChart = configurarEjesYGrafico(departamentoSeleccionado);
 
+        // Vincular el tamaño del gráfico al tamaño del Pane
+        barChart.prefWidthProperty().bind(chartPane.widthProperty());
+        barChart.prefHeightProperty().bind(chartPane.heightProperty());
+
         // Aplicar el estilo CSS
         aplicarEstiloCSS(barChart);
 
@@ -51,6 +55,7 @@ public class GraficosController {
         // Finalmente, añadir el gráfico al Pane
         chartPane.getChildren().add(barChart);
     }
+
 
     private BarChart<String, Number> configurarEjesYGrafico(String departamentoSeleccionado) {
         // Crear los ejes del gráfico
