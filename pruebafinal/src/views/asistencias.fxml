@@ -8,6 +8,7 @@
 
 <VBox xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.asistenciasController" alignment="CENTER" spacing="20" style="-fx-padding: 20; -fx-background-color: #F5F5F5; -fx-font-family: 'Arial';">
 
+
     <!-- Título -->
     <Label text="Registro de entrada/salida" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #333;" />
 

@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="443.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx/fxml/1">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -17,186 +17,58 @@
             <center>
                 <ScrollPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
                     <content>
-                        <GridPane alignment="TOP_LEFT" hgap="10" style="-fx-padding: 10;" vgap="10">
-                            <columnConstraints>
-                                <ColumnConstraints halignment="LEFT" />
-                                <ColumnConstraints halignment="CENTER" minWidth="55.0" prefWidth="250.0" />
-                                <ColumnConstraints halignment="CENTER" minWidth="61.0" prefWidth="250.0" />
-                                <ColumnConstraints halignment="CENTER" minWidth="69.0" prefWidth="250.0" />
-                            </columnConstraints>
+                        <Accordion prefHeight="256.0" prefWidth="658.0">
+                            <panes>
+                                <!-- TitledPane 1: Registro -->
+                                <TitledPane animated="false" text="Registro">
+                                    <content>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                            <children>
+                                                <VBox alignment="CENTER" spacing="10">
+                                                    <children>
+                                                        <CheckBox text="Si el supervisor puede registrar más empleados" />
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </AnchorPane>
+                                    </content>
+                                </TitledPane>
 
-                            <!-- Encabezado de Roles -->
-                            <Label prefHeight="25.0" prefWidth="284.0" style="-fx-font-weight: bold; -fx-font-size: 16px;" text="Derechos" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                            <Label prefHeight="17.0" style="-fx-font-weight: bold;" text="Líder" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                            <Label prefHeight="17.0" prefWidth="172.0" style="-fx-font-weight: bold;" text="Supervisor" GridPane.columnIndex="2" GridPane.rowIndex="0" />
-                            <Label prefHeight="17.0" prefWidth="77.0" style="-fx-font-weight: bold;" text="Empleado" GridPane.columnIndex="3" GridPane.rowIndex="0" />
+                                <!-- TitledPane 2: Gestión de empleados -->
+                                <TitledPane animated="false" text="Gestión de empleados">
+                                    <content>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                            <children>
+                                                <VBox alignment="CENTER" spacing="10">
+                                                    <children>
+                                                        <CheckBox text="Si el supervisor puede editar empleados" />
+                                                        <CheckBox text="Si el supervisor puede editar la huella" />
+                                                        <CheckBox text="Si el supervisor puede cambiar un Estatus al empleado" />
+                                                        <CheckBox text="Si el supervisor puede dar de baja empleados" />
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </AnchorPane>
+                                    </content>
+                                </TitledPane>
 
-                            <!-- Filas de Permisos -->
-                            <Label text="1: Ver inicio" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="1" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="1" />
-
-                            <Label text="2: Interactuar con inicio" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="2" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="2" />
-
-                            <Label text="3: Ver registro" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="3" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="3" />
-
-                            <Label text="4: Interactuar registro" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="4" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="4" />
-
-                            <Label text="5: Ver gestión" GridPane.columnIndex="0" GridPane.rowIndex="5" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="5" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="5" />
-
-                            <Label text="6: Interactuar gestión" GridPane.columnIndex="0" GridPane.rowIndex="6" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="6" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="6" />
-
-                            <Label text="7: Ver monitoreo" GridPane.columnIndex="0" GridPane.rowIndex="7" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="7" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="7" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="7" />
-
-                            <Label text="8: Interactuar monitoreo" GridPane.columnIndex="0" GridPane.rowIndex="8" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="8" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="8" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="8" />
-
-                            <Label text="9: Ver permisos" GridPane.columnIndex="0" GridPane.rowIndex="9" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="9" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="9" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="9" />
-
-                            <Label text="10: Interactuar permisos" GridPane.columnIndex="0" GridPane.rowIndex="10" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="10" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="10" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="10" />
-
-                            <Label text="11: Ver auditoría" GridPane.columnIndex="0" GridPane.rowIndex="11" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="11" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="11" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="11" />
-
-                            <Label text="12: Interactuar auditoría" GridPane.columnIndex="0" GridPane.rowIndex="12" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="12" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="12" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="12" />
-
-                            <Label text="13: Ver configuración" GridPane.columnIndex="0" GridPane.rowIndex="13" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="13" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="13" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="13" />
-
-                            <Label text="14: Interactuar configuración" GridPane.columnIndex="0" GridPane.rowIndex="14" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="14" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="14" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="14" />
-
-                            <!-- Más filas de permisos hasta el número 26 -->
-                            <!-- Para cada permiso adicional, sigue este patrón -->
-                            <Label text="15: Ver ayuda" GridPane.columnIndex="0" GridPane.rowIndex="15" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="15" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="15" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="15" />
-
-                            <Label text="16: interactuar ayuda" GridPane.columnIndex="0" GridPane.rowIndex="16" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="16" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="16" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="16" />
-
-                            <!-- Continúa hasta el permiso 26 -->
-
-                            <Label text="17: Registrar Líder" GridPane.columnIndex="0" GridPane.rowIndex="17" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="17" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="17" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="17" />
-
-                            <Label text="18: Registrar Supervisor" GridPane.columnIndex="0" GridPane.rowIndex="18" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="18" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="18" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="18" />
-
-                            <Label text="19: Registrar Empleado" GridPane.columnIndex="0" GridPane.rowIndex="19" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="19" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="19" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="19" />
-
-                            <Label text="20: Asignar departamentos" GridPane.columnIndex="0" GridPane.rowIndex="20" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="20" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="20" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="20" />
-
-                            <Label text="21: Asignar departamento administración" GridPane.columnIndex="0" GridPane.rowIndex="21" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="21" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="21" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="21" />
-
-                            <Label text="22: Asignar departamento construcción" GridPane.columnIndex="0" GridPane.rowIndex="22" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="22" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="22" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="22" />
-
-                            <Label text="23: Asignar departamento terminal" GridPane.columnIndex="0" GridPane.rowIndex="23" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="23" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="23" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="23" />
-
-                            <Label text="24: Editar empleado completo" GridPane.columnIndex="0" GridPane.rowIndex="24" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="24" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="24" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="24" />
-
-                            <Label text="25: Editar empleado limitado" GridPane.columnIndex="0" GridPane.rowIndex="25" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="25" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="25" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="25" />
-
-                            <Label text="26: Ver todos los empleados monitoreo" GridPane.columnIndex="0" GridPane.rowIndex="26" />
-                            <CheckBox GridPane.columnIndex="1" GridPane.rowIndex="26" />
-                            <CheckBox GridPane.columnIndex="2" GridPane.rowIndex="26" />
-                            <CheckBox GridPane.columnIndex="3" GridPane.rowIndex="26" />
-
-
-                     <rowConstraints>
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                        <RowConstraints />
-                     </rowConstraints>
-                        </GridPane>
+                                <!-- TitledPane 3: Monitoreo -->
+                                <TitledPane animated="false" text="Monitoreo">
+                                    <content>
+                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                            <children>
+                                                <VBox alignment="CENTER" spacing="10">
+                                                    <children>
+                                                        <CheckBox text="Si puede editar su tipo de asistencia" />
+                                                        <CheckBox text="Si el supervisor puede editar la nota" />
+                                                    </children>
+                                                </VBox>
+                                            </children>
+                                        </AnchorPane>
+                                    </content>
+                                </TitledPane>
+                            </panes>
+                        </Accordion>
                     </content>
                 </ScrollPane>
             </center>
