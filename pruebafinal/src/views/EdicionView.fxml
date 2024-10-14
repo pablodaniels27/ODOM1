@@ -90,11 +90,11 @@
                             <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="219.0" text="Puesto" textAlignment="RIGHT" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="7" />
                             <ChoiceBox fx:id="puestoChoiceBox" minWidth="150" prefWidth="200" style="-fx-font-size: 12px;" GridPane.columnIndex="3" GridPane.rowIndex="7" />
 
-                            <Label GridPane.columnIndex="4" GridPane.rowIndex="4" />
-                     <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="222.0" text="Estatus" GridPane.columnIndex="4" GridPane.rowIndex="7" />
-                     <ChoiceBox fx:id="estatusChoiceBox" prefWidth="150.0" style="-fx-font-size: 12px;" GridPane.columnIndex="5" GridPane.rowIndex="7" />
-                            <!-- Imagen de la huella dactilar -->
-                            <ImageView fx:id="fingerprintImageView" fitHeight="115.0" fitWidth="450.0" preserveRatio="true" GridPane.columnIndex="4" GridPane.rowIndex="7" />
+                            <Label alignment="TOP_RIGHT" prefHeight="17.0" prefWidth="222.0" text="Estatus" GridPane.columnIndex="4" GridPane.rowIndex="7" />
+                            <ChoiceBox fx:id="estatusChoiceBox" prefWidth="150.0" style="-fx-font-size: 12px;" GridPane.columnIndex="5" GridPane.rowIndex="7" />
+
+                            <!-- Imagen de la huella dactilar a la derecha del estatus -->
+                            <ImageView fx:id="fingerprintImageView" fitHeight="150.0" fitWidth="150.0" preserveRatio="true" GridPane.columnIndex="6" GridPane.rowIndex="7" />
                         </GridPane>
                     </VBox>
                 </content>

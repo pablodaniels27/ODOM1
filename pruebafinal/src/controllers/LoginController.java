@@ -12,13 +12,7 @@ import javafx.stage.Stage;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import Services.CacheService;
 
-import java.sql.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
 
 public class LoginController {
 
@@ -28,8 +22,6 @@ public class LoginController {
     @FXML
     private PasswordField passwordField;
 
-    @FXML
-    private TextField passwordVisibleField;
     @FXML
     private ImageView backgroundImage;
     @FXML
@@ -66,7 +58,7 @@ public class LoginController {
 
         if (username.equals("") && password.equals("")) {
             // Después de la validación del login, cargamos los datos al caché
-            loadEmployeeDataToCache();
+
             showMainView();
         } else {
             // Manejar error de login
@@ -90,48 +82,6 @@ public class LoginController {
         }
     }
 
-    // Método que carga los datos de los empleados en el caché
-    private void loadEmployeeDataToCache() {
-        if (CacheService.isCacheEmpty()) {
-            try (Connection connection = DatabaseConnection.getConnection()) {
-                String query = "SELECT id, nombres, apellido_paterno, apellido_materno, profesion FROM empleados";
-                Statement statement = connection.createStatement();
-                ResultSet resultSet = statement.executeQuery(query);
-
-                List<Map<String, Object>> employees = new ArrayList<>();
-                while (resultSet.next()) {
-                    Map<String, Object> employeeData = new HashMap<>();
-                    employeeData.put("id", resultSet.getInt("id"));
-                    employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " + resultSet.getString("apellido_paterno") + " " + resultSet.getString("apellido_materno"));
-                    employeeData.put("profesion", resultSet.getString("profesion"));
-                    employees.add(employeeData);
-                }
-
-                // Guardar los datos en el caché
-                CacheService.loadEmployeesIntoCache(employees);
-
-                System.out.println("Datos cargados en el caché");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("Datos obtenidos del caché");
-        }
-    }
-
-    @FXML
-    private void showPassword() {
-        passwordVisibleField.setText(passwordField.getText());
-        passwordVisibleField.setVisible(true);
-        passwordField.setVisible(false);
-    }
-
-    @FXML
-    private void hidePassword() {
-        passwordField.setText(passwordVisibleField.getText());
-        passwordField.setVisible(true);
-        passwordVisibleField.setVisible(false);
-    }
     @FXML
     private void handleBackToPreLoginAction() {
         try {

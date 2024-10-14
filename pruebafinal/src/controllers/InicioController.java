@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -12,16 +13,14 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class InicioController {
 
@@ -33,9 +32,6 @@ public class InicioController {
 
     @FXML
     private VBox employeeListContainer;
-
-    @FXML
-    private Label employeeNameLabel;
 
     @FXML
     private Label visitsInfoLabel;
@@ -56,19 +52,39 @@ public class InicioController {
     private TextField searchBar;
 
     @FXML
-    private Label mondayEntryLabel, mondayExitLabel;
+    private Label mondayEntryLabel;
     @FXML
-    private Label tuesdayEntryLabel, tuesdayExitLabel;
+    private Label mondayExitLabel;
     @FXML
-    private Label wednesdayEntryLabel, wednesdayExitLabel;
+    private Label tuesdayEntryLabel;
     @FXML
-    private Label thursdayEntryLabel, thursdayExitLabel;
+    private Label tuesdayExitLabel;
+
     @FXML
-    private Label fridayEntryLabel, fridayExitLabel;
+    private Label wednesdayEntryLabel;
     @FXML
-    private Label saturdayEntryLabel, saturdayExitLabel;
+    private Label wednesdayExitLabel;
+
     @FXML
-    private Label sundayEntryLabel, sundayExitLabel;
+    private Label thursdayEntryLabel;
+    @FXML
+    private Label thursdayExitLabel;
+
+    @FXML
+    private Label fridayEntryLabel;
+    @FXML
+    private Label fridayExitLabel;
+
+    @FXML
+    private Label saturdayEntryLabel;
+    @FXML
+    private Label saturdayExitLabel;
+
+    @FXML
+    private Label sundayEntryLabel;
+    @FXML
+    private Label sundayExitLabel;
+
 
     private List<Employee> employees;
     private YearMonth currentYearMonth;
@@ -212,36 +228,47 @@ public class InicioController {
 
     // Método para manejar la selección de una semana en el calendario
     private void handleWeekSelection(LocalDate selectedDate) {
-        // Limpiar la selección previa
-        clearWeekSelection();
+        clearWeekSelection(); // Limpiar la selección previa
 
-        // Encontrar el lunes de la semana seleccionada
-        LocalDate startOfWeek = selectedDate.minusDays(selectedDate.getDayOfWeek().getValue() - 1);
+        LocalDate startOfWeek = calcularInicioDeSemana(selectedDate); // Calcular el lunes de la semana
+        resaltarDiasDeLaSemana(startOfWeek); // Seleccionar y resaltar los días de la semana
+        loadWeekAttendance(startOfWeek); // Cargar asistencias de la semana seleccionada
+    }
 
-        // Seleccionar toda la semana (de lunes a domingo)
+    private LocalDate calcularInicioDeSemana(LocalDate selectedDate) {
+        return selectedDate.minusDays((long) (selectedDate.getDayOfWeek().getValue() - 1));
+
+    }
+
+    private void resaltarDiasDeLaSemana(LocalDate startOfWeek) {
         for (int i = 0; i < 7; i++) {
             LocalDate currentDay = startOfWeek.plusDays(i);
             if (currentDay.getMonth().equals(currentYearMonth.getMonth())) {
-                // Buscar y resaltar el Label correspondiente al día seleccionado
-                for (Node node : calendarGrid.getChildren()) {
-                    if (GridPane.getRowIndex(node) != null && GridPane.getColumnIndex(node) != null) {
-                        String text = ((Label) node).getText();
-                        try {
-                            int day = Integer.parseInt(text);
-                            if (currentDay.getDayOfMonth() == day) {
-                                node.getStyleClass().add("selected-day");
-                            }
-                        } catch (NumberFormatException e) {
-                            // Ignorar, ya que este nodo no es un número (es un día de la semana)
-                        }
+                resaltarDiaSeleccionado(currentDay);
+            }
+        }
+    }
+
+    private void resaltarDiaSeleccionado(LocalDate currentDay) {
+        for (Node node : calendarGrid.getChildren()) {
+            if (esNodoValido(node)) {
+                String text = ((Label) node).getText();
+                try {
+                    int day = Integer.parseInt(text);
+                    if (currentDay.getDayOfMonth() == day) {
+                        node.getStyleClass().add("selected-day");
                     }
+                } catch (NumberFormatException e) {
+                    // Ignorar nodos que no representan días numéricos
                 }
             }
         }
-
-        // Cargar las asistencias de la semana seleccionada
-        loadWeekAttendance(startOfWeek);
     }
+
+    private boolean esNodoValido(Node node) {
+        return GridPane.getRowIndex(node) != null && GridPane.getColumnIndex(node) != null;
+    }
+
 
     private void clearWeekSelection() {
         // Limpiar cualquier selección previa
@@ -256,63 +283,45 @@ public class InicioController {
     private void loadWeekAttendance(LocalDate startOfWeek) {
         if (selectedEmployee == null) return;
 
-        String query = "SELECT dia.fecha, es.hora_entrada, es.hora_salida " +
-                "FROM entradas_salidas es " +
-                "JOIN dias dia ON es.dia_id = dia.id " +
-                "WHERE es.empleado_id = ? AND dia.fecha BETWEEN ? AND ?";
+        try {
+            // Obtener los datos de asistencia semanal del empleado desde el DAO
+            List<Map<String, Object>> attendanceRecords = BaseDAO.obtenerAsistenciaSemanal(
+                    selectedEmployee.id(), startOfWeek, startOfWeek.plusDays(6));
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            clearAttendanceLabels(); // Limpiar los labels antes de cargar los nuevos datos
 
-            preparedStatement.setInt(1, selectedEmployee.id()); // Suponiendo que tienes el ID del empleado en la clase Employee
-            preparedStatement.setDate(2, java.sql.Date.valueOf(startOfWeek));
-            preparedStatement.setDate(3, java.sql.Date.valueOf(startOfWeek.plusDays(6)));
+            // Procesar los registros de asistencia y actualizar los labels correspondientes
+            for (Map<String, Object> record : attendanceRecords) {
+                LocalDate date = ((Date) record.get("fecha")).toLocalDate();
+                String horaEntrada = (String) record.get("hora_entrada");
+                String horaSalida = (String) record.get("hora_salida");
 
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            clearAttendanceLabels();
-
-            while (resultSet.next()) {
-                LocalDate date = resultSet.getDate("fecha").toLocalDate();
-                String horaEntrada = resultSet.getString("hora_entrada");
-                String horaSalida = resultSet.getString("hora_salida");
-
-                // Asignar las horas de entrada y salida a los labels correspondientes
-                switch (date.getDayOfWeek()) {
-                    case MONDAY -> {
-                        mondayEntryLabel.setText(horaEntrada != null ? horaEntrada : "N/A");
-                        mondayExitLabel.setText(horaSalida != null ? horaSalida : "N/A");
-                    }
-                    case TUESDAY -> {
-                        tuesdayEntryLabel.setText(horaEntrada != null ? horaEntrada : "N/A");
-                        tuesdayExitLabel.setText(horaSalida != null ? horaSalida : "N/A");
-                    }
-                    case WEDNESDAY -> {
-                        wednesdayEntryLabel.setText(horaEntrada != null ? horaEntrada : "N/A");
-                        wednesdayExitLabel.setText(horaSalida != null ? horaSalida : "N/A");
-                    }
-                    case THURSDAY -> {
-                        thursdayEntryLabel.setText(horaEntrada != null ? horaEntrada : "N/A");
-                        thursdayExitLabel.setText(horaSalida != null ? horaSalida : "N/A");
-                    }
-                    case FRIDAY -> {
-                        fridayEntryLabel.setText(horaEntrada != null ? horaEntrada : "N/A");
-                        fridayExitLabel.setText(horaSalida != null ? horaSalida : "N/A");
-                    }
-                    case SATURDAY -> {
-                        saturdayEntryLabel.setText(horaEntrada != null ? horaEntrada : "N/A");
-                        saturdayExitLabel.setText(horaSalida != null ? horaSalida : "N/A");
-                    }
-                    case SUNDAY -> {
-                        sundayEntryLabel.setText(horaEntrada != null ? horaEntrada : "N/A");
-                        sundayExitLabel.setText(horaSalida != null ? horaSalida : "N/A");
-                    }
-                }
+                actualizarLabelsPorDia(date, horaEntrada, horaSalida);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+    private void actualizarLabelsPorDia(LocalDate date, String horaEntrada, String horaSalida) {
+        switch (date.getDayOfWeek()) {
+            case MONDAY -> actualizarDia(mondayEntryLabel, mondayExitLabel, horaEntrada, horaSalida);
+            case TUESDAY -> actualizarDia(tuesdayEntryLabel, tuesdayExitLabel, horaEntrada, horaSalida);
+            case WEDNESDAY -> actualizarDia(wednesdayEntryLabel, wednesdayExitLabel, horaEntrada, horaSalida);
+            case THURSDAY -> actualizarDia(thursdayEntryLabel, thursdayExitLabel, horaEntrada, horaSalida);
+            case FRIDAY -> actualizarDia(fridayEntryLabel, fridayExitLabel, horaEntrada, horaSalida);
+            case SATURDAY -> actualizarDia(saturdayEntryLabel, saturdayExitLabel, horaEntrada, horaSalida);
+            case SUNDAY -> actualizarDia(sundayEntryLabel, sundayExitLabel, horaEntrada, horaSalida);
+        }
+    }
+
+    private void actualizarDia(Label entryLabel, Label exitLabel, String horaEntrada, String horaSalida) {
+        entryLabel.setText(horaEntrada != null ? horaEntrada : "N/A");
+        exitLabel.setText(horaSalida != null ? horaSalida : "N/A");
+    }
+
+
 
     // Limpiar los labels de asistencias
     private void clearAttendanceLabels() {
@@ -334,36 +343,15 @@ public class InicioController {
 
     // Método para obtener los empleados desde la base de datos
     private List<Employee> getEmployeesFromDatabase(String filter) {
-        List<Employee> employees = new ArrayList<>();
-        String query = "SELECT id, CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno) AS full_name, profesion FROM empleados";
-
-        // Si hay un filtro, añadir la condición a la consulta SQL
-        if (!filter.isEmpty()) {
-            query += " WHERE CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno) LIKE ?";
-        }
-
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
-
-            if (!filter.isEmpty()) {
-                preparedStatement.setString(1, "%" + filter + "%");
-            }
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String fullName = resultSet.getString("full_name");
-                String profession = resultSet.getString("profesion");
-
-                employees.add(new Employee(id, fullName, profession));
-            }
+        try {
+            // Obtener la lista de empleados desde el DAO
+            return BaseDAO.obtenerEmpleados(filter);
         } catch (SQLException e) {
             e.printStackTrace();
+            return new ArrayList<>();
         }
-
-        return employees;
     }
+
 
     // Clase para representar un empleado
     public record Employee(int id, String fullName, String profession) {

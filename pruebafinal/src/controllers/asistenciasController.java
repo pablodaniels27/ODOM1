@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -19,7 +20,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class asistenciasController {
 
@@ -80,20 +83,15 @@ public class asistenciasController {
 
     private void loadUserRecords() {
         LocalDate today = LocalDate.now();
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT hora_entrada, hora_salida FROM entradas_salidas " +
-                    "JOIN dias ON entradas_salidas.dia_id = dias.id " +
-                    "WHERE entradas_salidas.empleado_id = ? AND dias.fecha = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, empleadoId);
-            statement.setDate(2, java.sql.Date.valueOf(today));
-            ResultSet resultSet = statement.executeQuery();
+        try {
+            Optional<Map<String, LocalTime>> records = BaseDAO.obtenerRegistrosDelDia(empleadoId, today);
 
-            if (resultSet.next()) {
-                LocalTime entrada = resultSet.getTime("hora_entrada").toLocalTime();
-                LocalTime salida = resultSet.getTime("hora_salida") != null ? resultSet.getTime("hora_salida").toLocalTime() : null;
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
 
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
+            if (records.isPresent()) {
+                Map<String, LocalTime> recordData = records.get();
+                LocalTime entrada = recordData.get("hora_entrada");
+                LocalTime salida = recordData.get("hora_salida");
 
                 entryTimeLabel.setText("Te registraste a las: " + entrada.format(timeFormatter));
 
@@ -111,6 +109,7 @@ public class asistenciasController {
         }
     }
 
+
     private void loadFingerprintImage() {
         Image fingerprintImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/Huella.jpg")));
         fingerprintImageView.setImage(fingerprintImage);
@@ -120,24 +119,18 @@ public class asistenciasController {
     private void registerEntry() {
         LocalDate today = LocalDate.now();
         LocalTime now = LocalTime.now();
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            int diaId = getDiaId(connection, today);
 
-            // Insertar entrada en la base de datos
-            String sql = "INSERT INTO entradas_salidas (empleado_id, dia_id, hora_entrada, tipo_asistencia_id) " +
-                    "VALUES (?, ?, ?, 1)";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, empleadoId);
-            statement.setInt(2, diaId);
-            statement.setTime(3, java.sql.Time.valueOf(now));
-            statement.executeUpdate();
+        try {
+            // Insertar entrada en la base de datos usando el DAO
+            BaseDAO.insertarEntradaAsistencia(empleadoId, today, now);
 
             // Formato 24 horas para la hora registrada
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
             statusLabel.setText("Entrada registrada: " + now.format(timeFormatter));
 
-            loadUserRecords();  // Recargar los registros después de insertar
-            checkButtonStatus();  // Actualizar el estado de los botones
+            // Recargar los registros y actualizar el estado de los botones
+            loadUserRecords();
+            checkButtonStatus();
         } catch (SQLException e) {
             statusLabel.setText("Error al registrar entrada: " + e.getMessage());
         }
@@ -147,24 +140,18 @@ public class asistenciasController {
     private void registerExit() {
         LocalTime now = LocalTime.now();
         LocalDate today = LocalDate.now();
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            int diaId = getDiaId(connection, today);
 
-            // Actualizar salida en la base de datos
-            String sql = "UPDATE entradas_salidas SET hora_salida = ?, tipo_salida_id = 4 WHERE empleado_id = ? " +
-                    "AND dia_id = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setTime(1, java.sql.Time.valueOf(now));
-            statement.setInt(2, empleadoId);
-            statement.setInt(3, diaId);
-            statement.executeUpdate();
+        try {
+            // Actualizar la salida en la base de datos usando el DAO
+            BaseDAO.actualizarSalidaAsistencia(empleadoId, today, now);
 
             // Formato 24 horas para la hora registrada
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
             statusLabel.setText("Salida registrada: " + now.format(timeFormatter));
 
-            loadUserRecords();  // Recargar los registros después de actualizar
-            checkButtonStatus();  // Actualizar el estado de los botones
+            // Recargar los registros y actualizar el estado de los botones
+            loadUserRecords();
+            checkButtonStatus();
         } catch (SQLException e) {
             statusLabel.setText("Error al registrar salida: " + e.getMessage());
         }
@@ -172,18 +159,13 @@ public class asistenciasController {
 
     private void checkButtonStatus() {
         LocalDate today = LocalDate.now();
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String sql = "SELECT hora_entrada, hora_salida FROM entradas_salidas " +
-                    "JOIN dias ON entradas_salidas.dia_id = dias.id " +
-                    "WHERE entradas_salidas.empleado_id = ? AND dias.fecha = ?";
-            PreparedStatement statement = connection.prepareStatement(sql);
-            statement.setInt(1, empleadoId);
-            statement.setDate(2, java.sql.Date.valueOf(today));
-            ResultSet resultSet = statement.executeQuery();
+        try {
+            // Llamar al DAO para verificar el estado de la entrada y salida del día actual
+            Optional<Map<String, LocalTime>> horarios = BaseDAO.obtenerHorariosDeAsistencia(empleadoId, today);
 
-            if (resultSet.next()) {
-                LocalTime entrada = resultSet.getTime("hora_entrada").toLocalTime();
-                LocalTime salida = resultSet.getTime("hora_salida") != null ? resultSet.getTime("hora_salida").toLocalTime() : null;
+            if (horarios.isPresent()) {
+                LocalTime entrada = horarios.get().get("entrada");
+                LocalTime salida = horarios.get().get("salida");
 
                 registerEntryButton.setDisable(entrada != null);  // Desactivar botón si ya se registró entrada
                 registerExitButton.setDisable(salida != null || entrada == null);  // Desactivar botón si ya se registró salida o no hay entrada
@@ -195,27 +177,5 @@ public class asistenciasController {
             e.printStackTrace();
         }
     }
-    private int getDiaId(Connection connection, LocalDate date) throws SQLException {
-        String selectDiaSql = "SELECT id FROM dias WHERE fecha = ?";
-        PreparedStatement selectDiaStatement = connection.prepareStatement(selectDiaSql);
-        selectDiaStatement.setDate(1, java.sql.Date.valueOf(date));
-        ResultSet resultSet = selectDiaStatement.executeQuery();
 
-        if (resultSet.next()) {
-            return resultSet.getInt("id");
-        } else {
-            // Insertar un nuevo registro en la tabla dias si no existe
-            String insertDiaSql = "INSERT INTO dias (fecha) VALUES (?)";
-            PreparedStatement insertDiaStatement = connection.prepareStatement(insertDiaSql, PreparedStatement.RETURN_GENERATED_KEYS);
-            insertDiaStatement.setDate(1, java.sql.Date.valueOf(date));
-            insertDiaStatement.executeUpdate();
-
-            ResultSet generatedKeys = insertDiaStatement.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                return generatedKeys.getInt(1);
-            } else {
-                throw new SQLException("Failed to insert or retrieve dia_id.");
-            }
-        }
-    }
 }

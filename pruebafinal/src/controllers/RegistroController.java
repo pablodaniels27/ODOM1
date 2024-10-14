@@ -1,5 +1,6 @@
 package controllers;
 
+import DAO.BaseDAO;
 import Lector.EnrollmentFormController;
 import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.event.ActionEvent;
@@ -17,7 +18,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,87 +50,52 @@ public class RegistroController {
     private TextField profesionField;
 
     @FXML
+    private ImageView fingerprintImageView;
+
+
+    @FXML
     private ChoiceBox<String> departamentoChoiceBox;
     @FXML
     private ChoiceBox<String> puestoChoiceBox;
 
-    @FXML
-    private ImageView fingerprintImageView;
-
     private DPFPTemplate template; // Variable para almacenar el template de la huella digital
+    private byte[] fingerprintImageBytes; // Variable para almacenar la imagen de la huella en bytes
 
     @FXML
     private void initialize() {
         cargarDepartamentos();
         cargarPuestos();
-        configurarDatePicker();
     }
 
     public void setTemplate(DPFPTemplate template) {
         this.template = template;
     }
 
+    public void setFingerprintImageBytes(byte[] fingerprintImageBytes) {
+        this.fingerprintImageBytes = fingerprintImageBytes;
+    }
+
     private void cargarDepartamentos() {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String query = "SELECT nombre FROM departamentos";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                departamentoChoiceBox.getItems().add(resultSet.getString("nombre"));
-            }
+        departamentoChoiceBox.getItems().clear(); // Limpiar los ítems previamente cargados
+        try {
+            List<String> departamentos = BaseDAO.obtenerDepartamentos();
+            departamentoChoiceBox.getItems().addAll(departamentos);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     private void cargarPuestos() {
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String query = "SELECT nombre FROM jerarquias";
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                puestoChoiceBox.getItems().add(resultSet.getString("nombre"));
-            }
+        puestoChoiceBox.getItems().clear(); // Limpiar los ítems previamente cargados
+        try {
+            List<String> puestos = BaseDAO.obtenerPuestos();
+            puestoChoiceBox.getItems().addAll(puestos);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    private void configurarDatePicker() {
-        LocalDate today = LocalDate.now();
-        LocalDate maxDate = today.minusYears(15); // Limitar a fechas anteriores a 15 años
-        LocalDate minDate = today.minusYears(100); // Limitar a fechas de hace 100 años
-
-        // Preconfigurar la fecha del DatePicker al mínimo valor disponible
-        fechaNacimientoPicker.setValue(maxDate);
-
-        // Fijar el enfoque en el DatePicker para que el calendario empiece en el borde más bajo
-        fechaNacimientoPicker.focusedProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                fechaNacimientoPicker.show();
-            }
-        });
-
-        fechaNacimientoPicker.setDayCellFactory(new Callback<DatePicker, DateCell>() {
-            @Override
-            public DateCell call(DatePicker param) {
-                return new DateCell() {
-                    @Override
-                    public void updateItem(LocalDate date, boolean empty) {
-                        super.updateItem(date, empty);
-                        if (date.isAfter(maxDate) || date.isBefore(minDate)) {
-                            setDisable(true); // Deshabilitar fechas fuera de rango
-                        }
-                    }
-                };
-            }
-        });
-    }
-
-    @FXML
-    public void updateFingerprintImage(javafx.scene.image.Image image) {
-        fingerprintImageView.setImage(image);
-    }
 
     @FXML
     private void enviarDatos() {
@@ -159,115 +125,29 @@ public class RegistroController {
         String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
         String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
 
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            // Obtener el ID del departamento
-            String departamentoQuery = "SELECT id FROM departamentos WHERE nombre = ?";
-            PreparedStatement departamentoStatement = connection.prepareStatement(departamentoQuery);
-            departamentoStatement.setString(1, departamentoSeleccionado);
-            ResultSet departamentoResult = departamentoStatement.executeQuery();
-            int departamentoId = 0;
-            if (departamentoResult.next()) {
-                departamentoId = departamentoResult.getInt("id");
-            }
+        try {
+            // Obtener el ID del departamento y el puesto
+            int departamentoId = BaseDAO.obtenerIdDepartamento(departamentoSeleccionado);
+            int jerarquiaId = BaseDAO.obtenerIdPuesto(puestoSeleccionado);
 
-            // Obtener el ID del puesto
-            String puestoQuery = "SELECT id FROM jerarquias WHERE nombre = ?";
-            PreparedStatement puestoStatement = connection.prepareStatement(puestoQuery);
-            puestoStatement.setString(1, puestoSeleccionado);
-            ResultSet puestoResult = puestoStatement.executeQuery();
-            int jerarquiaId = 0;
-            if (puestoResult.next()) {
-                jerarquiaId = puestoResult.getInt("id");
-            }
-
-            // Insertar los datos del empleado sin huella aún, incluyendo el estatus activo
-            String empleadoSql = "INSERT INTO empleados (nombres, apellido_materno, apellido_paterno, fecha_nacimiento, pais, ciudad, correo_electronico, lada, telefono, rfc, curp, profesion, departamento_id, jerarquia_id, estatus_id) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
-            PreparedStatement statement = connection.prepareStatement(empleadoSql, Statement.RETURN_GENERATED_KEYS);
-            statement.setString(1, nombre);
-            statement.setString(2, apellidoMaterno);
-            statement.setString(3, apellidoPaterno);
-            statement.setDate(4, fechaNacimiento);
-            statement.setString(5, pais);
-            statement.setString(6, ciudad);
-            statement.setString(7, email);
-            statement.setString(8, lada);
-            statement.setString(9, telefono);
-            statement.setString(10, rfc);
-            statement.setString(11, curp);
-            statement.setString(12, profesion);
-            statement.setInt(13, departamentoId);
-            statement.setInt(14, jerarquiaId);
-
-            int rowsAffected = statement.executeUpdate();
-
-            if (rowsAffected == 0) {
+            // Insertar empleado en la base de datos
+            int empleadoId = BaseDAO.insertarEmpleado(nombre, apellidoMaterno, apellidoPaterno, fechaNacimiento, pais, ciudad, email, lada, telefono, rfc, curp, profesion, departamentoId, jerarquiaId);
+            if (empleadoId == -1) {
                 throw new SQLException("No se pudo insertar el empleado, no se generaron filas.");
             }
 
-            // Obtener el ID del empleado recién insertado
-            ResultSet generatedKeys = statement.getGeneratedKeys();
-            int empleadoId = 0;
-            if (generatedKeys.next()) {
-                empleadoId = generatedKeys.getInt(1);
-            }
-
-            // Insertar la huella en la tabla 'huellas'
-            int huellaId = 0;
+            // Insertar la huella en la base de datos
             if (template != null) {
-                try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                     ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-
-                    oos.writeObject(template.serialize()); // Serializar el template
-                    oos.flush();
-                    byte[] serializedTemplate = bos.toByteArray();
-
-                    String huellaSql = "INSERT INTO huellas (empleado_id, huella) VALUES (?, ?)";
-                    PreparedStatement huellaStatement = connection.prepareStatement(huellaSql, Statement.RETURN_GENERATED_KEYS);
-                    huellaStatement.setInt(1, empleadoId);
-                    huellaStatement.setBytes(2, serializedTemplate);
-                    huellaStatement.executeUpdate();
-
-                    ResultSet huellaGeneratedKeys = huellaStatement.getGeneratedKeys();
-                    if (huellaGeneratedKeys.next()) {
-                        huellaId = huellaGeneratedKeys.getInt(1); // Obtener el ID generado de la huella
+                byte[] serializedTemplate = BaseDAO.serializarTemplate(template);
+                if (serializedTemplate != null) {
+                    int huellaId = BaseDAO.insertarHuella(empleadoId, serializedTemplate, fingerprintImageBytes);
+                    if (huellaId != -1) {
+                        BaseDAO.actualizarHuellaEmpleado(empleadoId, huellaId);
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return;  // Early return on serialization failure
                 }
-
-                // Actualizar el campo huella_id en la tabla empleados
-                String updateEmpleadoHuellaSQL = "UPDATE empleados SET huella = ? WHERE id = ?";
-                PreparedStatement updateEmpleadoHuellaStmt = connection.prepareStatement(updateEmpleadoHuellaSQL);
-                updateEmpleadoHuellaStmt.setInt(1, huellaId);
-                updateEmpleadoHuellaStmt.setInt(2, empleadoId);
-                updateEmpleadoHuellaStmt.executeUpdate();
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    public void handleIngresarHuellaButton(ActionEvent event) {
-        openEnrollmentForm();
-    }
-
-    private void openEnrollmentForm() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EnrollmentForm.fxml"));
-            Parent root = loader.load();
-
-            EnrollmentFormController controller = loader.getController();
-            controller.setRegistroController(this); // Pasar el controlador de Registro al de Enrollment
-
-            Stage stage = new Stage();
-            stage.setScene(new Scene(root));
-            stage.setTitle("Enrollment Form");
-            stage.show();
-        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -313,13 +193,7 @@ public class RegistroController {
         return true; // Validaciones exitosas
     }
 
-    private void mostrarError(String mensaje) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error de validación");
-        alert.setHeaderText(null);
-        alert.setContentText(mensaje);
-        alert.showAndWait();
-    }
+
 
     @FXML
     private void rellenarCampos() {
@@ -335,5 +209,40 @@ public class RegistroController {
         profesionField.setText("Ingeniero");
         departamentoChoiceBox.getSelectionModel().selectFirst();
         puestoChoiceBox.getSelectionModel().select(2);
+    }
+
+    @FXML
+    public void handleIngresarHuellaButton(ActionEvent event) {
+        openEnrollmentForm();
+    }
+
+    private void openEnrollmentForm() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EnrollmentForm.fxml"));
+            Parent root = loader.load();
+
+            EnrollmentFormController controller = loader.getController();
+            controller.setRegistroController(this);
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Enrollment Form");
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void updateFingerprintImage(javafx.scene.image.Image image) {
+        fingerprintImageView.setImage(image);
+    }
+
+    private void mostrarError(String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error de validación");
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
 }
