@@ -10,8 +10,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="javafx-swt" level="application" />
     <orderEntry type="library" exported="" name="caffeine-3.1.6" level="application" />
-    <orderEntry type="library" exported="" name="mysql-connector-j-9.0.0" level="application" />
-    <orderEntry type="library" exported="" name="digitalpersona" level="application" />
     <orderEntry type="library" exported="" name="jbcrypt-0.4" level="project" />
+    <orderEntry type="library" exported="" name="dpfpenrollment" level="application" />
+    <orderEntry type="library" exported="" name="mysql-connector-j-8.4.0" level="application" />
   </component>
 </module>
