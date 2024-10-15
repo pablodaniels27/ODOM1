@@ -5,9 +5,11 @@ import com.digitalpersona.onetouch.DPFPGlobal;
 import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -38,7 +40,7 @@ public class EdicionController {
     private ChoiceBox<String> departamentoChoiceBox, puestoChoiceBox, estatusChoiceBox;
 
     @FXML
-    private Button deshacerButton, guardarButton;
+    private Button deshacerButton, guardarButton, regresarButton;
 
     @FXML
     private ImageView fingerprintImageView;
@@ -60,6 +62,7 @@ public class EdicionController {
         // Vincular los botones a sus métodos
         deshacerButton.setOnAction(event -> deshacerCambios());
         guardarButton.setOnAction(event -> guardarCambios());
+        regresarButton.setOnAction(event -> regresarARegistroSucursal() );
     }
 
     private void cargarDepartamentos() {
@@ -344,6 +347,22 @@ public class EdicionController {
                 }
             }
         });
+    }
+
+    // Método para regresar a la vista de registro de sucursal
+    @FXML
+    private void regresarARegistroSucursal() {
+        try {
+            // Obtén el StackPane principal desde la escena actual
+            StackPane mainContent = (StackPane) regresarButton.getScene().lookup("#mainContent");
+
+            // Carga la vista de RegistroSucursal
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
+            mainContent.getChildren().clear(); // Limpia el contenido actual
+            mainContent.getChildren().add(loader.load()); // Carga la nueva vista
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Método para verificar si hay cambios entre los valores actuales y los originales

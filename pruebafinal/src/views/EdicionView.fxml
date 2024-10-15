@@ -14,6 +14,7 @@
                     <Button fx:id="guardarButton"  text="Guardar cambios" />
                     <Button fx:id="deshacerButton" text="Deshacer cambios" />
                     <Button fx:id="ingresarHuellaButton" prefHeight="0.0" prefWidth="291.0" text="Presionar para cambiar Huella" />
+                    <Button fx:id="regresarButton" text="Regresar" />
                 </HBox>
             </AnchorPane>
         </bottom>
