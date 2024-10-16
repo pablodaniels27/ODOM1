@@ -1,6 +1,9 @@
 package controllers;
 
 import DAO.BaseDAO;
+import Usuarios.SessionManager;
+import Usuarios.Supervisor;
+import Usuarios.Usuario;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -411,9 +414,18 @@ public class MonitoreoController {
                     // Actualizar el tipo de asistencia del empleado
                     BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
 
-                    // Registrar el cambio en los logs
-                    int supervisorId = getCurrentSupervisorId(); // Obtener el ID del supervisor actual
-                    BaseDAO.registrarCambioLog(supervisorId, "Cambio de tipo de asistencia", empleadoId, notas);
+                    // Obtener el usuario actual desde SessionManager
+                    Usuario currentUser = SessionManager.getCurrentUser();
+
+                    // Verificar si el usuario es un supervisor antes de registrar el cambio en los logs
+                    if (currentUser instanceof Supervisor) {
+                        int supervisorId = currentUser.getId(); // Obtener el ID del supervisor actual
+
+                        // Registrar el cambio en los logs
+                        BaseDAO.registrarCambioLog(supervisorId, "Cambio de tipo de asistencia", empleadoId, notas);
+                    } else {
+                        System.out.println("El usuario actual no tiene permisos para registrar cambios en los logs.");
+                    }
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

@@ -19,6 +19,7 @@ public class UsuariosDAO {
     public Usuario autenticar(String correo, String contrasena) {
         Usuario usuario = null;
 
+        // Consulta para obtener el hash de la contraseña almacenada
         String query = "SELECT e.id AS empleado_id, e.nombres AS empleado_nombres, e.correo_electronico, " +
                 "u.contrasena_hash, j.nombre AS tipo_usuario " +
                 "FROM empleados e " +
@@ -29,18 +30,18 @@ public class UsuariosDAO {
         try (PreparedStatement stmt = conexion.prepareStatement(query)) {
             stmt.setString(1, correo);
 
+            // Ejecutar la consulta y obtener el resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+                    // Obtener el hash almacenado de la base de datos
                     String storedHash = rs.getString("contrasena_hash");
-                    System.out.println("Hash almacenado: " + storedHash);
 
-                    // Verificar la contraseña usando BCrypt
+                    // Verificar la contraseña proporcionada por el usuario
                     if (BCrypt.checkpw(contrasena, storedHash)) {
+                        // Obtener los datos del usuario autenticado
                         int id = rs.getInt("empleado_id");
                         String nombre = rs.getString("empleado_nombres");
                         String tipoUsuario = rs.getString("tipo_usuario");
-
-                        System.out.println("Inicio de sesión exitoso. Tipo de usuario: " + tipoUsuario);
 
                         // Crear el objeto Usuario dependiendo del tipo de jerarquía
                         switch (tipoUsuario) {
@@ -53,9 +54,10 @@ public class UsuariosDAO {
                             case "Líder":
                                 usuario = new Lider(id, nombre, correo);
                                 break;
-                            default:
-                                System.out.println("Tipo de usuario no reconocido.");
                         }
+
+                        // Guardar el usuario en la sesión
+                        SessionManager.setCurrentUser(usuario);
                     } else {
                         System.out.println("Contraseña incorrecta.");
                     }
