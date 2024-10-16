@@ -7,6 +7,7 @@ import Usuarios.Usuario;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -16,6 +17,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import views.POSApplication;
 
@@ -207,12 +209,24 @@ public class MainController {
         Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
         try {
             POSApplication mainApp = new POSApplication();
-            mainApp.start(window);
+            mainApp.start(window);  // Iniciar la aplicación principal
+
+            // Obtener los límites visuales de la pantalla principal
+            Screen screen = Screen.getPrimary();
+            Rectangle2D bounds = screen.getVisualBounds();
+
+            // Establecer la posición y el tamaño de la ventana
+            window.setX(bounds.getMinX());
+            window.setY(bounds.getMinY());
+            window.setWidth(bounds.getWidth());
+            window.setHeight(bounds.getHeight());
+
+            // Opcional: Eliminar la decoración de la ventana si lo deseas
+            // window.initStyle(StageStyle.UNDECORATED);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
     // Método para ser llamado desde el botón de la barra azul para cargar la vista de edición
     @FXML
     private void handleEditAction() {
