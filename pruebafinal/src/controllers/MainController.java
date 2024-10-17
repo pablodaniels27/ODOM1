@@ -1,5 +1,9 @@
 package controllers;
 
+import Usuarios.Empleado;
+import Usuarios.Lider;
+import Usuarios.Supervisor;
+import Usuarios.Usuario;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -21,6 +25,21 @@ import java.net.URL;
 public class MainController {
 
     @FXML
+    private Button permisosButton;  // Botón de Permisos
+
+    @FXML
+    private Button auditoriaButton;  // Botón de Auditoría
+
+    @FXML
+    private Button registroButton;
+
+    @FXML
+    private  Button registroSucursalButton;
+
+    @FXML
+    private Button iniciobutton;
+
+    @FXML
     private VBox loginContainer;
 
     @FXML
@@ -38,32 +57,42 @@ public class MainController {
     @FXML
     private Button editButton; // Botón que será usado para cargar la vista de edición
 
+    private Usuario usuarioAutenticado;  // Para almacenar el usuario autenticado
+
+
     @FXML
     public void initialize() {
         // Inicialmente, el botón de edición está oculto
         editButton.setVisible(false);
 
         // Cargar la vista de inicio al cargar el MainView
-        showInicio();
+        //showInicio();
     }
 
-    @FXML
-    private void handleLoginAction() {
-        String username = usernameField.getText();
-        String password = passwordField.getText();
+    public void setUsuarioAutenticado(Usuario usuario) {
+        this.usuarioAutenticado = usuario;
 
-        if (username.equals("admin") && password.equals("1234")) {
-            // Ocultar el login y mostrar el contenido principal
-            loginContainer.setVisible(false);
-            mainContainer.setVisible(true);
-        } else {
-            Alert alert = new Alert(AlertType.ERROR);
-            alert.setTitle("Login Failed");
-            alert.setHeaderText(null);
-            alert.setContentText("Incorrect username or password.");
-            alert.showAndWait();
+        // Configurar la interfaz según el tipo de usuario
+        if (usuario instanceof Supervisor) {
+            System.out.println("Usuario autenticado es un Supervisor. Aplicando restricciones...");
+            permisosButton.setVisible(false);
+            auditoriaButton.setVisible(false);
+            showInicio();  // Mostrar inicio para el supervisor
+        } else if (usuario instanceof Empleado) {
+            System.out.println("Usuario autenticado es un Empleado. Aplicando restricciones...");
+            permisosButton.setVisible(false);
+            auditoriaButton.setVisible(false);
+            registroButton.setVisible(false);
+            registroSucursalButton.setVisible(false);
+            iniciobutton.setVisible(false);
+            showMonitoreo();  // Mostrar directamente la vista de monitoreo
+        } else if (usuario instanceof Lider) {
+            System.out.println("Usuario autenticado es un Líder. No se aplican restricciones.");
+            showInicio();  // Mostrar inicio para el líder
         }
     }
+
+
 
     @FXML
     public void showInicio() {
@@ -72,12 +101,28 @@ public class MainController {
 
     @FXML
     public void showRegistro() {
-        loadContent("/views/RegistroView.fxml");
+        if (!(usuarioAutenticado instanceof Supervisor)) {
+            loadContent("/views/RegistroView.fxml");
+        } else {
+            showAccessDeniedAlert();
+        }
     }
 
     @FXML
     public void showRegistroSucursal() {
-        loadContent("/views/RegistroSucursalView.fxml");
+        if (!(usuarioAutenticado instanceof Supervisor)) {
+            loadContent("/views/RegistroSucursalView.fxml");
+        } else {
+            showAccessDeniedAlert();
+        }
+    }
+    @FXML
+    public void showPermisos() {
+        if (!(usuarioAutenticado instanceof Supervisor)) {
+            loadContent("/views/Permisos.fxml");
+        } else {
+            showAccessDeniedAlert();
+        }
     }
 
     @FXML
@@ -101,8 +146,21 @@ public class MainController {
     }
 
     @FXML
-    public void showAuditoria() { loadContent("/views/Auditoria.fxml");}
+    public void showAuditoria() {
+        if (!(usuarioAutenticado instanceof Supervisor)) {
+            loadContent("/views/Auditoria.fxml");
+        } else {
+            showAccessDeniedAlert();
+        }
+    }
 
+    private void showAccessDeniedAlert() {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Acceso denegado");
+        alert.setHeaderText(null);
+        alert.setContentText("No tienes permiso para acceder a esta vista.");
+        alert.showAndWait();
+    }
 
 
 

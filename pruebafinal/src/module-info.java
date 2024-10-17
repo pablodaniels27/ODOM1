@@ -5,12 +5,12 @@ module pruebafinal {
 
     requires java.desktop;
 
-
+    requires dpotapi;
     requires javafx.graphics;
     requires javafx.swing;
     requires java.sql;
     requires com.github.benmanes.caffeine;
-    requires dpotapi;
+    requires jbcrypt;
 
 
     opens Lector to javafx.fxml;
