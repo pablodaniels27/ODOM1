@@ -7,17 +7,20 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Set;
 
 public class Supervisor extends Usuario {
     private int departamentoId;  // Almacena el ID del departamento del supervisor
     private String departamentoNombre;  // Almacena el nombre del departamento del supervisor
+    private Set<String> permisos;  // Almacena los permisos asociados al supervisor
     private UsuariosDAO usuariosDAO;
 
-    // Constructor modificado para aceptar el departamentoId y el departamentoNombre
-    public Supervisor(int id, String nombre, String correo, int departamentoId, String departamentoNombre, UsuariosDAO usuariosDAO) {
+    // Constructor modificado para aceptar el departamentoId, departamentoNombre y permisos
+    public Supervisor(int id, String nombre, String correo, int departamentoId, String departamentoNombre, Set<String> permisos, UsuariosDAO usuariosDAO) {
         super(id, nombre, correo, "Supervisor");
-        this.departamentoId = departamentoId;  // Asignar el departamento
+        this.departamentoId = departamentoId;  // Asignar el departamento ID
         this.departamentoNombre = departamentoNombre;  // Asignar el nombre del departamento
+        this.permisos = permisos;  // Asignar los permisos
         this.usuariosDAO = usuariosDAO;
     }
 
@@ -31,11 +34,12 @@ public class Supervisor extends Usuario {
         return departamentoNombre;
     }
 
-    @Override
     public boolean tienePermiso(String permiso) {
-        // Carga los permisos desde la base de datos usando UsuariosDAO
-        Permisos permisos = usuariosDAO.cargarPermisos(getId());
-        return permisos.tienePermiso(permiso);
+        // Verificar si el supervisor tiene el permiso requerido
+        return permisos.contains(permiso);
+    }
+    public Set<String> getPermisos() {
+        return permisos;
     }
 
     // Método para obtener el ID y nombre del departamento del supervisor autenticado
@@ -59,8 +63,14 @@ public class Supervisor extends Usuario {
                 int departamentoId = resultSet.getInt("departamentoId");
                 String departamentoNombre = resultSet.getString("departamentoNombre");
 
-                // Pasar la conexión a UsuariosDAO
-                return new Supervisor(id, nombres, correo, departamentoId, departamentoNombre, new UsuariosDAO(connection));
+                // Instanciar UsuariosDAO para obtener los permisos del supervisor
+                UsuariosDAO usuariosDAO = new UsuariosDAO(connection);
+
+                // Obtener los permisos del supervisor
+                Set<String> permisos = usuariosDAO.obtenerPermisos(id);
+
+                // Crear y retornar el objeto Supervisor con permisos, departamento y conexión
+                return new Supervisor(id, nombres, correo, departamentoId, departamentoNombre, permisos, usuariosDAO);
             } else {
                 throw new IllegalStateException("No se encontró un supervisor con el ID proporcionado.");
             }
