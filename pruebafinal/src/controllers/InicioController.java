@@ -1,6 +1,8 @@
 package controllers;
 
 import DAO.BaseDAO;
+import Usuarios.SessionManager;
+import Usuarios.Supervisor;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -344,8 +346,12 @@ public class InicioController {
     // Método para obtener los empleados desde la base de datos
     private List<Employee> getEmployeesFromDatabase(String filter) {
         try {
-            // Obtener la lista de empleados desde el DAO
-            return BaseDAO.obtenerEmpleados(filter);
+            // Obtener el supervisor actual desde la sesión o como lo tengas implementado
+            Supervisor supervisor = (Supervisor) SessionManager.getCurrentUser();
+            int departamentoId = supervisor.getDepartamentoId(); // Obtener el departamento del supervisor actual
+
+            // Obtener la lista de empleados desde el DAO filtrando por el departamento
+            return BaseDAO.obtenerEmpleados(filter, departamentoId);  // Pasar el departamentoId
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();

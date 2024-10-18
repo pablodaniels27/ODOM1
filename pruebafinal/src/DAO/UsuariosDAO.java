@@ -19,44 +19,43 @@ public class UsuariosDAO {
     public Usuario autenticar(String correo, String contrasena) {
         Usuario usuario = null;
 
-        // Consulta para obtener el hash de la contraseña almacenada
+        // Consulta para obtener el hash de la contraseña almacenada y los datos del empleado
         String query = "SELECT e.id AS empleado_id, e.nombres AS empleado_nombres, e.correo_electronico, " +
-                "u.contrasena_hash, j.nombre AS tipo_usuario " +
+                "u.contrasena_hash, j.nombre AS tipo_usuario, e.departamento_id, d.nombre AS departamento_nombre " + // Agregar departamento_nombre
                 "FROM empleados e " +
                 "JOIN usuarios u ON e.id = u.empleado_id " +
                 "JOIN jerarquias j ON e.jerarquia_id = j.id " +
+                "JOIN departamentos d ON e.departamento_id = d.id " +  // Unir con la tabla de departamentos
                 "WHERE e.correo_electronico = ?";
 
         try (PreparedStatement stmt = conexion.prepareStatement(query)) {
             stmt.setString(1, correo);
 
-            // Ejecutar la consulta y obtener el resultado
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    // Obtener el hash almacenado de la base de datos
                     String storedHash = rs.getString("contrasena_hash");
 
-                    // Verificar la contraseña proporcionada por el usuario
+                    // Verificar la contraseña usando BCrypt
                     if (BCrypt.checkpw(contrasena, storedHash)) {
-                        // Obtener los datos del usuario autenticado
                         int id = rs.getInt("empleado_id");
                         String nombre = rs.getString("empleado_nombres");
                         String tipoUsuario = rs.getString("tipo_usuario");
+                        int departamentoId = rs.getInt("departamento_id");  // Obtener el departamento del supervisor
+                        String departamentoNombre = rs.getString("departamento_nombre");  // Obtener el nombre del departamento
 
-                        // Crear el objeto Usuario dependiendo del tipo de jerarquía
                         switch (tipoUsuario) {
                             case "Empleado":
                                 usuario = new Empleado(id, nombre, correo);
                                 break;
                             case "Supervisor":
-                                usuario = new Supervisor(id, nombre, correo, this);
+                                usuario = new Supervisor(id, nombre, correo, departamentoId, departamentoNombre, this);  // Pasar el departamentoId y el departamentoNombre
                                 break;
                             case "Líder":
                                 usuario = new Lider(id, nombre, correo);
                                 break;
                         }
 
-                        // Guardar el usuario en la sesión
+                        // Establecer el usuario autenticado en el SessionManager
                         SessionManager.setCurrentUser(usuario);
                     } else {
                         System.out.println("Contraseña incorrecta.");
@@ -69,9 +68,8 @@ public class UsuariosDAO {
             e.printStackTrace();
         }
 
-        return usuario;  // Retorna null si no se autenticó correctamente
+        return usuario;
     }
-
 
 
 
