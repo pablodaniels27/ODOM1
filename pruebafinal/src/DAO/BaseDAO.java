@@ -125,20 +125,23 @@ public class BaseDAO {
     }
 
     public static List<Map<String, Object>> obtenerTodasLasEntradas() throws SQLException {
-        // Usar las constantes para construir la consulta
-        String query = "SELECT e.id, e." + CAMPO_NOMBRES + ", e." + CAMPO_APELLIDOPATERNO + ", e." + CAMPO_APELLIDOMATERNO +
-                ", es." + CAMPO_NOMBRE + " as " + CAMPO_ESTADO + ", dias." + CAMPO_FECHA + ", es.id as estado_id, " +
-                "en." + CAMPO_HORAENTRADA + ", en." + CAMPO_HORASALIDA + ", t." + CAMPO_NOMBRE + " as " + CAMPO_TIPOASISTENCIA +
-                ", ts." + CAMPO_NOMBRE + " as " + CAMPO_TIPOSALIDA + ", l." + CAMPO_DETALLES + " as " + CAMPO_NOTAS + " " +
+        // Construir la consulta
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, " +
+                "es.nombre AS estado, dias.fecha, es.id AS estado_id, " +
+                "en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
+                "ts.nombre AS tipo_salida, " +
+                "(SELECT l2.details FROM logs l2 " +
+                " WHERE l2.target_employee_id = e.id " +
+                " AND l2.action = 'Cambio de tipo de asistencia' " +
+                " AND DATE(l2.timestamp) = dias.fecha " +
+                " ORDER BY l2.timestamp DESC LIMIT 1) AS notas " +
                 "FROM entradas_salidas en " +
-                "JOIN empleados e ON en." + CAMPO_EMPLEADO_ID + " = e.id " +
+                "JOIN empleados e ON en.empleado_id = e.id " +
                 "JOIN dias ON en.dia_id = dias.id " +
-                "JOIN estatus_empleado es ON e." + CAMPO_ESTATUS_ID + " = es.id " +
-                "JOIN " + CAMPO_TIPOS_ASISTENCIA + " t ON en.tipo_asistencia_id = t.id " +
+                "JOIN estatus_empleado es ON e.estatus_id = es.id " +
+                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
                 "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
-                "LEFT JOIN logs l ON l." + CAMPO_EMPLEADO_OBJETIVO + " = e.id " +
-                "AND l." + CAMPO_ACCION + " = 'Cambio de tipo de asistencia' " +
-                "ORDER BY dias." + CAMPO_FECHA + " DESC, en." + CAMPO_HORAENTRADA + " DESC";
+                "ORDER BY dias.fecha DESC, en.hora_entrada DESC";
 
         List<Map<String, Object>> entries = new ArrayList<>();
 
@@ -149,16 +152,16 @@ public class BaseDAO {
             while (resultSet.next()) {
                 Map<String, Object> employeeData = new HashMap<>();
                 employeeData.put("id", String.valueOf(resultSet.getInt("id")));
-                employeeData.put(CAMPO_NOMBRECOMPLETO, resultSet.getString(CAMPO_NOMBRES) + " " +
-                        resultSet.getString(CAMPO_APELLIDOPATERNO) + " " +
-                        resultSet.getString(CAMPO_APELLIDOMATERNO));
-                employeeData.put("fechaEntrada", resultSet.getString(CAMPO_FECHA));
-                employeeData.put("horaEntrada", resultSet.getString(CAMPO_HORAENTRADA));
-                employeeData.put("horaSalida", resultSet.getString(CAMPO_HORASALIDA));
-                employeeData.put("tipoAsistencia", resultSet.getString(CAMPO_TIPOASISTENCIA));
-                employeeData.put("tipoSalida", resultSet.getString(CAMPO_TIPOSALIDA));
-                employeeData.put(CAMPO_ESTADO, resultSet.getString(CAMPO_ESTADO));
-                employeeData.put(CAMPO_NOTAS, resultSet.getString(CAMPO_NOTAS) != null ? resultSet.getString(CAMPO_NOTAS) : ""); // Si no hay notas, mostrar vacío
+                employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " +
+                        resultSet.getString("apellido_paterno") + " " +
+                        resultSet.getString("apellido_materno"));
+                employeeData.put("fechaEntrada", resultSet.getString("fecha"));
+                employeeData.put("horaEntrada", resultSet.getString("hora_entrada"));
+                employeeData.put("horaSalida", resultSet.getString("hora_salida"));
+                employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
+                employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
+                employeeData.put("estado", resultSet.getString("estado"));
+                employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : ""); // Si no hay notas, mostrar vacío
 
                 entries.add(employeeData);
             }
@@ -166,6 +169,7 @@ public class BaseDAO {
 
         return entries;
     }
+
 
 
     public static List<Map<String, Object>> buscarPorFechaYDepartamento(String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados, String fechaInicio, String fechaFin) throws SQLException {
@@ -195,19 +199,28 @@ public class BaseDAO {
     }
 
     private static String construirConsultaBase() {
-        return "SELECT e.id, e." + CAMPO_NOMBRES + ", e." + CAMPO_APELLIDOPATERNO + ", e." + CAMPO_APELLIDOMATERNO +
-                ", es." + CAMPO_NOMBRE + " as " + CAMPO_ESTADO + ", dias." + CAMPO_FECHA + ", es.id as estado_id, " +
-                "en." + CAMPO_HORAENTRADA + ", en." + CAMPO_HORASALIDA + ", t." + CAMPO_NOMBRE + " as " + CAMPO_TIPOASISTENCIA +
-                ", ts." + CAMPO_NOMBRE + " as " + CAMPO_TIPOSALIDA + ", l." + CAMPO_DETALLES + " as " + CAMPO_NOTAS + " " +
+        return "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, " +
+                "es.nombre AS estado, dias.fecha, es.id AS estado_id, " +
+                "en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
+                "ts.nombre AS tipo_salida, " +
+                "(SELECT l2.details FROM logs l2 " +
+                " WHERE l2.target_employee_id = e.id " +
+                " AND l2.action = 'Cambio de tipo de asistencia' " +
+                " AND DATE(l2.timestamp) = dias.fecha " +
+                " ORDER BY l2.timestamp DESC LIMIT 1) AS notas " +
                 "FROM entradas_salidas en " +
-                "JOIN empleados e ON en." + CAMPO_EMPLEADO_ID + " = e.id " +
+                "JOIN empleados e ON en.empleado_id = e.id " +
                 "JOIN dias ON en.dia_id = dias.id " +
-                "JOIN estatus_empleado es ON e." + CAMPO_ESTATUS_ID + " = es.id " +
-                "JOIN " + CAMPO_TIPOS_ASISTENCIA + " t ON en.tipo_asistencia_id = t.id " +
+                "JOIN estatus_empleado es ON e.estatus_id = es.id " +
+                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
                 "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
-                "LEFT JOIN logs l ON l." + CAMPO_EMPLEADO_OBJETIVO + " = e.id AND l." + CAMPO_ACCION + " = 'Cambio de tipo de asistencia' " +
-                "WHERE dias." + CAMPO_FECHA + " BETWEEN ? AND ? ";
+                "WHERE dias.fecha BETWEEN ? AND ? ";
     }
+
+
+
+
+
 
     private static String agregarFiltroDepartamento(String departamentoSeleccionado) {
         if (!departamentoSeleccionado.equals(CAMPO_TODOSLOSDEPARTAMENTOS)) {
@@ -259,18 +272,20 @@ public class BaseDAO {
     private static Map<String, Object> llenarDatosEmpleado(ResultSet resultSet) throws SQLException {
         Map<String, Object> employeeData = new HashMap<>();
         employeeData.put("id", String.valueOf(resultSet.getInt("id")));
-        employeeData.put(CAMPO_NOMBRECOMPLETO, resultSet.getString(CAMPO_NOMBRES) + " " +
-                resultSet.getString(CAMPO_APELLIDOPATERNO) + " " +
-                resultSet.getString(CAMPO_APELLIDOMATERNO));
-        employeeData.put("fechaEntrada", resultSet.getString(CAMPO_FECHA));
-        employeeData.put("horaEntrada", resultSet.getString(CAMPO_HORAENTRADA));
-        employeeData.put("horaSalida", resultSet.getString(CAMPO_HORASALIDA));
-        employeeData.put("tipoAsistencia", resultSet.getString(CAMPO_TIPOASISTENCIA));
-        employeeData.put("tipoSalida", resultSet.getString(CAMPO_TIPOSALIDA));
-        employeeData.put(CAMPO_ESTADO, resultSet.getString(CAMPO_ESTADO));
-        employeeData.put(CAMPO_NOTAS, resultSet.getString(CAMPO_NOTAS) != null ? resultSet.getString(CAMPO_NOTAS) : ""); // Si no hay notas, mostrar vacío
+        employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " +
+                resultSet.getString("apellido_paterno") + " " +
+                resultSet.getString("apellido_materno"));
+        employeeData.put("fechaEntrada", resultSet.getString("fecha"));
+        employeeData.put("horaEntrada", resultSet.getString("hora_entrada"));
+        employeeData.put("horaSalida", resultSet.getString("hora_salida"));
+        employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
+        employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
+        employeeData.put("estado", resultSet.getString("estado"));
+        employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");
         return employeeData;
     }
+
+
 
 
 
