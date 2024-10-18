@@ -94,6 +94,14 @@ public class MainController {
         }
     }
 
+    // Método para verificar permisos antes de acceder a una vista
+    private boolean tienePermiso(String permiso) {
+        if (usuarioAutenticado instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) usuarioAutenticado;
+            return supervisor.tienePermiso(permiso);
+        }
+        return true; // Para otros tipos de usuario que no son supervisores, asumimos que tienen acceso.
+    }
 
 
     @FXML
@@ -101,9 +109,10 @@ public class MainController {
         loadContent("/views/InicioView.fxml");
     }
 
+
     @FXML
     public void showRegistro() {
-        if (!(usuarioAutenticado instanceof Supervisor)) {
+        if (tienePermiso("Ver Gestión de empleados")) { // Verificar si tiene el permiso necesario
             loadContent("/views/RegistroView.fxml");
         } else {
             showAccessDeniedAlert();
@@ -112,12 +121,21 @@ public class MainController {
 
     @FXML
     public void showRegistroSucursal() {
-        if (!(usuarioAutenticado instanceof Supervisor)) {
+        if (tienePermiso("Ver Gestión de empleados")) { // Verificar si tiene el permiso necesario
             loadContent("/views/RegistroSucursalView.fxml");
         } else {
             showAccessDeniedAlert();
         }
     }
+    @FXML
+    public void showMonitoreo() {
+        if (tienePermiso("Ver Monitoreo")) { // Verificar si tiene el permiso necesario
+            loadContent("/views/MonitoreoView.fxml");
+        } else {
+            showAccessDeniedAlert();
+        }
+    }
+
     @FXML
     public void showPermisos() {
         if (!(usuarioAutenticado instanceof Supervisor)) {
@@ -128,13 +146,12 @@ public class MainController {
     }
 
     @FXML
-    public void showMonitoreo() {
-        loadContent("/views/MonitoreoView.fxml");
-    }
-
-    @FXML
-    public void showTerminacion() {
-        loadContent("/views/Permisos.fxml");
+    public void showAuditoria() {
+        if (!(usuarioAutenticado instanceof Supervisor)) {
+            loadContent("/views/Auditoria.fxml");
+        } else {
+            showAccessDeniedAlert();
+        }
     }
 
     @FXML
@@ -147,14 +164,6 @@ public class MainController {
         loadContent("/views/ConfiguracionView.fxml");
     }
 
-    @FXML
-    public void showAuditoria() {
-        if (!(usuarioAutenticado instanceof Supervisor)) {
-            loadContent("/views/Auditoria.fxml");
-        } else {
-            showAccessDeniedAlert();
-        }
-    }
 
     private void showAccessDeniedAlert() {
         Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -163,7 +172,6 @@ public class MainController {
         alert.setContentText("No tienes permiso para acceder a esta vista.");
         alert.showAndWait();
     }
-
 
 
     @FXML

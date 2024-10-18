@@ -1,10 +1,7 @@
 package controllers;
 
 import DAO.UsuariosDAO;
-import Usuarios.Usuario;
-import Usuarios.Supervisor;
-import Usuarios.Empleado;
-import Usuarios.Lider;
+import Usuarios.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.PasswordField;
@@ -98,6 +95,9 @@ public class LoginController {
 
         if (usuario != null) {
             System.out.println("Inicio de sesión exitoso para: " + usuario.getNombre());
+
+            // Guardar el usuario autenticado en el SessionManager
+            SessionManager.setCurrentUser(usuario);
 
             // Cargar la vista principal y pasar el usuario autenticado al MainController
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/MainView.fxml"));
