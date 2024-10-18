@@ -6,10 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -248,16 +245,40 @@ public class RegistroSucursalController {
     }
 
     private void darDeBajaEmpleado(int empleadoId, HBox empleadoBox) {
-        try {
-            // Cambiar el estatus del empleado a 'Baja' usando el método en el DAO
-            BaseDAO.darDeBajaEmpleado(empleadoId);
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Confirmar Dar de Baja");
+        confirmacion.setHeaderText("¿Está seguro de dar de baja al empleado?");
+        confirmacion.setContentText("El empleado será dado de baja y no aparecerá en la lista de empleados activos.");
 
-            // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
-            empleadosContainer.getChildren().remove(empleadoBox);
-            supervisoresContainer.getChildren().remove(empleadoBox);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // Opción Sí o No en el popup
+        ButtonType botonSi = new ButtonType("Sí");
+        ButtonType botonNo = new ButtonType("No", ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirmacion.getButtonTypes().setAll(botonSi, botonNo);
+
+        // Mostrar la alerta y esperar la respuesta del usuario
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == botonSi) {
+                // Si el usuario confirma, procedemos a dar de baja al empleado
+                try {
+                    // Cambiar el estatus del empleado a 'Baja' usando el método en el DAO
+                    BaseDAO.darDeBajaEmpleado(empleadoId);
+
+                    // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
+                    empleadosContainer.getChildren().remove(empleadoBox);
+                    supervisoresContainer.getChildren().remove(empleadoBox);
+
+                    // Remover el empleado de la vista
+                    empleadosContainer.getChildren().remove(empleadoBox);
+                    supervisoresContainer.getChildren().remove(empleadoBox);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                // Si el usuario selecciona 'No', no se realiza ninguna acción.
+                System.out.println("La acción de dar de baja fue cancelada.");
+            }
+        });
+
     }
 
 

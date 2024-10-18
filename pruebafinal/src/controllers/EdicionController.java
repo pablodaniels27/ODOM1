@@ -5,13 +5,11 @@ import com.digitalpersona.onetouch.DPFPGlobal;
 import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.TextField;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.control.Alert;
+import javafx.scene.layout.StackPane;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -42,7 +40,7 @@ public class EdicionController {
     private ChoiceBox<String> departamentoChoiceBox, puestoChoiceBox, estatusChoiceBox;
 
     @FXML
-    private Button deshacerButton, guardarButton;
+    private Button deshacerButton, guardarButton, regresarButton;
 
     @FXML
     private ImageView fingerprintImageView;
@@ -64,6 +62,7 @@ public class EdicionController {
         // Vincular los botones a sus métodos
         deshacerButton.setOnAction(event -> deshacerCambios());
         guardarButton.setOnAction(event -> guardarCambios());
+        regresarButton.setOnAction(event -> regresarARegistroSucursal() );
     }
 
     private void cargarDepartamentos() {
@@ -279,41 +278,109 @@ public class EdicionController {
     // Método para guardar los cambios en la base de datos
     @FXML
     private void guardarCambios() {
-        // Validar los campos antes de guardar
-        if (!validarCampos()) {
-            return; // No se guardarán los cambios si la validación falla
+        // Validar si hay cambios antes de guardar
+        if (!hayCambios()) {
+            Alert sinCambiosAlert = new Alert(Alert.AlertType.INFORMATION);
+            sinCambiosAlert.setTitle("Sin cambios detectados");
+            sinCambiosAlert.setHeaderText(null);
+            sinCambiosAlert.setContentText("No se han detectado cambios en el formulario.");
+            sinCambiosAlert.showAndWait();
+            return;
         }
 
-        try {
-            // Crear un mapa con los datos actualizados del empleado
-            Map<String, Object> empleadoData = new HashMap<>();
-            empleadoData.put("nombres", nombreField.getText());
-            empleadoData.put("apellido_paterno", apellidoPaternoField.getText());
-            empleadoData.put("apellido_materno", apellidoMaternoField.getText());
-            empleadoData.put("pais", paisField.getText());
-            empleadoData.put("ciudad", ciudadField.getText());
-            empleadoData.put("lada", ladaField.getText());
-            empleadoData.put("telefono", telefonoField.getText());
-            empleadoData.put("correo_electronico", emailField.getText());
-            empleadoData.put("rfc", rfcField.getText());
-            empleadoData.put("curp", curpField.getText());
-            empleadoData.put("profesion", profesionField.getText());
-            empleadoData.put("fecha_nacimiento", java.sql.Date.valueOf(fechaNacimientoPicker.getValue()));
-            empleadoData.put("departamento_id", departamentoMap.get(departamentoChoiceBox.getValue()));
-            empleadoData.put("jerarquia_id", puestoMap.get(puestoChoiceBox.getValue()));
-            empleadoData.put("estatus_id", estatusMap.get(estatusChoiceBox.getValue()));
-            empleadoData.put("id", empleadoId);
+        // Mostrar confirmación antes de guardar
+        Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+        confirmacion.setTitle("Confirmar cambios");
+        confirmacion.setHeaderText("¿Desea guardar los cambios?");
+        confirmacion.setContentText("Haga clic en 'Confirmar cambios' para guardar o 'Cancelar' para descartar.");
 
-            // Llamar al DAO para guardar los cambios
-            boolean success = BaseDAO.actualizarEmpleado(empleadoData);
-            if (success) {
-                System.out.println("Los cambios se han guardado correctamente.");
-            } else {
-                System.out.println("No se pudo actualizar el registro.");
+        // Botones de confirmación
+        ButtonType botonConfirmar = new ButtonType("Confirmar cambios");
+        ButtonType botonCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirmacion.getButtonTypes().setAll(botonConfirmar, botonCancelar);
+
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == botonConfirmar) {
+                // Validar los campos antes de guardar
+                if (!validarCampos()) {
+                    return; // No se guardarán los cambios si la validación falla
+                }
+
+                try {
+                    // Crear un mapa con los datos actualizados del empleado
+                    Map<String, Object> empleadoData = new HashMap<>();
+                    empleadoData.put("nombres", nombreField.getText());
+                    empleadoData.put("apellido_paterno", apellidoPaternoField.getText());
+                    empleadoData.put("apellido_materno", apellidoMaternoField.getText());
+                    empleadoData.put("pais", paisField.getText());
+                    empleadoData.put("ciudad", ciudadField.getText());
+                    empleadoData.put("lada", ladaField.getText());
+                    empleadoData.put("telefono", telefonoField.getText());
+                    empleadoData.put("correo_electronico", emailField.getText());
+                    empleadoData.put("rfc", rfcField.getText());
+                    empleadoData.put("curp", curpField.getText());
+                    empleadoData.put("profesion", profesionField.getText());
+                    empleadoData.put("fecha_nacimiento", java.sql.Date.valueOf(fechaNacimientoPicker.getValue()));
+                    empleadoData.put("departamento_id", departamentoMap.get(departamentoChoiceBox.getValue()));
+                    empleadoData.put("jerarquia_id", puestoMap.get(puestoChoiceBox.getValue()));
+                    empleadoData.put("estatus_id", estatusMap.get(estatusChoiceBox.getValue()));
+                    empleadoData.put("id", empleadoId);
+
+                    // Llamar al DAO para guardar los cambios
+                    boolean success = BaseDAO.actualizarEmpleado(empleadoData);
+                    if (success) {
+                        System.out.println("Los cambios se han guardado correctamente.");
+
+                        // Mostrar alerta de éxito
+                        Alert exitoAlert = new Alert(Alert.AlertType.INFORMATION);
+                        exitoAlert.setTitle("Éxito");
+                        exitoAlert.setHeaderText(null);
+                        exitoAlert.setContentText("Los cambios fueron guardados exitosamente.");
+                        exitoAlert.showAndWait();
+
+                    } else {
+                        System.out.println("No se pudo actualizar el registro.");
+                    }
+
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
+        });
+    }
 
-        } catch (SQLException e) {
+    // Método para regresar a la vista de registro de sucursal
+    @FXML
+    private void regresarARegistroSucursal() {
+        try {
+            // Obtén el StackPane principal desde la escena actual
+            StackPane mainContent = (StackPane) regresarButton.getScene().lookup("#mainContent");
+
+            // Carga la vista de RegistroSucursal
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
+            mainContent.getChildren().clear(); // Limpia el contenido actual
+            mainContent.getChildren().add(loader.load()); // Carga la nueva vista
+        } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // Método para verificar si hay cambios entre los valores actuales y los originales
+    private boolean hayCambios() {
+        return !nombreField.getText().equals(datosOriginales.get("nombre")) ||
+                !apellidoPaternoField.getText().equals(datosOriginales.get("apellidoPaterno")) ||
+                !apellidoMaternoField.getText().equals(datosOriginales.get("apellidoMaterno")) ||
+                !paisField.getText().equals(datosOriginales.get("pais")) ||
+                !ciudadField.getText().equals(datosOriginales.get("ciudad")) ||
+                !ladaField.getText().equals(datosOriginales.get("lada")) ||
+                !telefonoField.getText().equals(datosOriginales.get("telefono")) ||
+                !emailField.getText().equals(datosOriginales.get("email")) ||
+                !rfcField.getText().equals(datosOriginales.get("rfc")) ||
+                !curpField.getText().equals(datosOriginales.get("curp")) ||
+                !profesionField.getText().equals(datosOriginales.get("profesion")) ||
+                !fechaNacimientoPicker.getValue().equals(datosOriginales.get("fechaNacimiento")) ||
+                !departamentoChoiceBox.getValue().equals(datosOriginales.get("departamento")) ||
+                !puestoChoiceBox.getValue().equals(datosOriginales.get("puesto")) ||
+                !estatusChoiceBox.getValue().equals(datosOriginales.get("estatus"));
     }
 }
