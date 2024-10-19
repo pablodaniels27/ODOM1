@@ -64,7 +64,7 @@
                         <ScrollPane prefHeight="847.0" prefWidth="478.0">
                            <content>
                                         <!-- Cuadrante 3: Asistencias semanales -->
-                                        <VBox alignment="CENTER_LEFT" prefHeight="219.0" prefWidth="481.0" style="-fx-padding: 10; -fx-border-color:#D3D3D3">
+                                        <VBox alignment="CENTER_LEFT" prefHeight="219.0" prefWidth="477.0" style="-fx-padding: 10; -fx-border-color:#D3D3D3">
                                             <GridPane fx:id="attendanceGrid" alignment="CENTER_LEFT" hgap="5" maxWidth="452.0" prefHeight="270.0" prefWidth="430.0" vgap="10" VBox.vgrow="NEVER">
                                                 <columnConstraints>
                                                     <ColumnConstraints maxWidth="161.0" minWidth="88.0" prefWidth="88.0" /> <!-- Ajuste para los días de la semana -->

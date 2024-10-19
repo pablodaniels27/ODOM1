@@ -3,7 +3,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="443.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx/fxml/1">
+<AnchorPane prefHeight="1167.0" prefWidth="1017.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PermisosController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -15,60 +15,60 @@
                 </HBox>
             </top>
             <center>
-                <ScrollPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
+                <ScrollPane prefHeight="1034.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
                     <content>
-                        <Accordion prefHeight="256.0" prefWidth="658.0">
-                            <panes>
-                                <!-- TitledPane 1: Registro -->
-                                <TitledPane animated="false" text="Registro">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                            <children>
-                                                <VBox alignment="CENTER" spacing="10">
-                                                    <children>
-                                                        <CheckBox text="Si el supervisor puede registrar más empleados" />
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </AnchorPane>
-                                    </content>
-                                </TitledPane>
+                        <VBox alignment="TOP_CENTER" prefHeight="499.0" prefWidth="737.0" spacing="10.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 
-                                <!-- TitledPane 2: Gestión de empleados -->
-                                <TitledPane animated="false" text="Gestión de empleados">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                            <children>
-                                                <VBox alignment="CENTER" spacing="10">
-                                                    <children>
-                                                        <CheckBox text="Si el supervisor puede editar empleados" />
-                                                        <CheckBox text="Si el supervisor puede editar la huella" />
-                                                        <CheckBox text="Si el supervisor puede cambiar un Estatus al empleado" />
-                                                        <CheckBox text="Si el supervisor puede dar de baja empleados" />
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </AnchorPane>
-                                    </content>
-                                </TitledPane>
+                            <!-- CheckBoxes fuera del TitledPane para habilitar su apertura -->
+                            <CheckBox fx:id="checkBoxRegistro" prefHeight="17.0" prefWidth="192.0" text="Habilitar Registro" />
+                            <TitledPane fx:id="titledPaneRegistro" disable="true" expanded="false" text="Registro">
+                                <content>
+                                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                        <children>
+                                            <VBox alignment="CENTER" spacing="10">
+                                                <children>
+                                                    <CheckBox fx:id="checkBoxRegistroInterno" text="Si el supervisor puede registrar más empleados" />
+                                                </children>
+                                            </VBox>
+                                        </children>
+                                    </AnchorPane>
+                                </content>
+                            </TitledPane>
 
-                                <!-- TitledPane 3: Monitoreo -->
-                                <TitledPane animated="false" text="Monitoreo">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                            <children>
-                                                <VBox alignment="CENTER" spacing="10">
-                                                    <children>
-                                                        <CheckBox text="Si puede editar su tipo de asistencia" />
-                                                        <CheckBox text="Si el supervisor puede editar la nota" />
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </AnchorPane>
-                                    </content>
-                                </TitledPane>
-                            </panes>
-                        </Accordion>
+                            <CheckBox fx:id="checkBoxGestion" prefHeight="17.0" prefWidth="194.0" text="Habilitar Gestión de empleados" />
+                            <TitledPane fx:id="titledPaneGestion" disable="true" expanded="false" text="Gestión de empleados">
+                                <content>
+                                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                        <children>
+                                            <VBox alignment="CENTER" spacing="10">
+                                                <children>
+                                                    <CheckBox fx:id="checkBoxEditarEmpleados" text="Si el supervisor puede editar empleados" />
+                                                    <CheckBox fx:id="checkBoxEditarHuella" text="Si el supervisor puede editar la huella" />
+                                                    <CheckBox fx:id="checkBoxCambiarEstatus" text="Si el supervisor puede cambiar un Estatus al empleado" />
+                                                    <CheckBox fx:id="checkBoxDarDeBaja" text="Si el supervisor puede dar de baja empleados" />
+                                                </children>
+                                            </VBox>
+                                        </children>
+                                    </AnchorPane>
+                                </content>
+                            </TitledPane>
+
+                            <CheckBox fx:id="checkBoxMonitoreo" prefHeight="17.0" prefWidth="190.0" text="Habilitar Monitoreo" />
+                            <TitledPane fx:id="titledPaneMonitoreo" disable="true" expanded="false" text="Monitoreo">
+                                <content>
+                                    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                                        <children>
+                                            <VBox alignment="CENTER" spacing="10">
+                                                <children>
+                                                    <CheckBox fx:id="checkBoxEditarAsistencia" text="Si puede editar su tipo de asistencia" />
+                                                    <CheckBox fx:id="checkBoxEditarNota" text="Si el supervisor puede editar la nota" />
+                                                </children>
+                                            </VBox>
+                                        </children>
+                                    </AnchorPane>
+                                </content>
+                            </TitledPane>
+                        </VBox>
                     </content>
                 </ScrollPane>
             </center>

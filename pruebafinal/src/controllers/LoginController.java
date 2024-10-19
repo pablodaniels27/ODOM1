@@ -55,11 +55,11 @@ public class LoginController {
     }
 
 
-        public  void  PasswordHashing() {
-            String password = "prueba123";
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));  // Generar un hash válido
-            System.out.println(hashedPassword);
-        }
+    public  void  PasswordHashing() {
+        String password = "prueba123";
+        String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));  // Generar un hash válido
+        System.out.println(hashedPassword);
+    }
 
 
     public void setConexion() {
