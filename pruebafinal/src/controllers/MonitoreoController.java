@@ -38,7 +38,7 @@ import java.util.Map;
 
 import javafx.scene.input.KeyEvent;
 
-import static Usuarios.Supervisor.getCurrentSupervisorId;
+
 
 public class MonitoreoController {
 
@@ -160,6 +160,23 @@ public class MonitoreoController {
         configureButtons();
         loadInitialEntries();
         cargarDepartamentos(); // Cargar departamentos en el ChoiceBox
+
+
+        Usuario currentUser = SessionManager.getCurrentUser();
+
+        if (currentUser instanceof Supervisor) {
+            // El supervisor está autenticado, obtener su departamento
+            Supervisor supervisor = (Supervisor) currentUser;
+
+            // Deshabilitar el ChoiceBox de departamentos para supervisores
+            departamentoChoiceBox.setDisable(true);
+
+            // Obtener el nombre del departamento y asignarlo al ChoiceBox
+            String departamentoNombre = supervisor.getDepartamentoNombre();
+            departamentoChoiceBox.setValue(departamentoNombre);
+        }
+
+        // Continuar con la inicialización de la aplicación
     }
 
 
@@ -330,11 +347,38 @@ public class MonitoreoController {
     private void loadInitialEntries() {
         try {
             employees.clear();
-            loadAllEntries();
+
+            // Obtener el supervisor actual
+            Usuario currentUser = SessionManager.getCurrentUser();
+            if (currentUser instanceof Supervisor) {
+                Supervisor supervisor = (Supervisor) currentUser;
+                int departamentoId = supervisor.getDepartamentoId(); // Obtener el departamento del supervisor actual
+
+                // Llamar a BaseDAO para cargar los empleados del departamento del supervisor
+                List<Map<String, Object>> entries = BaseDAO.obtenerEntradasPorDepartamento(departamentoId);
+                for (Map<String, Object> employeeData : entries) {
+                    // Calcular el tiempo laborado si hay hora de entrada y salida
+                    String horaEntrada = (String) employeeData.get("horaEntrada");
+                    String horaSalida = (String) employeeData.get("horaSalida");
+                    if (horaEntrada != null && horaSalida != null) {
+                        employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
+                    } else {
+                        employeeData.put("tiempoLaborado", "N/A");
+                    }
+                    employees.add(employeeData);
+                }
+
+                // Después de cargar los empleados, calcula el total de páginas
+                totalPages = (int) Math.ceil((double) employees.size() / itemsPerPage);
+
+                // Mostrar la primera página de resultados
+                showPage(1);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     private void showAlert(String title, String header, String content) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -676,14 +720,26 @@ public class MonitoreoController {
         searchField.clear();
         supervisoresCheckBox.setSelected(false);
         empleadosCheckBox.setSelected(false);
-        departamentoChoiceBox.getSelectionModel().selectFirst(); // Resetear el ChoiceBox al valor por defecto
+
+        // Obtener el usuario autenticado
+        Usuario currentUser = SessionManager.getCurrentUser();
+
+        // Si el usuario es un supervisor, restablecer con su departamento
+        if (currentUser instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) currentUser;
+            String departamentoNombre = supervisor.getDepartamentoNombre();  // Obtener el departamento del supervisor
+            departamentoChoiceBox.setValue(departamentoNombre);  // Restablecer al departamento del supervisor
+            selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+        } else {
+            // Para otros usuarios (por ejemplo, Líder), restablecer al valor por defecto
+            departamentoChoiceBox.getSelectionModel().selectFirst();
+            selectedDepartmentLabel.setText("Departamento: Todos los departamentos");
+        }
 
         // Si estamos en la vista de gráficos, cambiar de nuevo a la vista de tabla
         if (!employeeTableView.isVisible()) {
             toggleGraphView(); // Volver a la vista de tabla si estamos en gráficos
         }
-
-        selectedDepartmentLabel.setText("Departamento: Todos los departamentos" );
 
         // Cargar los registros más recientes (esto ya está en el método loadAllEntries)
         try {
@@ -696,7 +752,6 @@ public class MonitoreoController {
         // Mostrar la primera página
         showPage(1);
     }
-
     //TABLAS DE NOMBRES Y FECHAS
 
     public void mostrarNombresPorAsistencia(String departamento, String tipoAsistencia, String searchQuery) {
