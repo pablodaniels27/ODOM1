@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox alignment="TOP_CENTER" spacing="50" style="-fx-padding: 20;" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.RegistroSucursalController2">
+
+    <!-- Supervisores -->
+    <VBox alignment="TOP_CENTER" spacing="20">
+        <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Supervisores" />
+        <HBox spacing="10">
+            <TextField fx:id="searchSupervisoresField" promptText="Buscar supervisor..." style="-fx-font-size: 14px;" />
+        </HBox>
+
+        <ScrollPane fx:id="supervisoresScroll" fitToWidth="true" fitToHeight="true" vbarPolicy="ALWAYS" prefHeight="400" prefWidth="400">
+            <VBox fx:id="supervisoresContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
+                <!-- Aquí se cargarán dinámicamente los supervisores -->
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+    <!-- Empleados -->
+    <VBox alignment="TOP_CENTER" spacing="20">
+        <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Empleados" />
+        <HBox spacing="10">
+            <TextField fx:id="searchEmpleadosField" promptText="Buscar empleados..." style="-fx-font-size: 14px;" />
+        </HBox>
+
+        <ScrollPane fx:id="empleadosScroll" fitToWidth="true" fitToHeight="true" vbarPolicy="ALWAYS" prefHeight="400" prefWidth="400">
+            <VBox fx:id="empleadosContainer" spacing="10" style="-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;">
+                <!-- Aquí se cargarán dinámicamente los empleados -->
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+</HBox>
