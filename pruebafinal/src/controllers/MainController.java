@@ -7,6 +7,7 @@ import Usuarios.Usuario;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -16,6 +17,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import views.POSApplication;
 
@@ -74,6 +76,8 @@ public class MainController {
 
         // Configurar la interfaz según el tipo de usuario
         if (usuario instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) usuario;
+            System.out.println("Permisos del supervisor: " + supervisor.getPermisos());  // Depuración para verificar permisos
             System.out.println("Usuario autenticado es un Supervisor. Aplicando restricciones...");
             permisosButton.setVisible(false);
             auditoriaButton.setVisible(false);
@@ -93,16 +97,42 @@ public class MainController {
     }
 
 
+    // Método para verificar permisos antes de acceder a una vista
+    private boolean tienePermiso(String permiso) {
+        if (usuarioAutenticado instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) usuarioAutenticado;
+            return supervisor.tienePermiso(permiso);
+        }
+        return true; // Para otros tipos de usuario que no son supervisores, asumimos que tienen acceso.
+    }
+
 
     @FXML
     public void showInicio() {
         loadContent("/views/InicioView.fxml");
     }
 
+
     @FXML
     public void showRegistro() {
-        if (!(usuarioAutenticado instanceof Supervisor)) {
-            loadContent("/views/RegistroView.fxml");
+        if (tienePermiso("Ver Registro")) { // Verificar si tiene el permiso necesario
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroView.fxml"));
+                Parent root = loader.load();
+
+                // Obtener el controlador de la vista de registro
+                RegistroController registroController = loader.getController();
+
+                // Pasar el usuario autenticado al controlador de registro
+                registroController.setUsuarioAutenticado(usuarioAutenticado);
+
+
+                // Cargar la vista en el mainContent
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             showAccessDeniedAlert();
         }
@@ -110,12 +140,35 @@ public class MainController {
 
     @FXML
     public void showRegistroSucursal() {
-        if (!(usuarioAutenticado instanceof Supervisor)) {
-            loadContent("/views/RegistroSucursalView.fxml");
+        if (tienePermiso("Ver Gestión de empleados")) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
+                Parent root = loader.load();
+
+                // Obtener el controlador de la vista
+                RegistroSucursalController registroSucursalController = loader.getController();
+                registroSucursalController.setUsuarioAutenticado(usuarioAutenticado); // Pasar el usuario autenticado
+
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             showAccessDeniedAlert();
         }
     }
+
+
+    @FXML
+    public void showMonitoreo() {
+        if (tienePermiso("Ver Monitoreo")) { // Verificar si tiene el permiso necesario
+            loadContent("/views/MonitoreoView.fxml");
+        } else {
+            showAccessDeniedAlert();
+        }
+    }
+
     @FXML
     public void showPermisos() {
         if (!(usuarioAutenticado instanceof Supervisor)) {
@@ -126,13 +179,12 @@ public class MainController {
     }
 
     @FXML
-    public void showMonitoreo() {
-        loadContent("/views/MonitoreoView.fxml");
-    }
-
-    @FXML
-    public void showTerminacion() {
-        loadContent("/views/Permisos.fxml");
+    public void showAuditoria() {
+        if (!(usuarioAutenticado instanceof Supervisor)) {
+            loadContent("/views/Auditoria.fxml");
+        } else {
+            showAccessDeniedAlert();
+        }
     }
 
     @FXML
@@ -145,14 +197,6 @@ public class MainController {
         loadContent("/views/ConfiguracionView.fxml");
     }
 
-    @FXML
-    public void showAuditoria() {
-        if (!(usuarioAutenticado instanceof Supervisor)) {
-            loadContent("/views/Auditoria.fxml");
-        } else {
-            showAccessDeniedAlert();
-        }
-    }
 
     private void showAccessDeniedAlert() {
         Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -161,7 +205,6 @@ public class MainController {
         alert.setContentText("No tienes permiso para acceder a esta vista.");
         alert.showAndWait();
     }
-
 
 
     @FXML
@@ -207,12 +250,24 @@ public class MainController {
         Stage window = (Stage) ((Node) event.getSource()).getScene().getWindow();
         try {
             POSApplication mainApp = new POSApplication();
-            mainApp.start(window);
+            mainApp.start(window);  // Iniciar la aplicación principal
+
+            // Obtener los límites visuales de la pantalla principal
+            Screen screen = Screen.getPrimary();
+            Rectangle2D bounds = screen.getVisualBounds();
+
+            // Establecer la posición y el tamaño de la ventana
+            window.setX(bounds.getMinX());
+            window.setY(bounds.getMinY());
+            window.setWidth(bounds.getWidth());
+            window.setHeight(bounds.getHeight());
+
+            // Opcional: Eliminar la decoración de la ventana si lo deseas
+            // window.initStyle(StageStyle.UNDECORATED);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
     // Método para ser llamado desde el botón de la barra azul para cargar la vista de edición
     @FXML
     private void handleEditAction() {

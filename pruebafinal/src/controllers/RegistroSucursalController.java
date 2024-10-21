@@ -2,6 +2,8 @@ package controllers;
 
 import DAO.BaseDAO;
 import Services.CacheService;
+import Usuarios.Supervisor;
+import Usuarios.Usuario;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -20,6 +22,9 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import javafx.geometry.Pos;
+
 
 public class RegistroSucursalController {
 
@@ -41,10 +46,14 @@ public class RegistroSucursalController {
     @FXML
     private ScrollPane supervisoresScroll;
 
+    @FXML
+    private HBox mainContainer;
+
+
     private HBox selectedBox;
     private int empleadosOffset = 0;
     private int supervisoresOffset = 0;
-    private static final int ITEMS_PER_PAGE = 14;
+    private static final int ITEMS_PER_PAGE = 400;
 
     private MainController mainController;
 
@@ -52,8 +61,40 @@ public class RegistroSucursalController {
         this.mainController = mainController;
     }
 
+
+
     @FXML
     public void initialize() {
+        // Verificar que el usuario autenticado esté cargado antes de continuar
+
+
+
+
+
+    }
+
+    private Usuario usuarioAutenticado;
+
+    public void setUsuarioAutenticado(Usuario usuario) {
+        this.usuarioAutenticado = usuario;
+
+        // Resetear contenedores antes de volver a cargar
+        empleadosContainer.getChildren().clear();
+        supervisoresContainer.getChildren().clear();
+
+        // Verificar permisos del supervisor y ajustar la interfaz según sea necesario
+        if (usuarioAutenticado instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) usuarioAutenticado;
+            System.out.println("Permisos del supervisor en gestion: " + supervisor.getPermisos());
+
+            // Si el usuario es supervisor, no cargamos supervisores
+            supervisoresContainer.setVisible(false);
+        } else {
+            // Si el usuario no es supervisor (es un líder), sí cargamos los supervisores
+            cargarSupervisores();
+            supervisoresContainer.setVisible(true);  // Asegurarnos de que el contenedor de supervisores se muestre si es un líder
+        }
+
         // Ajustar tamaño dinámico de los ScrollPane
         empleadosScroll.sceneProperty().addListener((observable, oldScene, newScene) -> {
             if (newScene != null) {
@@ -64,9 +105,10 @@ public class RegistroSucursalController {
             }
         });
 
+        // Recargar empleados
         cargarEmpleados();
-        cargarSupervisores();
 
+        // Listeners para los campos de búsqueda
         searchEmpleadosField.textProperty().addListener((observable, oldValue, newValue) -> {
             empleadosOffset = 0;
             empleadosContainer.getChildren().clear();
@@ -79,12 +121,14 @@ public class RegistroSucursalController {
             cargarSupervisores(newValue);
         });
 
+        // Configurar listener para scroll de empleados
         empleadosContainer.sceneProperty().addListener((observable, oldScene, newScene) -> {
             if (newScene != null) {
                 setupScrollListeners();
             }
         });
     }
+
 
     private void setupScrollListeners() {
         empleadosScroll.vvalueProperty().addListener((obs, oldVal, newVal) -> {
@@ -118,7 +162,20 @@ public class RegistroSucursalController {
         }
 
         try {
-            List<Map<String, Object>> empleados = BaseDAO.obtenerEmpleados(filtro, ITEMS_PER_PAGE, empleadosOffset * ITEMS_PER_PAGE);
+            List<Map<String, Object>> empleados;
+
+            // Si el usuario autenticado es un supervisor, cargar solo los empleados de su departamento
+            if (usuarioAutenticado instanceof Supervisor) {
+                Supervisor supervisor = (Supervisor) usuarioAutenticado;
+                System.out.println("Cargando empleados del departamento: " + supervisor.getDepartamentoId());
+
+                // Cargar empleados solo del departamento del supervisor
+                empleados = BaseDAO.obtenerEmpleados(filtro, ITEMS_PER_PAGE, empleadosOffset * ITEMS_PER_PAGE, supervisor.getDepartamentoId());
+            } else {
+                // Cargar todos los empleados si no es un supervisor
+                empleados = BaseDAO.obtenerEmpleados(filtro, ITEMS_PER_PAGE, empleadosOffset * ITEMS_PER_PAGE, null);
+            }
+
             for (Map<String, Object> empleado : empleados) {
                 int id = (int) empleado.get("id");
                 String nombre = (String) empleado.get("nombres");
@@ -135,7 +192,15 @@ public class RegistroSucursalController {
     }
 
 
+
     private void cargarSupervisores(String filtro) {
+        // Verificar si el usuario es un supervisor
+        if (usuarioAutenticado instanceof Supervisor) {
+            System.out.println("Usuario autenticado es un Supervisor. No se cargarán supervisores.");
+            return; // No cargar supervisores si el usuario autenticado es un Supervisor
+        }
+
+        // Continuar con la carga de supervisores si el usuario no es un supervisor
         if (supervisoresOffset == 0) {
             supervisoresContainer.getChildren().clear();
         }
@@ -158,6 +223,7 @@ public class RegistroSucursalController {
     }
 
 
+
     private HBox crearEmpleadoBox(int empleadoId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
         HBox empleadoBox = new HBox();
         empleadoBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;");
@@ -167,6 +233,7 @@ public class RegistroSucursalController {
         statusIcon.setFitHeight(10);
         statusIcon.setFitWidth(10);
 
+        // Define el ícono basado en el estatus del empleado
         String statusImagePath;
         switch (estatusId) {
             case 1:
@@ -192,7 +259,6 @@ public class RegistroSucursalController {
         VBox textContainer = new VBox();
         textContainer.setSpacing(5);
 
-        // Apilar nombre y apellido
         Label nombreLabel = new Label(nombre.toUpperCase());
         nombreLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
         Label apellidoPaternoLabel = new Label(apellidoPaterno.toUpperCase());
@@ -209,11 +275,33 @@ public class RegistroSucursalController {
         botonesContainer.setSpacing(5);
         botonesContainer.setVisible(false);
 
-        Button editarButton = new Button("Editar");
-        Button eliminarButton = new Button("Dar baja");
-        eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId, empleadoBox));
-        editarButton.setOnAction(event -> cargarVistaEdicion(empleadoId));
-        botonesContainer.getChildren().addAll(editarButton, eliminarButton);
+        // Verificar si el usuario es un Supervisor
+        if (usuarioAutenticado instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) usuarioAutenticado;
+            System.out.println("Permisos del supervisor en gestión: " + supervisor.getPermisos());
+
+            // Verificar los permisos del supervisor
+            if (supervisor.tienePermiso("Editar empleados")) {
+                Button editarButton = new Button("Editar");
+                editarButton.setOnAction(event -> cargarVistaEdicion(empleadoId));
+                botonesContainer.getChildren().add(editarButton);
+            }
+
+            if (supervisor.tienePermiso("Dar de baja empleados")) {
+                Button eliminarButton = new Button("Dar baja");
+                eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId, empleadoBox));
+                botonesContainer.getChildren().add(eliminarButton);
+            }
+        } else {
+            // Si es un líder (no es un Supervisor), permitir editar y dar de baja
+            Button editarButton = new Button("Editar");
+            editarButton.setOnAction(event -> cargarVistaEdicion(empleadoId));
+            botonesContainer.getChildren().add(editarButton);
+
+            Button eliminarButton = new Button("Dar baja");
+            eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId, empleadoBox));
+            botonesContainer.getChildren().add(eliminarButton);
+        }
 
         empleadoBox.getChildren().addAll(statusIcon, textContainer, spacer, botonesContainer);
 
@@ -243,6 +331,10 @@ public class RegistroSucursalController {
 
         return empleadoBox;
     }
+
+
+
+
 
     private void darDeBajaEmpleado(int empleadoId, HBox empleadoBox) {
         Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
@@ -294,6 +386,7 @@ public class RegistroSucursalController {
 
                 EdicionController edicionController = loader.getController();
                 edicionController.cargarDatosEmpleado(empleadoId);
+                edicionController.setUsuarioAutenticado(usuarioAutenticado);  // Pasar el usuario autenticado a la vista de edición
 
                 mainContent.getChildren().clear();
                 mainContent.getChildren().add(editRoot);
@@ -302,4 +395,5 @@ public class RegistroSucursalController {
             e.printStackTrace();
         }
     }
+
 }

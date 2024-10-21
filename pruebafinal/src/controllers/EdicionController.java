@@ -1,11 +1,16 @@
 package controllers;
 
 import DAO.BaseDAO;
+import Usuarios.Lider;
+import Usuarios.Supervisor;
+import Usuarios.Usuario;
 import com.digitalpersona.onetouch.DPFPGlobal;
 import com.digitalpersona.onetouch.DPFPTemplate;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -53,6 +58,46 @@ public class EdicionController {
     private final Map<String, Object> datosOriginales = new HashMap<>();
     private int empleadoId;
 
+    private Usuario usuarioAutenticado;
+
+    public void setUsuarioAutenticado(Usuario usuario) {
+        this.usuarioAutenticado = usuario;
+
+        if (usuarioAutenticado instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) usuarioAutenticado;
+
+            // Cargar solo el departamento del supervisor y bloquear el campo
+            departamentoChoiceBox.getItems().clear();
+            departamentoChoiceBox.getItems().add(supervisor.getDepartamentoNombre());
+            departamentoChoiceBox.setValue(supervisor.getDepartamentoNombre());
+            departamentoChoiceBox.setDisable(true); // Bloquear para que no se pueda modificar
+
+            // Cargar solo la opción "Empleado" en el puesto y bloquear el campo
+            puestoChoiceBox.getItems().clear();
+            puestoChoiceBox.getItems().add("Empleado");
+            puestoChoiceBox.setValue("Empleado");
+            puestoChoiceBox.setDisable(true); // Bloquear para que no se pueda modificar
+
+            // Verificar si el supervisor tiene permiso para editar el estatus
+            if (!supervisor.tienePermiso("Cambiar estatus del empleado")) {
+                estatusChoiceBox.setDisable(true); // Bloquear el campo si no tiene permiso
+            }
+
+        } else if (usuarioAutenticado instanceof Lider) {
+            // Si es un líder, cargar todos los departamentos y permitir la selección
+            cargarDepartamentos();
+
+            // Para puestos, solo cargar "Empleado" y "Supervisor"
+            puestoChoiceBox.getItems().clear();
+            puestoChoiceBox.getItems().addAll("Empleado", "Supervisor");
+
+            // Un líder siempre puede modificar el estatus
+            estatusChoiceBox.setDisable(false); // Permitir cambios en el estatus
+        }
+    }
+
+
+
     @FXML
     public void initialize() {
         cargarDepartamentos();
@@ -67,6 +112,9 @@ public class EdicionController {
 
     private void cargarDepartamentos() {
         try {
+            // Limpiar el ChoiceBox antes de agregar nuevos elementos
+            departamentoChoiceBox.getItems().clear();  // Limpia el ChoiceBox para evitar duplicados
+
             // Obtener la lista de departamentos desde el DAO
             Map<String, Integer> departamentos = BaseDAO.obtenerDepartamentosid();
 
@@ -83,22 +131,35 @@ public class EdicionController {
     }
 
 
+
     private void cargarPuestos() {
         try {
+            // Limpiar el ChoiceBox y el mapa antes de agregar nuevos elementos
+            puestoChoiceBox.getItems().clear();
+            puestoMap.clear();  // Limpiar el mapa para evitar residuos de datos anteriores
+
             // Obtener la lista de puestos desde el DAO
             Map<String, Integer> puestos = BaseDAO.obtenerPuestosid();
 
-            // Agregar los puestos al ChoiceBox y al mapa
-            for (Map.Entry<String, Integer> entry : puestos.entrySet()) {
-                String nombre = entry.getKey();
-                int id = entry.getValue();
-                puestoChoiceBox.getItems().add(nombre);
-                puestoMap.put(nombre, id);
+            // Verificar si los puestos están siendo obtenidos correctamente
+            if (puestos.isEmpty()) {
+                System.out.println("No se encontraron puestos en la base de datos.");
+            } else {
+                // Agregar los puestos al ChoiceBox y al mapa
+                for (Map.Entry<String, Integer> entry : puestos.entrySet()) {
+                    String nombre = entry.getKey();
+                    int id = entry.getValue();
+                    puestoChoiceBox.getItems().add(nombre);  // Agregar el nombre del puesto al ChoiceBox
+                    puestoMap.put(nombre, id);  // Guardar el nombre y el ID en el mapa
+                }
+                System.out.println("Puestos cargados correctamente: " + puestoChoiceBox.getItems());
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+
 
 
     private void cargarEstatus() {
@@ -120,6 +181,8 @@ public class EdicionController {
 
 
     // Método para establecer los valores actuales en los campos
+    // Método para establecer los valores actuales en los campos
+    // Método para cargar datos del empleado
     public void cargarDatosEmpleado(int empleadoId) {
         this.empleadoId = empleadoId;
 
@@ -128,6 +191,7 @@ public class EdicionController {
             Map<String, Object> empleadoData = BaseDAO.obtenerDatosEmpleado(empleadoId);
 
             if (empleadoData != null) {
+                // Establecer valores en los campos
                 nombreField.setText((String) empleadoData.get("nombres"));
                 apellidoPaternoField.setText((String) empleadoData.get("apellido_paterno"));
                 apellidoMaternoField.setText((String) empleadoData.get("apellido_materno"));
@@ -141,12 +205,33 @@ public class EdicionController {
                 profesionField.setText((String) empleadoData.get("profesion"));
                 fechaNacimientoPicker.setValue(((java.sql.Date) empleadoData.get("fecha_nacimiento")).toLocalDate());
 
-                int departamentoId = (int) empleadoData.get("departamento_id");
-                departamentoChoiceBox.setValue(getKeyByValue(departamentoMap, departamentoId));
+                // Cargar los departamentos y seleccionarlos
+                cargarDepartamentos();
+                Platform.runLater(() -> {
+                    int departamentoId = (int) empleadoData.get("departamento_id");
+                    String departamentoNombre = getKeyByValue(departamentoMap, departamentoId);
+                    if (departamentoNombre != null) {
+                        departamentoChoiceBox.setValue(departamentoNombre);
+                        System.out.println("Departamento cargado: " + departamentoNombre);
+                    } else {
+                        System.out.println("Error al cargar el departamento: ID no encontrado.");
+                    }
+                });
 
-                int puestoId = (int) empleadoData.get("jerarquia_id");
-                puestoChoiceBox.setValue(getKeyByValue(puestoMap, puestoId));
+                // Cargar los puestos y seleccionarlos
+                cargarPuestos();
+                Platform.runLater(() -> {
+                    int puestoId = (int) empleadoData.get("jerarquia_id");
+                    String puestoNombre = getKeyByValue(puestoMap, puestoId);
+                    if (puestoNombre != null) {
+                        puestoChoiceBox.setValue(puestoNombre);
+                        System.out.println("Puesto cargado: " + puestoNombre);
+                    } else {
+                        System.out.println("Error al cargar el puesto: ID no encontrado.");
+                    }
+                });
 
+                // Cargar el estatus seleccionado
                 int estatusId = (int) empleadoData.get("estatus_id");
                 estatusChoiceBox.setValue(getKeyByValue(estatusMap, estatusId));
 
@@ -160,6 +245,12 @@ public class EdicionController {
             e.printStackTrace();
         }
     }
+
+
+
+
+
+
 
 
     private void cargarHuella(int empleadoId) {
@@ -187,6 +278,7 @@ public class EdicionController {
     }
 
     // Método para guardar los datos originales
+    // Método para guardar los datos originales
     private void guardarDatosOriginales() {
         datosOriginales.put("nombre", nombreField.getText());
         datosOriginales.put("apellidoPaterno", apellidoPaternoField.getText());
@@ -200,14 +292,35 @@ public class EdicionController {
         datosOriginales.put("curp", curpField.getText());
         datosOriginales.put("profesion", profesionField.getText());
         datosOriginales.put("fechaNacimiento", fechaNacimientoPicker.getValue());
+
+        // Aquí nos aseguramos de guardar los nombres de departamento y puesto, no los IDs
         datosOriginales.put("departamento", departamentoChoiceBox.getValue());
         datosOriginales.put("puesto", puestoChoiceBox.getValue());
         datosOriginales.put("estatus", estatusChoiceBox.getValue());
+
+        // Debugging para asegurarnos de que se guardaron correctamente
+        System.out.println("Datos originales guardados:");
+        System.out.println("Departamento: " + departamentoChoiceBox.getValue());
+        System.out.println("Puesto: " + puestoChoiceBox.getValue());
     }
 
+
+
     // Método para deshacer cambios y restaurar los valores originales
+// Método para deshacer cambios y restaurar los valores originales
     @FXML
     private void deshacerCambios() {
+        // Volvemos a cargar los departamentos y puestos antes de restaurar sus valores
+        if (departamentoChoiceBox.getItems().isEmpty()) {
+            cargarDepartamentos();
+        }
+        if (puestoChoiceBox.getItems().isEmpty()) {
+            cargarPuestos();
+        }
+
+        System.out.println("Restaurando los valores originales...");
+
+        // Restaurar los valores originales
         nombreField.setText((String) datosOriginales.get("nombre"));
         apellidoPaternoField.setText((String) datosOriginales.get("apellidoPaterno"));
         apellidoMaternoField.setText((String) datosOriginales.get("apellidoMaterno"));
@@ -220,11 +333,19 @@ public class EdicionController {
         curpField.setText((String) datosOriginales.get("curp"));
         profesionField.setText((String) datosOriginales.get("profesion"));
         fechaNacimientoPicker.setValue((LocalDate) datosOriginales.get("fechaNacimiento"));
+
+        // Debugging para ver qué valores estamos restaurando
+        System.out.println("Departamento a restaurar: " + datosOriginales.get("departamento"));
+        System.out.println("Puesto a restaurar: " + datosOriginales.get("puesto"));
+
         departamentoChoiceBox.setValue((String) datosOriginales.get("departamento"));
         puestoChoiceBox.setValue((String) datosOriginales.get("puesto"));
         estatusChoiceBox.setValue((String) datosOriginales.get("estatus"));
-    }
 
+        // Verificar qué valores se están poniendo después de setValue
+        System.out.println("Departamento restaurado: " + departamentoChoiceBox.getValue());
+        System.out.println("Puesto restaurado: " + puestoChoiceBox.getValue());
+    }
     // Método para validar los campos antes de guardar los cambios
     private boolean validarCampos() {
         // Validación de Lada
@@ -358,8 +479,17 @@ public class EdicionController {
 
             // Carga la vista de RegistroSucursal
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
-            mainContent.getChildren().clear(); // Limpia el contenido actual
-            mainContent.getChildren().add(loader.load()); // Carga la nueva vista
+            Parent registroView = loader.load();
+
+            // Obtén el controlador de RegistroSucursal
+            RegistroSucursalController registroController = loader.getController();
+
+            // Configura el usuario autenticado en el controlador de RegistroSucursal
+            registroController.setUsuarioAutenticado(usuarioAutenticado);
+
+            // Limpia el contenido actual y añade la nueva vista
+            mainContent.getChildren().clear();
+            mainContent.getChildren().add(registroView);
         } catch (IOException e) {
             e.printStackTrace();
         }
