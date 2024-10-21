@@ -126,6 +126,7 @@ public class MainController {
                 // Pasar el usuario autenticado al controlador de registro
                 registroController.setUsuarioAutenticado(usuarioAutenticado);
 
+
                 // Cargar la vista en el mainContent
                 mainContent.getChildren().clear();
                 mainContent.getChildren().add(root);
