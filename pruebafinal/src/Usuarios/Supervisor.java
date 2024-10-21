@@ -38,6 +38,7 @@ public class Supervisor extends Usuario {
         // Verificar si el supervisor tiene el permiso requerido
         return permisos.contains(permiso);
     }
+
     public Set<String> getPermisos() {
         return permisos;
     }

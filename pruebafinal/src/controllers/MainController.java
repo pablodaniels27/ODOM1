@@ -76,6 +76,8 @@ public class MainController {
 
         // Configurar la interfaz según el tipo de usuario
         if (usuario instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) usuario;
+            System.out.println("Permisos del supervisor: " + supervisor.getPermisos());  // Depuración para verificar permisos
             System.out.println("Usuario autenticado es un Supervisor. Aplicando restricciones...");
             permisosButton.setVisible(false);
             auditoriaButton.setVisible(false);
@@ -93,6 +95,7 @@ public class MainController {
             showInicio();  // Mostrar inicio para el líder
         }
     }
+
 
     // Método para verificar permisos antes de acceder a una vista
     private boolean tienePermiso(String permiso) {
@@ -112,8 +115,23 @@ public class MainController {
 
     @FXML
     public void showRegistro() {
-        if (tienePermiso("Ver Gestión de empleados")) { // Verificar si tiene el permiso necesario
-            loadContent("/views/RegistroView.fxml");
+        if (tienePermiso("Ver Registro")) { // Verificar si tiene el permiso necesario
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroView.fxml"));
+                Parent root = loader.load();
+
+                // Obtener el controlador de la vista de registro
+                RegistroController registroController = loader.getController();
+
+                // Pasar el usuario autenticado al controlador de registro
+                registroController.setUsuarioAutenticado(usuarioAutenticado);
+
+                // Cargar la vista en el mainContent
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             showAccessDeniedAlert();
         }
@@ -121,12 +139,26 @@ public class MainController {
 
     @FXML
     public void showRegistroSucursal() {
-        if (tienePermiso("Ver Gestión de empleados")) { // Verificar si tiene el permiso necesario
-            loadContent("/views/RegistroSucursalView.fxml");
+        if (tienePermiso("Ver Gestión de empleados")) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
+                Parent root = loader.load();
+
+                // Obtener el controlador de la vista
+                RegistroSucursalController registroSucursalController = loader.getController();
+                registroSucursalController.setUsuarioAutenticado(usuarioAutenticado); // Pasar el usuario autenticado
+
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } else {
             showAccessDeniedAlert();
         }
     }
+
+
     @FXML
     public void showMonitoreo() {
         if (tienePermiso("Ver Monitoreo")) { // Verificar si tiene el permiso necesario

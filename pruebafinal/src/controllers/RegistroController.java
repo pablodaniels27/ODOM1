@@ -2,6 +2,8 @@ package controllers;
 
 import DAO.BaseDAO;
 import Lector.EnrollmentFormController;
+import Usuarios.Supervisor;
+import Usuarios.Usuario;
 import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -61,10 +63,42 @@ public class RegistroController {
     private DPFPTemplate template; // Variable para almacenar el template de la huella digital
     private byte[] fingerprintImageBytes; // Variable para almacenar la imagen de la huella en bytes
 
+    private Usuario usuarioAutenticado;
+
+
+
     @FXML
     private void initialize() {
         cargarDepartamentos();
         cargarPuestos();
+    }
+
+    // Este método se encargará de bloquear o permitir acceso a los campos según el tipo de usuario
+    public void setUsuarioAutenticado(Usuario usuario) {
+        this.usuarioAutenticado = usuario;
+
+        if (usuarioAutenticado instanceof Supervisor) {
+            Supervisor supervisor = (Supervisor) usuarioAutenticado;
+
+            // Cargar solo el departamento del supervisor y bloquear el campo
+            departamentoChoiceBox.getItems().clear();
+            departamentoChoiceBox.getItems().add(supervisor.getDepartamentoNombre()); // Suponiendo que tienes un método getDepartamentoNombre()
+            departamentoChoiceBox.setValue(supervisor.getDepartamentoNombre());
+            departamentoChoiceBox.setDisable(true); // Bloquear para que no se pueda modificar
+
+            // Cargar solo la opción "Empleado" en el puesto y bloquear el campo
+            puestoChoiceBox.getItems().clear();
+            puestoChoiceBox.getItems().add("Empleado");
+            puestoChoiceBox.setValue("Empleado");
+            puestoChoiceBox.setDisable(true); // Bloquear para que no se pueda modificar
+        } else {
+            // Si es un líder, cargar todos los departamentos y permitir la selección
+            cargarDepartamentos();
+
+            // Para puestos, solo cargar "Empleado" y "Supervisor"
+            puestoChoiceBox.getItems().clear();
+            puestoChoiceBox.getItems().addAll("Empleado", "Supervisor");
+        }
     }
 
     public void setTemplate(DPFPTemplate template) {

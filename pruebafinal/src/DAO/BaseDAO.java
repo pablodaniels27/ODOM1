@@ -947,15 +947,21 @@ public class BaseDAO {
     //aqui termina registroController///
     //REGISTRO SUCURSAL//////////////////////////////////7
 
-    public static List<Map<String, Object>> obtenerEmpleados(String filtro, int limit, int offset) throws SQLException {
+    public static List<Map<String, Object>> obtenerEmpleados(String filtro, int limit, int offset, Integer departamentoId) throws SQLException {
         List<Map<String, Object>> empleados = new ArrayList<>();
 
-        // Construir la consulta usando las constantes
+        // Modificar la consulta para incluir el filtro del departamento si es necesario
         String sql = "SELECT id, " + CAMPO_NOMBRES + ", " + CAMPO_APELLIDOPATERNO + ", " + CAMPO_PROFESION + ", " + CAMPO_ESTATUS_ID +
                 " FROM empleados " +
                 "WHERE " + CAMPO_JERARQUIA_ID + " = 3 AND " + CAMPO_ESTATUS_ID + " != 4 " +
-                "AND (" + CAMPO_NOMBRES + " LIKE ? OR " + CAMPO_APELLIDOPATERNO + " LIKE ?) " +
-                "LIMIT ? OFFSET ?";
+                "AND (" + CAMPO_NOMBRES + " LIKE ? OR " + CAMPO_APELLIDOPATERNO + " LIKE ?)";
+
+        // Si el departamentoId es proporcionado, lo añadimos como filtro
+        if (departamentoId != null) {
+            sql += " AND departamento_id = ?";
+        }
+
+        sql += " LIMIT ? OFFSET ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -963,8 +969,14 @@ public class BaseDAO {
             String filtroSQL = "%" + filtro + "%";
             statement.setString(1, filtroSQL);
             statement.setString(2, filtroSQL);
-            statement.setInt(3, limit);
-            statement.setInt(4, offset);
+
+            int index = 3;
+            if (departamentoId != null) {
+                statement.setInt(index++, departamentoId);  // Si se pasa el departamento, lo agregamos a la consulta
+            }
+
+            statement.setInt(index++, limit);
+            statement.setInt(index, offset);
 
             ResultSet resultSet = statement.executeQuery();
 
@@ -981,6 +993,7 @@ public class BaseDAO {
 
         return empleados;
     }
+
 
 
     public static List<Map<String, Object>> obtenerSupervisores(String filtro, int limit, int offset) throws SQLException {
