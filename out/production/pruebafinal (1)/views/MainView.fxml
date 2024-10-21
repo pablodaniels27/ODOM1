@@ -14,17 +14,17 @@
         <!-- StackPane para agregar el fondo semitransparente -->
         <StackPane alignment="CENTER" style="-fx-background-color: #efeded; -fx-padding: 5;">
             <HBox alignment="CENTER_LEFT" prefHeight="51.0" prefWidth="1050.0" spacing="10">
-                <Button ellipsisString="" onAction="#showInicio" styleClass="responsive-button" text="Inicio">
+                <Button fx:id="iniciobutton" ellipsisString="" onAction="#showInicio" styleClass="responsive-button" text="Inicio">
                     <HBox.margin>
                         <Insets bottom="5" left="0" right="10" top="5" />
                     </HBox.margin>
                 </Button>
-                <Button ellipsisString="" onAction="#showRegistro" styleClass="responsive-button" text="Registro">
+                <Button fx:id="registroButton" ellipsisString="" onAction="#showRegistro" styleClass="responsive-button" text="Registro">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-                <Button ellipsisString="" onAction="#showRegistroSucursal" styleClass="responsive-button" text="Gestión de empleados">
+                <Button fx:id="registroSucursalButton" ellipsisString="" onAction="#showRegistroSucursal" styleClass="responsive-button" text="Gestión de empleados">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
@@ -34,12 +34,12 @@
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-                <Button ellipsisString="" onAction="#showTerminacion" styleClass="responsive-button" text="Permisos">
+                <Button fx:id="permisosButton" ellipsisString="" onAction="#showPermisos" styleClass="responsive-button" text="Permisos">
                     <HBox.margin>
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-            <Button ellipsisString="" layoutX="540.0" layoutY="20.0" onAction="#showAuditoria" styleClass="responsive-button" text="Auditoria" />
+            <Button  fx:id="auditoriaButton" ellipsisString="" layoutX="540.0" layoutY="20.0" onAction="#showAuditoria" styleClass="responsive-button" text="Auditoria" />
 
                 <!-- Espaciador para empujar los botones de Configuración y Ayuda a la derecha -->
                 <Pane HBox.hgrow="ALWAYS" />

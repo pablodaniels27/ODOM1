@@ -1,22 +1,13 @@
 package Usuarios;
 
 public class Empleado extends Usuario {
-    private String departamento;
 
-    // Constructor
-    public Empleado(int id, String nombres, String apellidoPaterno, String apellidoMaterno, String correoElectronico, String departamento) {
-        super(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico);
-        this.departamento = departamento;
+    public Empleado(int id, String nombre, String correo) {
+        super(id, nombre, correo, "Empleado");
     }
 
-    // Getters y Setters
-    public String getDepartamento() { return departamento; }
-
-    // Restricciones
-    public void accesoLimitado() {
-        System.out.println("Acceso restringido a configuraciones de supervisión o liderazgo.");
+    @Override
+    public boolean tienePermiso(String permiso) {
+        return false; // El empleado no tiene permisos adicionales
     }
 }
-
-
-
