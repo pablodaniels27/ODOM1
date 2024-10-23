@@ -733,6 +733,42 @@ public class BaseDAO {
         return employees;
     }
 
+    public static List<InicioController.Employee> obtenerTodosLosEmpleados(String filter) throws SQLException {
+        List<InicioController.Employee> employees = new ArrayList<>();
+
+        // Consulta para obtener todos los empleados, sin filtrar por departamento
+        String query = "SELECT id, CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") AS " + CAMPO_NOMBRECOMPLETO +
+                ", e." + CAMPO_PROFESION + " " +
+                "FROM empleados e";
+
+        // Si hay un filtro, añadir la condición a la consulta SQL
+        if (!filter.isEmpty()) {
+            query += " WHERE CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") LIKE ?";
+        }
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            // Asignar el filtro si está presente
+            if (!filter.isEmpty()) {
+                preparedStatement.setString(1, "%" + filter + "%");
+            }
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String fullName = resultSet.getString(CAMPO_NOMBRECOMPLETO);
+                String profession = resultSet.getString(CAMPO_PROFESION);
+
+                employees.add(new InicioController.Employee(id, fullName, profession));
+            }
+        }
+
+        return employees;
+    }
+
+
 
     //Aqui acaba inicioController/////////////////
     //AuditoriaController
