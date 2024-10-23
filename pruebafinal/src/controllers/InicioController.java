@@ -1,8 +1,10 @@
 package controllers;
 
 import DAO.BaseDAO;
+import Usuarios.Lider;
 import Usuarios.SessionManager;
 import Usuarios.Supervisor;
+import Usuarios.Usuario;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -344,19 +346,33 @@ public class InicioController {
     }
 
     // Método para obtener los empleados desde la base de datos
+    // Método para obtener los empleados desde la base de datos
     private List<Employee> getEmployeesFromDatabase(String filter) {
         try {
-            // Obtener el supervisor actual desde la sesión o como lo tengas implementado
-            Supervisor supervisor = (Supervisor) SessionManager.getCurrentUser();
-            int departamentoId = supervisor.getDepartamentoId(); // Obtener el departamento del supervisor actual
+            // Obtener el usuario actual desde la sesión
+            Usuario usuario = SessionManager.getCurrentUser();
 
-            // Obtener la lista de empleados desde el DAO filtrando por el departamento
-            return BaseDAO.obtenerEmpleados(filter, departamentoId);  // Pasar el departamentoId
+
+            // Si es un líder, obtener todos los empleados
+            if (usuario instanceof Lider) {
+                // Si el usuario es un líder, traer todos los empleados sin filtrar por departamento
+                return BaseDAO.obtenerTodosLosEmpleados(filter);
+
+            } else if (usuario instanceof Supervisor) {
+                // Si es un supervisor, filtrar por departamento
+                Supervisor supervisor = (Supervisor) usuario;
+                int departamentoId = supervisor.getDepartamentoId(); // Obtener el departamento del supervisor
+                return BaseDAO.obtenerEmpleados(filter, departamentoId);
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
-            return new ArrayList<>();
         }
+
+        // Si hay un error o no se cumple ninguna condición, devolver una lista vacía
+        return new ArrayList<>();
     }
+
 
 
     // Clase para representar un empleado

@@ -733,6 +733,42 @@ public class BaseDAO {
         return employees;
     }
 
+    public static List<InicioController.Employee> obtenerTodosLosEmpleados(String filter) throws SQLException {
+        List<InicioController.Employee> employees = new ArrayList<>();
+
+        // Consulta para obtener todos los empleados, sin filtrar por departamento
+        String query = "SELECT id, CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") AS " + CAMPO_NOMBRECOMPLETO +
+                ", e." + CAMPO_PROFESION + " " +
+                "FROM empleados e";
+
+        // Si hay un filtro, añadir la condición a la consulta SQL
+        if (!filter.isEmpty()) {
+            query += " WHERE CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") LIKE ?";
+        }
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            // Asignar el filtro si está presente
+            if (!filter.isEmpty()) {
+                preparedStatement.setString(1, "%" + filter + "%");
+            }
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String fullName = resultSet.getString(CAMPO_NOMBRECOMPLETO);
+                String profession = resultSet.getString(CAMPO_PROFESION);
+
+                employees.add(new InicioController.Employee(id, fullName, profession));
+            }
+        }
+
+        return employees;
+    }
+
+
 
     //Aqui acaba inicioController/////////////////
     //AuditoriaController
@@ -947,15 +983,21 @@ public class BaseDAO {
     //aqui termina registroController///
     //REGISTRO SUCURSAL//////////////////////////////////7
 
-    public static List<Map<String, Object>> obtenerEmpleados(String filtro, int limit, int offset) throws SQLException {
+    public static List<Map<String, Object>> obtenerEmpleados(String filtro, int limit, int offset, Integer departamentoId) throws SQLException {
         List<Map<String, Object>> empleados = new ArrayList<>();
 
-        // Construir la consulta usando las constantes
+        // Modificar la consulta para incluir el filtro del departamento si es necesario
         String sql = "SELECT id, " + CAMPO_NOMBRES + ", " + CAMPO_APELLIDOPATERNO + ", " + CAMPO_PROFESION + ", " + CAMPO_ESTATUS_ID +
                 " FROM empleados " +
                 "WHERE " + CAMPO_JERARQUIA_ID + " = 3 AND " + CAMPO_ESTATUS_ID + " != 4 " +
-                "AND (" + CAMPO_NOMBRES + " LIKE ? OR " + CAMPO_APELLIDOPATERNO + " LIKE ?) " +
-                "LIMIT ? OFFSET ?";
+                "AND (" + CAMPO_NOMBRES + " LIKE ? OR " + CAMPO_APELLIDOPATERNO + " LIKE ?)";
+
+        // Si el departamentoId es proporcionado, lo añadimos como filtro
+        if (departamentoId != null) {
+            sql += " AND departamento_id = ?";
+        }
+
+        sql += " LIMIT ? OFFSET ?";
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -963,8 +1005,14 @@ public class BaseDAO {
             String filtroSQL = "%" + filtro + "%";
             statement.setString(1, filtroSQL);
             statement.setString(2, filtroSQL);
-            statement.setInt(3, limit);
-            statement.setInt(4, offset);
+
+            int index = 3;
+            if (departamentoId != null) {
+                statement.setInt(index++, departamentoId);  // Si se pasa el departamento, lo agregamos a la consulta
+            }
+
+            statement.setInt(index++, limit);
+            statement.setInt(index, offset);
 
             ResultSet resultSet = statement.executeQuery();
 
@@ -981,6 +1029,7 @@ public class BaseDAO {
 
         return empleados;
     }
+
 
 
     public static List<Map<String, Object>> obtenerSupervisores(String filtro, int limit, int offset) throws SQLException {
