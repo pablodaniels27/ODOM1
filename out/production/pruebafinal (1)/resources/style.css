@@ -116,7 +116,7 @@
     -fx-background-color: #219D01; /* Color cuando se presiona el botón */
 }
 
-.responsive-button:selected {
+.responsive-button.selected{
     -fx-background-color: #FF4080; /* Color cuando el botón está seleccionado */
 }
 
