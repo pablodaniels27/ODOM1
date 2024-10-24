@@ -1,6 +1,7 @@
 package controllers;
 
 import DAO.BaseDAO;
+import Usuarios.Lider;
 import Usuarios.SessionManager;
 import Usuarios.Supervisor;
 import Usuarios.Usuario;
@@ -174,9 +175,13 @@ public class MonitoreoController {
             // Obtener el nombre del departamento y asignarlo al ChoiceBox
             String departamentoNombre = supervisor.getDepartamentoNombre();
             departamentoChoiceBox.setValue(departamentoNombre);
-        }
 
-        // Continuar con la inicialización de la aplicación
+        } else if (currentUser instanceof Lider) {
+            // El líder está autenticado, habilitar el ChoiceBox de departamentos
+            departamentoChoiceBox.setDisable(false);
+
+
+        }
     }
 
 
@@ -409,75 +414,82 @@ public class MonitoreoController {
 
 
     private void showTipoAsistenciaPopup(Map<String, Object> employeeData) {
-        // Crear el Dialog
-        Dialog<String[]> dialog = new Dialog<>();
-        dialog.setTitle("Cambiar Tipo de Asistencia");
+        // Obtener el usuario actual desde SessionManager
+        Usuario currentUser = SessionManager.getCurrentUser();
 
-        // Crear el ChoiceBox con las opciones
-        ChoiceBox<String> choiceBox = new ChoiceBox<>();
-        choiceBox.getItems().addAll("Asistencia", "No Asistencia", "Retardo", "Justificación");
+        // Verificar si el usuario tiene el permiso para cambiar el tipo de asistencia
+        if (currentUser.tienePermiso("Editar tipo de asistencia")) {
 
-        // Crear un TextArea para las notas
-        TextArea notasTextArea = new TextArea();
-        notasTextArea.setPromptText("Escribe la razón del cambio...");
+            // Crear el Dialog
+            Dialog<String[]> dialog = new Dialog<>();
+            dialog.setTitle("Cambiar Tipo de Asistencia");
 
-        // Crear un VBox para añadir ambos elementos
-        VBox vBox = new VBox(10, new Label("Tipo de Asistencia"), choiceBox, new Label("Notas"), notasTextArea);
-        dialog.getDialogPane().setContent(vBox);
+            // Crear el ChoiceBox con las opciones
+            ChoiceBox<String> choiceBox = new ChoiceBox<>();
+            choiceBox.getItems().addAll("Asistencia", "No Asistencia", "Retardo", "Justificación");
 
-        // Añadir botones de OK y Cancelar
-        ButtonType okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+            // Crear un TextArea para las notas
+            TextArea notasTextArea = new TextArea();
+            notasTextArea.setPromptText("Escribe la razón del cambio...");
 
-        // Procesar el resultado cuando se hace clic en OK
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == okButtonType) {
-                return new String[]{choiceBox.getValue(), notasTextArea.getText()}; // Devolver el tipo de asistencia y las notas
-            }
-            return null;
-        });
+            // Crear un VBox para añadir ambos elementos
+            VBox vBox = new VBox(10, new Label("Tipo de Asistencia"), choiceBox, new Label("Notas"), notasTextArea);
+            dialog.getDialogPane().setContent(vBox);
 
-        // Mostrar el Dialog y esperar por la respuesta
-        Optional<String[]> result = dialog.showAndWait();
+            // Añadir botones de OK y Cancelar
+            ButtonType okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
 
-        result.ifPresent(response -> {
-            String newTipoAsistencia = response[0];
-            String notas = response[1];
-
-            // Actualizar el tipo de asistencia en los datos de la tabla
-            employeeData.put("tipoAsistencia", newTipoAsistencia);
-            employeeData.put("notas", notas); // Actualizar también las notas
-
-            // Llamar al DAO para actualizar el tipo de asistencia y guardar las notas
-            try {
-                int tipoAsistenciaId = BaseDAO.obtenerIdTipoAsistencia(newTipoAsistencia);
-                if (tipoAsistenciaId != -1) {
-                    int empleadoId = Integer.parseInt(employeeData.get("id").toString());
-                    String fechaEntrada = employeeData.get("fechaEntrada").toString();
-
-                    // Actualizar el tipo de asistencia del empleado
-                    BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
-
-                    // Obtener el usuario actual desde SessionManager
-                    Usuario currentUser = SessionManager.getCurrentUser();
-
-                    // Verificar si el usuario es un supervisor antes de registrar el cambio en los logs
-                    if (currentUser instanceof Supervisor) {
-                        int supervisorId = currentUser.getId(); // Obtener el ID del supervisor actual
-
-                        // Registrar el cambio en los logs
-                        BaseDAO.registrarCambioLog(supervisorId, "Cambio de tipo de asistencia", empleadoId, notas);
-                    } else {
-                        System.out.println("El usuario actual no tiene permisos para registrar cambios en los logs.");
-                    }
+            // Procesar el resultado cuando se hace clic en OK
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == okButtonType) {
+                    return new String[]{choiceBox.getValue(), notasTextArea.getText()}; // Devolver el tipo de asistencia y las notas
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+                return null;
+            });
 
-            // Recargar la tabla para mostrar el nuevo valor
-            employeeTableView.refresh();
-        });
+            // Mostrar el Dialog y esperar por la respuesta
+            Optional<String[]> result = dialog.showAndWait();
+
+            result.ifPresent(response -> {
+                String newTipoAsistencia = response[0];
+                String notas = response[1];
+
+                // Actualizar el tipo de asistencia en los datos de la tabla
+                employeeData.put("tipoAsistencia", newTipoAsistencia);
+                employeeData.put("notas", notas); // Actualizar también las notas
+
+                // Llamar al DAO para actualizar el tipo de asistencia y guardar las notas
+                try {
+                    int tipoAsistenciaId = BaseDAO.obtenerIdTipoAsistencia(newTipoAsistencia);
+                    if (tipoAsistenciaId != -1) {
+                        int empleadoId = Integer.parseInt(employeeData.get("id").toString());
+                        String fechaEntrada = employeeData.get("fechaEntrada").toString();
+
+                        // Actualizar el tipo de asistencia del empleado
+                        BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
+
+                        // Verificar si el usuario es un Supervisor o un Líder para registrar cambios
+                        if (currentUser instanceof Supervisor || currentUser instanceof Lider) {
+                            int userId = currentUser.getId(); // Obtener el ID del supervisor o líder
+
+                            // Registrar el cambio en los logs
+                            BaseDAO.registrarCambioLog(userId, "Cambio de tipo de asistencia", empleadoId, notas);
+                        } else {
+                            System.out.println("El usuario actual no tiene permisos para registrar cambios en los logs.");
+                        }
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+
+                // Recargar la tabla para mostrar el nuevo valor
+                employeeTableView.refresh();
+            });
+        } else {
+            // Si el usuario no tiene el permiso, mostrar un mensaje o bloquear la acción
+            System.out.println("El usuario no tiene permiso para cambiar el tipo de asistencia.");
+        }
     }
 
 

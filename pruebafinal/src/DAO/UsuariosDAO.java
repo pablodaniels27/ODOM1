@@ -21,11 +21,11 @@ public class UsuariosDAO {
 
         // Consulta para obtener el hash de la contraseña almacenada, departamento, y nombre del departamento
         String query = "SELECT e.id AS empleado_id, e.nombres AS empleado_nombres, e.correo_electronico, " +
-                "u.contrasena_hash, j.nombre AS tipo_usuario, e.departamento_id, d.nombre AS departamento_nombre " +  // Agregar departamento_nombre
+                "u.contrasena_hash, j.nombre AS tipo_usuario, e.departamento_id, d.nombre AS departamento_nombre " +
                 "FROM empleados e " +
                 "JOIN usuarios u ON e.id = u.empleado_id " +
                 "JOIN jerarquias j ON e.jerarquia_id = j.id " +
-                "JOIN departamentos d ON e.departamento_id = d.id " +  // Unir con la tabla de departamentos
+                "JOIN departamentos d ON e.departamento_id = d.id " +
                 "WHERE e.correo_electronico = ?";
 
         try (PreparedStatement stmt = conexion.prepareStatement(query)) {
@@ -40,20 +40,21 @@ public class UsuariosDAO {
                         String nombre = rs.getString("empleado_nombres");
                         String tipoUsuario = rs.getString("tipo_usuario");
                         int departamentoId = rs.getInt("departamento_id");
-                        String departamentoNombre = rs.getString("departamento_nombre");  // Obtener el nombre del departamento
+                        String departamentoNombre = rs.getString("departamento_nombre");
 
-                        // Obtener los permisos del supervisor desde la base de datos
-                        Set<String> permisos = UsuariosDAO.obtenerPermisos(id);  // Obtener permisos del supervisor
-
+                        // Crear el usuario según su tipo (Empleado, Supervisor o Líder)
                         switch (tipoUsuario) {
                             case "Empleado":
                                 usuario = new Empleado(id, nombre, correo);
                                 break;
                             case "Supervisor":
-                                // Pasar el departamentoId, departamentoNombre, y permisos al constructor del supervisor
+                                // Obtener permisos del supervisor
+                                Set<Permisos> permisos = obtenerPermisos(id);
                                 usuario = new Supervisor(id, nombre, correo, departamentoId, departamentoNombre, permisos, this);
                                 break;
                             case "Líder":
+                                // Obtener todos los permisos para el líder
+                                Set<Permisos> permisosLider = Lider.obtenerTodosLosPermisos();
                                 usuario = new Lider(id, nombre, correo);
                                 break;
                         }
@@ -74,11 +75,12 @@ public class UsuariosDAO {
         return usuario;
     }
 
-    // Cargar permisos asignados a un supervisor desde la tabla usuarios_permisos
-    public static Set<String> obtenerPermisos(int supervisorId) throws SQLException {
-        Set<String> permisos = new HashSet<>();
 
-        String query = "SELECT p.nombre " +
+    // Cargar permisos asignados a un supervisor desde la tabla usuarios_permisos
+    public static Set<Permisos> obtenerPermisos(int supervisorId) throws SQLException {
+        Set<Permisos> permisos = new HashSet<>();
+
+        String query = "SELECT p.nombre " +  // Solo obtenemos el nombre del permiso
                 "FROM permisos p " +
                 "JOIN usuarios_permisos up ON p.id = up.permiso_id " +
                 "WHERE up.supervisor_id = ?";
@@ -89,7 +91,11 @@ public class UsuariosDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    permisos.add(rs.getString("nombre"));  // Añadir cada permiso al conjunto
+                    String nombrePermiso = rs.getString("nombre");
+
+                    // Crear objeto Permisos solo con el nombre
+                    Permisos permiso = new Permisos(nombrePermiso);
+                    permisos.add(permiso);
                 }
             }
         }
