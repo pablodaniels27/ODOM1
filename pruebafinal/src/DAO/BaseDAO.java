@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static controllers.DatabaseConnection.getConnection;
+
 public class BaseDAO {
 
     private BaseDAO() {
@@ -65,7 +67,7 @@ public class BaseDAO {
 
     public static int obtenerIdTipoAsistencia(String tipoAsistencia) throws SQLException {
         String query = "SELECT id FROM " + CAMPO_TIPOS_ASISTENCIA + " WHERE " + CAMPO_NOMBRE +" = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             preparedStatement.setString(1, tipoAsistencia);
@@ -82,7 +84,7 @@ public class BaseDAO {
         // Usar las constantes para los nombres de columnas y tablas en la consulta
         String updateQuery = "UPDATE entradas_salidas SET " + CAMPO_TIPOASISTENCIA + "_id = ? " +
                 "WHERE " + CAMPO_EMPLEADO_ID + " = ? AND dia_id = (SELECT id FROM dias WHERE " + CAMPO_FECHA + " = ?)";
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(updateQuery)) {
 
             preparedStatement.setInt(1, tipoAsistenciaId);
@@ -97,7 +99,7 @@ public class BaseDAO {
     public static void registrarCambioLog(int supervisorId, String accion, int empleadoId, String detalles) throws SQLException {
         // Usar las constantes para los nombres de columnas en la consulta
         String insertLogQuery = "INSERT INTO logs (" + CAMPO_SUPERVISOR_ID + ", " + CAMPO_ACCION + ", " + CAMPO_EMPLEADO_OBJETIVO + ", " + CAMPO_DETALLES + ") VALUES (?, ?, ?, ?)";
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(insertLogQuery)) {
 
             preparedStatement.setInt(1, supervisorId);
@@ -115,7 +117,7 @@ public class BaseDAO {
         String query = "SELECT " +  CAMPO_NOMBRE + " FROM " + CAMPO_DEPARTAMENTOS;
         List<String> departamentos = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(query)) {
 
@@ -161,7 +163,7 @@ public class BaseDAO {
 
         List<Map<String, Object>> entries = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
 
             // Si es un supervisor, establecer el parámetro de departamento
@@ -215,7 +217,7 @@ public class BaseDAO {
 
         List<Map<String, Object>> searchResults = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             asignarParametros(preparedStatement, departamentoSeleccionado, searchQuery, fechaInicio, fechaFin, supervisorDepartamentoId);
@@ -361,7 +363,7 @@ public class BaseDAO {
 
         Set<String> empleadosUnicos = new HashSet<>();
 
-        try (Connection connectDB = DatabaseConnection.getConnection();
+        try (Connection connectDB = getConnection();
              PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
 
             int paramIndex = 1;
@@ -415,7 +417,7 @@ public class BaseDAO {
 
         Set<String> fechasUnicas = new HashSet<>();
 
-        try (Connection connectDB = DatabaseConnection.getConnection();
+        try (Connection connectDB = getConnection();
              PreparedStatement preparedStatement = connectDB.prepareStatement(query)) {
 
             System.out.println("Ejecutando consulta SQL: " + query);
@@ -504,7 +506,7 @@ public class BaseDAO {
 
         ObservableList<String> results = FXCollections.observableArrayList();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query.toString())) {
 
             int paramIndex = 1;
@@ -557,7 +559,7 @@ public class BaseDAO {
 
         List<Map<String, Object>> entries = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             // Asignar el departamentoId al parámetro de la consulta
@@ -622,7 +624,7 @@ public class BaseDAO {
 
         query += "GROUP BY d." + CAMPO_NOMBRE + ", t." + CAMPO_NOMBRE;
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             // Asignar parámetros
@@ -671,7 +673,7 @@ public class BaseDAO {
                 "JOIN dias dia ON es.dia_id = dia.id " +
                 "WHERE es." + CAMPO_EMPLEADO_ID + " = ? AND dia." + CAMPO_FECHA + " BETWEEN ? AND ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             // Asignar los parámetros de la consulta
@@ -708,7 +710,7 @@ public class BaseDAO {
             query += " AND CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") LIKE ?";
         }
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             // Asignar el `departamentoId`
@@ -746,7 +748,7 @@ public class BaseDAO {
             query += " WHERE CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") LIKE ?";
         }
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             // Asignar el filtro si está presente
@@ -774,7 +776,7 @@ public class BaseDAO {
     //AuditoriaController
 
     public static ObservableList<String> buscarSupervisores(String searchQuery) throws SQLException {
-        // Construir la consulta usando las constantes
+        // Consulta SQL para buscar supervisores coincidentes con la consulta
         String query = "SELECT DISTINCT CONCAT(esuper." + CAMPO_NOMBRES + ", ' ', esuper." + CAMPO_APELLIDOPATERNO + ", ' ', esuper." + CAMPO_APELLIDOMATERNO + ") AS supervisorNombre " +
                 "FROM logs l " +
                 "JOIN empleados esuper ON l." + CAMPO_SUPERVISOR_ID + " = esuper.id " +
@@ -783,18 +785,24 @@ public class BaseDAO {
 
         ObservableList<String> results = FXCollections.observableArrayList();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
+            // Transformar el parámetro de búsqueda a minúsculas y rodearlo con '%' para el LIKE
             String searchPattern = "%" + searchQuery.toLowerCase() + "%";
             preparedStatement.setString(1, searchPattern);
 
+            // Ejecutar la consulta
             ResultSet resultSet = preparedStatement.executeQuery();
 
+            // Extraer resultados y agregarlos a la lista
             while (resultSet.next()) {
                 String supervisorNombre = resultSet.getString("supervisorNombre");
                 results.add(supervisorNombre);
             }
+        } catch (SQLException e) {
+            System.err.println("Error al buscar supervisores: " + e.getMessage());
+            throw e;  // Volver a lanzar la excepción para que sea manejada en un nivel superior si es necesario
         }
 
         return results;
@@ -815,7 +823,7 @@ public class BaseDAO {
 
         List<AuditoriaController.Auditoria> auditoriaList = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query);
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
@@ -848,7 +856,7 @@ public class BaseDAO {
         String query = "SELECT " + CAMPO_NOMBRE + " FROM jerarquias";
         List<String> puestos = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query);
              ResultSet resultSet = statement.executeQuery()) {
 
@@ -864,7 +872,7 @@ public class BaseDAO {
     public static int obtenerIdDepartamento(String departamentoNombre) throws SQLException {
         // Construir la consulta usando las constantes
         String query = "SELECT id FROM " + CAMPO_DEPARTAMENTOS + " WHERE " + CAMPO_NOMBRE + " = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, departamentoNombre);
             ResultSet resultSet = statement.executeQuery();
@@ -879,7 +887,7 @@ public class BaseDAO {
     public static int obtenerIdPuesto(String puestoNombre) throws SQLException {
         // Construir la consulta usando las constantes
         String query = "SELECT id FROM jerarquias WHERE " + CAMPO_NOMBRE + " = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, puestoNombre);
             ResultSet resultSet = statement.executeQuery();
@@ -898,7 +906,7 @@ public class BaseDAO {
                 ", pais, " + CAMPO_CIUDAD + ", " + CAMPO_CORREO + ", lada, " + CAMPO_TELEFONO + ", rfc, curp, " + CAMPO_PROFESION + ", " + CAMPO_DEPARTAMENTO_ID +
                 ", " + CAMPO_JERARQUIA_ID + ", " + CAMPO_ESTATUS_ID + ") " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setString(1, nombre);
@@ -949,7 +957,7 @@ public class BaseDAO {
     public static int insertarHuella(int empleadoId, byte[] serializedTemplate, byte[] fingerprintImageBytes) throws SQLException {
         // Construir la consulta usando las constantes
         String query = "INSERT INTO huellas (" + CAMPO_EMPLEADO_ID + ", " + CAMPO_HUELLA + ", " + CAMPO_HUELLA_IMAGEN + ") VALUES (?, ?, ?)";
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
 
             statement.setInt(1, empleadoId);
@@ -970,7 +978,7 @@ public class BaseDAO {
     public static void actualizarHuellaEmpleado(int empleadoId, int huellaId) throws SQLException {
         // Construir la consulta usando las constantes
         String query = "UPDATE empleados SET " + CAMPO_HUELLA + " = ? WHERE id = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
 
             statement.setInt(1, huellaId);
@@ -999,7 +1007,7 @@ public class BaseDAO {
 
         sql += " LIMIT ? OFFSET ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             String filtroSQL = "%" + filtro + "%";
@@ -1042,7 +1050,7 @@ public class BaseDAO {
                 "AND (" + CAMPO_NOMBRES + " LIKE ? OR " + CAMPO_APELLIDOPATERNO + " LIKE ?) " +
                 "LIMIT ? OFFSET ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             String filtroSQL = "%" + filtro + "%";
@@ -1072,7 +1080,7 @@ public class BaseDAO {
         // Construir la consulta usando las constantes
         String sql = "UPDATE empleados SET " + CAMPO_ESTATUS_ID + " = 4 WHERE id = ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, empleadoId);
@@ -1088,7 +1096,7 @@ public class BaseDAO {
         String sql = "SELECT id, " + CAMPO_NOMBRE + " FROM " + CAMPO_DEPARTAMENTOS;
         Map<String, Integer> departamentos = new HashMap<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
 
@@ -1108,7 +1116,7 @@ public class BaseDAO {
         String sql = "SELECT id, " + CAMPO_NOMBRE + " FROM jerarquias";
         Map<String, Integer> puestos = new HashMap<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
 
@@ -1128,7 +1136,7 @@ public class BaseDAO {
         String sql = "SELECT id, " + CAMPO_NOMBRE + " FROM estatus_empleado";
         Map<String, Integer> estatus = new HashMap<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
 
@@ -1148,7 +1156,7 @@ public class BaseDAO {
         String sql = "SELECT * FROM empleados WHERE id = ?";
         Map<String, Object> empleadoData = new HashMap<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, empleadoId);
@@ -1184,7 +1192,7 @@ public class BaseDAO {
         String sql = "SELECT " + CAMPO_HUELLA_IMAGEN + " FROM huellas WHERE " + CAMPO_EMPLEADO_ID + " = ?";
         byte[] imageBytes = null;
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, empleadoId);
             ResultSet resultSet = statement.executeQuery();
@@ -1206,7 +1214,7 @@ public class BaseDAO {
                 "rfc = ?, curp = ?, " + CAMPO_PROFESION + " = ?, " + CAMPO_FECHA_NACIMIENTO + " = ?, " +
                 CAMPO_DEPARTAMENTO_ID + " = ?, " + CAMPO_JERARQUIA_ID + " = ?, " + CAMPO_ESTATUS_ID + " = ? WHERE id = ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, (String) empleadoData.get(CAMPO_NOMBRES));
@@ -1244,7 +1252,7 @@ public class BaseDAO {
 
         List<Map<String, Object>> huellas = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet resultSet = statement.executeQuery()) {
 
@@ -1269,9 +1277,9 @@ public class BaseDAO {
     public static Optional<Map<String, LocalTime>> obtenerRegistrosDelDia(int empleadoId, LocalDate fecha) throws SQLException {
         String sql = "SELECT hora_entrada, hora_salida FROM entradas_salidas " +
                 "JOIN dias ON entradas_salidas.dia_id = dias.id " +
-                "WHERE entradas_salidas.empleado_id = ? AND dias.fecha = ?";
+                "WHERE entradas_salidas.empleado_id = ? AND di  as.fecha = ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, empleadoId);
@@ -1291,7 +1299,7 @@ public class BaseDAO {
     }
 
     public static void insertarEntradaAsistencia(int empleadoId, LocalDate fecha, LocalTime horaEntrada) throws SQLException {
-        try (Connection connection = DatabaseConnection.getConnection()) {
+        try (Connection connection = getConnection()) {
             int diaId = obtenerDiaId(connection, fecha);
 
             // Insertar entrada en la base de datos
@@ -1331,7 +1339,7 @@ public class BaseDAO {
     }
 
     public static void actualizarSalidaAsistencia(int empleadoId, LocalDate fecha, LocalTime horaSalida) throws SQLException {
-        try (Connection connection = DatabaseConnection.getConnection()) {
+        try (Connection connection = getConnection()) {
             int diaId = obtenerDiaId(connection, fecha);
 
             // Actualizar la salida en la base de datos
@@ -1350,7 +1358,7 @@ public class BaseDAO {
                 "JOIN dias ON entradas_salidas.dia_id = dias.id " +
                 "WHERE entradas_salidas.empleado_id = ? AND dias.fecha = ?";
 
-        try (Connection connection = DatabaseConnection.getConnection();
+        try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, empleadoId);
@@ -1371,35 +1379,8 @@ public class BaseDAO {
         return Optional.empty();
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//permisos comienzo
 
 
 }
+

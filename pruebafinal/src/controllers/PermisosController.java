@@ -9,4 +9,3 @@ public class PermisosController {
         // Inicializa componentes específicos para la vista de terminación
     }
 }
-
