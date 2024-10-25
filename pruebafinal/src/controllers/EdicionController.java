@@ -60,6 +60,8 @@ public class EdicionController {
 
     private Usuario usuarioAutenticado;
 
+    private int visitas = 0;
+
     public void setUsuarioAutenticado(Usuario usuario) {
         this.usuarioAutenticado = usuario;
 
@@ -184,6 +186,7 @@ public class EdicionController {
     // Método para establecer los valores actuales en los campos
     // Método para cargar datos del empleado
     public void cargarDatosEmpleado(int empleadoId) {
+
         this.empleadoId = empleadoId;
 
         try {
@@ -205,31 +208,39 @@ public class EdicionController {
                 profesionField.setText((String) empleadoData.get("profesion"));
                 fechaNacimientoPicker.setValue(((java.sql.Date) empleadoData.get("fecha_nacimiento")).toLocalDate());
 
-                // Cargar los departamentos y seleccionarlos
-                cargarDepartamentos();
-                Platform.runLater(() -> {
-                    int departamentoId = (int) empleadoData.get("departamento_id");
-                    String departamentoNombre = getKeyByValue(departamentoMap, departamentoId);
-                    if (departamentoNombre != null) {
-                        departamentoChoiceBox.setValue(departamentoNombre);
-                        System.out.println("Departamento cargado: " + departamentoNombre);
-                    } else {
-                        System.out.println("Error al cargar el departamento: ID no encontrado.");
-                    }
-                });
 
-                // Cargar los puestos y seleccionarlos
-                cargarPuestos();
-                Platform.runLater(() -> {
-                    int puestoId = (int) empleadoData.get("jerarquia_id");
-                    String puestoNombre = getKeyByValue(puestoMap, puestoId);
-                    if (puestoNombre != null) {
-                        puestoChoiceBox.setValue(puestoNombre);
-                        System.out.println("Puesto cargado: " + puestoNombre);
-                    } else {
-                        System.out.println("Error al cargar el puesto: ID no encontrado.");
-                    }
-                });
+                if (visitas == 0 || usuarioAutenticado instanceof Lider ){
+
+                    // Cargar los departamentos y seleccionarlos
+                    cargarDepartamentos();
+                    Platform.runLater(() -> {
+                        int departamentoId = (int) empleadoData.get("departamento_id");
+                        String departamentoNombre = getKeyByValue(departamentoMap, departamentoId);
+                        if (departamentoNombre != null) {
+                            departamentoChoiceBox.setValue(departamentoNombre);
+                            System.out.println("Departamento cargado: " + departamentoNombre);
+                        } else {
+                            System.out.println("Error al cargar el departamento: ID no encontrado.");
+                        }
+                    });
+
+                    // Cargar los puestos y seleccionarlos
+                    cargarPuestos();
+                    Platform.runLater(() -> {
+                        int puestoId = (int) empleadoData.get("jerarquia_id");
+                        String puestoNombre = getKeyByValue(puestoMap, puestoId);
+                        if (puestoNombre != null) {
+                            puestoChoiceBox.setValue(puestoNombre);
+                            System.out.println("Puesto cargado: " + puestoNombre);
+                        } else {
+                            System.out.println("Error al cargar el puesto: ID no encontrado.");
+                        }
+
+
+                    });
+
+                }
+
 
                 // Cargar el estatus seleccionado
                 int estatusId = (int) empleadoData.get("estatus_id");
@@ -238,8 +249,7 @@ public class EdicionController {
                 // Cargar la huella y mostrarla
                 cargarHuella(empleadoId);
 
-                // Guardar los valores originales
-                guardarDatosOriginales();
+                visitas++;
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -277,32 +287,11 @@ public class EdicionController {
         return null;
     }
 
-    // Método para guardar los datos originales
-    // Método para guardar los datos originales
-    private void guardarDatosOriginales() {
-        datosOriginales.put("nombre", nombreField.getText());
-        datosOriginales.put("apellidoPaterno", apellidoPaternoField.getText());
-        datosOriginales.put("apellidoMaterno", apellidoMaternoField.getText());
-        datosOriginales.put("pais", paisField.getText());
-        datosOriginales.put("ciudad", ciudadField.getText());
-        datosOriginales.put("lada", ladaField.getText());
-        datosOriginales.put("telefono", telefonoField.getText());
-        datosOriginales.put("email", emailField.getText());
-        datosOriginales.put("rfc", rfcField.getText());
-        datosOriginales.put("curp", curpField.getText());
-        datosOriginales.put("profesion", profesionField.getText());
-        datosOriginales.put("fechaNacimiento", fechaNacimientoPicker.getValue());
 
-        // Aquí nos aseguramos de guardar los nombres de departamento y puesto, no los IDs
-        datosOriginales.put("departamento", departamentoChoiceBox.getValue());
-        datosOriginales.put("puesto", puestoChoiceBox.getValue());
-        datosOriginales.put("estatus", estatusChoiceBox.getValue());
 
-        // Debugging para asegurarnos de que se guardaron correctamente
-        System.out.println("Datos originales guardados:");
-        System.out.println("Departamento: " + departamentoChoiceBox.getValue());
-        System.out.println("Puesto: " + puestoChoiceBox.getValue());
-    }
+
+
+
 
 
 
@@ -310,42 +299,11 @@ public class EdicionController {
 // Método para deshacer cambios y restaurar los valores originales
     @FXML
     private void deshacerCambios() {
-        // Volvemos a cargar los departamentos y puestos antes de restaurar sus valores
-        if (departamentoChoiceBox.getItems().isEmpty()) {
-            cargarDepartamentos();
-        }
-        if (puestoChoiceBox.getItems().isEmpty()) {
-            cargarPuestos();
-        }
-
-        System.out.println("Restaurando los valores originales...");
-
-        // Restaurar los valores originales
-        nombreField.setText((String) datosOriginales.get("nombre"));
-        apellidoPaternoField.setText((String) datosOriginales.get("apellidoPaterno"));
-        apellidoMaternoField.setText((String) datosOriginales.get("apellidoMaterno"));
-        paisField.setText((String) datosOriginales.get("pais"));
-        ciudadField.setText((String) datosOriginales.get("ciudad"));
-        ladaField.setText((String) datosOriginales.get("lada"));
-        telefonoField.setText((String) datosOriginales.get("telefono"));
-        emailField.setText((String) datosOriginales.get("email"));
-        rfcField.setText((String) datosOriginales.get("rfc"));
-        curpField.setText((String) datosOriginales.get("curp"));
-        profesionField.setText((String) datosOriginales.get("profesion"));
-        fechaNacimientoPicker.setValue((LocalDate) datosOriginales.get("fechaNacimiento"));
-
-        // Debugging para ver qué valores estamos restaurando
-        System.out.println("Departamento a restaurar: " + datosOriginales.get("departamento"));
-        System.out.println("Puesto a restaurar: " + datosOriginales.get("puesto"));
-
-        departamentoChoiceBox.setValue((String) datosOriginales.get("departamento"));
-        puestoChoiceBox.setValue((String) datosOriginales.get("puesto"));
-        estatusChoiceBox.setValue((String) datosOriginales.get("estatus"));
-
-        // Verificar qué valores se están poniendo después de setValue
-        System.out.println("Departamento restaurado: " + departamentoChoiceBox.getValue());
-        System.out.println("Puesto restaurado: " + puestoChoiceBox.getValue());
+        cargarDatosEmpleado(empleadoId);
     }
+
+
+
     // Método para validar los campos antes de guardar los cambios
     private boolean validarCampos() {
         // Validación de Lada
@@ -473,26 +431,52 @@ public class EdicionController {
     // Método para regresar a la vista de registro de sucursal
     @FXML
     private void regresarARegistroSucursal() {
-        try {
-            // Obtén el StackPane principal desde la escena actual
-            StackPane mainContent = (StackPane) regresarButton.getScene().lookup("#mainContent");
 
-            // Carga la vista de RegistroSucursal
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
-            Parent registroView = loader.load();
+        if (usuarioAutenticado instanceof Lider){
+            try {
+                // Obtén el StackPane principal desde la escena actual
+                StackPane mainContent = (StackPane) regresarButton.getScene().lookup("#mainContent");
 
-            // Obtén el controlador de RegistroSucursal
-            RegistroSucursalController registroController = loader.getController();
+                // Carga la vista de RegistroSucursal
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
+                Parent registroView = loader.load();
 
-            // Configura el usuario autenticado en el controlador de RegistroSucursal
-            registroController.setUsuarioAutenticado(usuarioAutenticado);
+                // Obtén el controlador de RegistroSucursal
+                RegistroSucursalController registroController = loader.getController();
 
-            // Limpia el contenido actual y añade la nueva vista
-            mainContent.getChildren().clear();
-            mainContent.getChildren().add(registroView);
-        } catch (IOException e) {
-            e.printStackTrace();
+                // Configura el usuario autenticado en el controlador de RegistroSucursal
+                registroController.setUsuarioAutenticado(usuarioAutenticado);
+
+                // Limpia el contenido actual y añade la nueva vista
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(registroView);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }else{
+            try {
+                // Obtén el StackPane principal desde la escena actual
+                StackPane mainContent = (StackPane) regresarButton.getScene().lookup("#mainContent");
+
+                // Carga la vista de RegistroSucursal
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView2.fxml"));
+                Parent registroView = loader.load();
+
+                // Obtén el controlador de RegistroSucursal
+                RegistroSucursalController2 registroController = loader.getController();
+
+                // Configura el usuario autenticado en el controlador de RegistroSucursal
+                registroController.setUsuarioAutenticado(usuarioAutenticado);
+
+                // Limpia el contenido actual y añade la nueva vista
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(registroView);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
     // Método para verificar si hay cambios entre los valores actuales y los originales
