@@ -1,15 +1,17 @@
 package Usuarios;
-import java.util.Set;
 
 public class Permisos {
-    private Set<String> permisosAsignados;
+    private String nombre;
 
-    public Permisos(Set<String> permisosAsignados) {
-        this.permisosAsignados = permisosAsignados;
+    public Permisos(String nombre) {
+        this.nombre = nombre;
     }
 
-    // Verificar si el supervisor tiene un permiso en particular
-    public boolean tienePermiso(String permiso) {
-        return permisosAsignados.contains(permiso);
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 }

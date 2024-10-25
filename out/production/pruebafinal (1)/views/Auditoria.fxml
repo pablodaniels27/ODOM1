@@ -36,17 +36,17 @@
                     <HBox alignment="CENTER_LEFT" spacing="10" GridPane.columnIndex="0" GridPane.rowIndex="2">
                         <!-- Filtrar por acción -->
                         <Label style="-fx-font-weight: bold;" text="Filtrar por acción:" />
-                        <ComboBox fx:id="actionFilterComboBox">
+                        <ChoiceBox fx:id="actionFilterChoiceBox" prefWidth="200">
                             <items>
                                 <FXCollections fx:factory="observableArrayList">
                                     <String fx:value="Todos" />
-                                    <String fx:value="Agregar" />
-                                    <String fx:value="Modificar" />
-                                    <String fx:value="Eliminar" />
-                                    <String fx:value="Consultar" />
+                                    <String fx:value="Actualización de datos de empleado" />
+                                    <String fx:value="Dar de baja empleado" />
+                                    <String fx:value="Cambio de tipo de asistencia" />
                                 </FXCollections>
                             </items>
-                        </ComboBox>
+                        </ChoiceBox>
+
                         <!-- Botón de Buscar -->
                         <Button fx:id="searchButton" onAction="#validateAndSearch" text="Buscar" />
                         <!-- Botón portapapeles -->

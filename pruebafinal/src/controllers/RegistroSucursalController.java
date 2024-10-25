@@ -2,6 +2,7 @@ package controllers;
 
 import DAO.BaseDAO;
 import Services.CacheService;
+import Usuarios.Lider;
 import Usuarios.Supervisor;
 import Usuarios.Usuario;
 import javafx.fxml.FXML;
@@ -355,11 +356,16 @@ public class RegistroSucursalController {
                     // Cambiar el estatus del empleado a 'Baja' usando el método en el DAO
                     BaseDAO.darDeBajaEmpleado(empleadoId);
 
-                    // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
-                    empleadosContainer.getChildren().remove(empleadoBox);
-                    supervisoresContainer.getChildren().remove(empleadoBox);
+                    // Registrar en los logs si el usuario es un Supervisor o un Líder
+                    if (usuarioAutenticado instanceof Supervisor || usuarioAutenticado instanceof Lider) {
+                        int userId = usuarioAutenticado.getId(); // Obtener el ID del supervisor o líder
+                        String detalles = "Empleado con ID " + empleadoId + " fue dado de baja.";
 
-                    // Remover el empleado de la vista
+                        // Registrar el cambio en los logs
+                        BaseDAO.registrarCambioLogCambios(userId, "Dar de baja empleado", empleadoId, detalles);
+                    }
+
+                    // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
                     empleadosContainer.getChildren().remove(empleadoBox);
                     supervisoresContainer.getChildren().remove(empleadoBox);
                 } catch (SQLException e) {
@@ -370,8 +376,8 @@ public class RegistroSucursalController {
                 System.out.println("La acción de dar de baja fue cancelada.");
             }
         });
-
     }
+
 
 
     private void cargarVistaEdicion(int empleadoId) {
