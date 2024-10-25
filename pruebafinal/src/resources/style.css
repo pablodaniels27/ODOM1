@@ -185,3 +185,9 @@
 .scroll-bar .decrement-button {
     -fx-background-color: #2196F3;
 }
+
+.titled-pane > .title > .arrow-button {
+    -fx-opacity: 0;
+    -fx-padding: 0;
+    -fx-shape: "M0 0"; /* Removes the shape */
+}

@@ -1,77 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="443.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx/fxml/1">
+<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PermisosController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
-                <HBox alignment="CENTER" prefHeight="126.0" prefWidth="800.0" spacing="10.0" BorderPane.alignment="CENTER">
-                    <children>
+                <VBox spacing="10" BorderPane.alignment="CENTER">
+                    <!-- Título -->
+                    <HBox alignment="CENTER" spacing="10">
                         <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Acceso de Administración" />
                         <Label style="-fx-font-size: 14px;" text="(Define un rol o asigna derechos)" />
-                    </children>
-                </HBox>
+                    </HBox>
+
+                    <!-- Barra de búsqueda de supervisores -->
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label style="-fx-font-weight: bold;" text="Buscar Supervisor:" />
+                        <TextField fx:id="searchField" onKeyReleased="#searchForSupervisors" prefWidth="300" promptText="Buscar supervisor..." />
+                        <Button text="Buscar" onAction="#handleSearch" />
+                    </HBox>
+                </VBox>
             </top>
+
             <center>
-                <ScrollPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
+                <ScrollPane prefHeight="500.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
                     <content>
-                        <Accordion prefHeight="256.0" prefWidth="658.0">
-                            <panes>
-                                <!-- TitledPane 1: Registro -->
-                                <TitledPane animated="false" text="Registro">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                            <children>
-                                                <VBox alignment="CENTER" spacing="10">
-                                                    <children>
-                                                        <CheckBox text="Si el supervisor puede registrar más empleados" />
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </AnchorPane>
-                                    </content>
-                                </TitledPane>
+                        <VBox alignment="CENTER" spacing="10" fillWidth="true">
 
-                                <!-- TitledPane 2: Gestión de empleados -->
-                                <TitledPane animated="false" text="Gestión de empleados">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                            <children>
-                                                <VBox alignment="CENTER" spacing="10">
-                                                    <children>
-                                                        <CheckBox text="Si el supervisor puede editar empleados" />
-                                                        <CheckBox text="Si el supervisor puede editar la huella" />
-                                                        <CheckBox text="Si el supervisor puede cambiar un Estatus al empleado" />
-                                                        <CheckBox text="Si el supervisor puede dar de baja empleados" />
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </AnchorPane>
-                                    </content>
-                                </TitledPane>
+                            <!-- Sección Registro -->
+                            <HBox spacing="5" alignment="CENTER_LEFT">
+                                <Label text="Registro" />
+                                <CheckBox fx:id="checkBoxRegistro" onAction="#toggleRegistro" />
+                            </HBox>
+                            <VBox alignment="CENTER_LEFT" spacing="10">
+                                <CheckBox text="Si el supervisor puede registrar más empleados" fx:id="registroPermiso1" disable="true" />
+                            </VBox>
 
-                                <!-- TitledPane 3: Monitoreo -->
-                                <TitledPane animated="false" text="Monitoreo">
-                                    <content>
-                                        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                                            <children>
-                                                <VBox alignment="CENTER" spacing="10">
-                                                    <children>
-                                                        <CheckBox text="Si puede editar su tipo de asistencia" />
-                                                        <CheckBox text="Si el supervisor puede editar la nota" />
-                                                    </children>
-                                                </VBox>
-                                            </children>
-                                        </AnchorPane>
-                                    </content>
-                                </TitledPane>
-                            </panes>
-                        </Accordion>
+                            <!-- Sección Gestión de empleados -->
+                            <HBox spacing="5" alignment="CENTER_LEFT">
+                                <Label text="Gestión de empleados" />
+                                <CheckBox fx:id="checkBoxGestion" onAction="#toggleGestion" />
+                            </HBox>
+                            <VBox alignment="CENTER_LEFT" spacing="10">
+                                <CheckBox text="Si el supervisor puede editar empleados" fx:id="gestionPermiso1" disable="true" />
+                                <CheckBox text="Si el supervisor puede editar la huella" fx:id="gestionPermiso2" disable="true" />
+                                <CheckBox text="Si el supervisor puede cambiar un Estatus al empleado" fx:id="gestionPermiso3" disable="true" />
+                                <CheckBox text="Si el supervisor puede dar de baja empleados" fx:id="gestionPermiso4" disable="true" />
+                            </VBox>
+
+                            <!-- Sección Monitoreo -->
+                            <HBox spacing="5" alignment="CENTER_LEFT">
+                                <Label text="Monitoreo" />
+                                <CheckBox fx:id="checkBoxMonitoreo" onAction="#toggleMonitoreo" />
+                            </HBox>
+                            <VBox alignment="CENTER_LEFT" spacing="10">
+                                <CheckBox text="Si puede editar su tipo de asistencia" fx:id="monitoreoPermiso1" disable="true" />
+                                <CheckBox text="Si el supervisor puede editar la nota" fx:id="monitoreoPermiso2" disable="true" />
+                            </VBox>
+
+                        </VBox>
                     </content>
                 </ScrollPane>
             </center>
+
+            <!-- Botón de aplicar cambios -->
+            <bottom>
+                <HBox alignment="CENTER" spacing="10" BorderPane.alignment="CENTER">
+                    <Button text="Aplicar cambios" onAction="#applyChanges" />
+                </HBox>
+            </bottom>
         </BorderPane>
     </children>
 </AnchorPane>
