@@ -172,7 +172,7 @@ public class RegistroController {
 
             // Insertar la huella en la base de datos
             if (template != null) {
-                byte[] serializedTemplate = BaseDAO.serializarTemplate(template);
+                byte[] serializedTemplate = template.serialize(); // Usa el método de la API para serializar
                 if (serializedTemplate != null) {
                     int huellaId = BaseDAO.insertarHuella(empleadoId, serializedTemplate, fingerprintImageBytes);
                     if (huellaId != -1) {
@@ -241,8 +241,6 @@ public class RegistroController {
         rfcField.setText("PEGA900101ABC");
         curpField.setText("PEGA901101HMCRRL00");
         profesionField.setText("Ingeniero");
-        departamentoChoiceBox.getSelectionModel().selectFirst();
-        puestoChoiceBox.getSelectionModel().select(2);
     }
 
     @FXML

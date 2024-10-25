@@ -71,6 +71,8 @@ public class MainController {
         //showInicio();
     }
 
+
+
     public void setUsuarioAutenticado(Usuario usuario) {
         this.usuarioAutenticado = usuario;
 
@@ -140,13 +142,37 @@ public class MainController {
 
     @FXML
     public void showRegistroSucursal() {
-        if (tienePermiso("Ver Gestión de empleados")) {
+
+
+        if (tienePermiso("Ver Gestión de empleados") && (usuarioAutenticado instanceof Lider)) {
             try {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
                 Parent root = loader.load();
 
                 // Obtener el controlador de la vista
                 RegistroSucursalController registroSucursalController = loader.getController();
+                registroSucursalController.setUsuarioAutenticado(usuarioAutenticado); // Pasar el usuario autenticado
+
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(root);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            showRegistroSucursal2();
+
+        }
+    }
+
+    @FXML
+    public void showRegistroSucursal2() {
+        if (tienePermiso("Ver Gestión de empleados")) {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView2.fxml"));
+                Parent root = loader.load();
+
+                // Obtener el controlador de la vista
+                RegistroSucursalController2 registroSucursalController = loader.getController();
                 registroSucursalController.setUsuarioAutenticado(usuarioAutenticado); // Pasar el usuario autenticado
 
                 mainContent.getChildren().clear();
@@ -168,6 +194,9 @@ public class MainController {
             showAccessDeniedAlert();
         }
     }
+
+
+
 
     @FXML
     public void showPermisos() {
