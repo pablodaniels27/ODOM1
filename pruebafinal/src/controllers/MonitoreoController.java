@@ -428,6 +428,9 @@ public class MonitoreoController {
             ChoiceBox<String> choiceBox = new ChoiceBox<>();
             choiceBox.getItems().addAll("Asistencia", "No Asistencia", "Retardo", "Justificación");
 
+            // Obtener el tipo de asistencia actual del empleado para registrarlo luego
+            String tipoAsistenciaActual = (String) employeeData.get("tipoAsistencia");
+
             // Crear un TextArea para las notas
             TextArea notasTextArea = new TextArea();
             notasTextArea.setPromptText("Escribe la razón del cambio...");
@@ -452,14 +455,17 @@ public class MonitoreoController {
             Optional<String[]> result = dialog.showAndWait();
 
             result.ifPresent(response -> {
-                String newTipoAsistencia = response[0];
-                String notas = response[1];
+                String newTipoAsistencia = response[0]; // Nuevo tipo de asistencia
+                String notas = response[1]; // Nota del cambio
+
+                // Crear la descripción del cambio
+                String descripcionCambio = tipoAsistenciaActual + " cambio a " + newTipoAsistencia;
 
                 // Actualizar el tipo de asistencia en los datos de la tabla
                 employeeData.put("tipoAsistencia", newTipoAsistencia);
                 employeeData.put("notas", notas); // Actualizar también las notas
 
-                // Llamar al DAO para actualizar el tipo de asistencia y guardar las notas
+                // Llamar al DAO para actualizar el tipo de asistencia, las notas y registrar el cambio
                 try {
                     int tipoAsistenciaId = BaseDAO.obtenerIdTipoAsistencia(newTipoAsistencia);
                     if (tipoAsistenciaId != -1) {
@@ -473,8 +479,8 @@ public class MonitoreoController {
                         if (currentUser instanceof Supervisor || currentUser instanceof Lider) {
                             int userId = currentUser.getId(); // Obtener el ID del supervisor o líder
 
-                            // Registrar el cambio en los logs
-                            BaseDAO.registrarCambioLog(userId, "Cambio de tipo de asistencia", empleadoId, notas);
+                            // Registrar el cambio en los logs, incluyendo notas y la descripción del cambio
+                            BaseDAO.registrarCambioLog(userId, "Cambio de tipo de asistencia", empleadoId, notas, descripcionCambio);
                         } else {
                             System.out.println("El usuario actual no tiene permisos para registrar cambios en los logs.");
                         }
@@ -491,6 +497,7 @@ public class MonitoreoController {
             System.out.println("El usuario no tiene permiso para cambiar el tipo de asistencia.");
         }
     }
+
 
 
     private void cargarDepartamentos() {

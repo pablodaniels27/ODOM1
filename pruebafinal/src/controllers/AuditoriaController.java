@@ -39,7 +39,8 @@ public class AuditoriaController {
     private TextField userFilterField;
 
     @FXML
-    private ComboBox<String> actionFilterComboBox;
+    private ChoiceBox<String> actionFilterChoiceBox; // Cambiar ComboBox por ChoiceBox
+
 
     @FXML
     private TableView<Auditoria> auditoriaTable;
@@ -69,7 +70,12 @@ public class AuditoriaController {
     private HBox paginationBox;
 
     private ObservableList<Auditoria> auditoriaData = FXCollections.observableArrayList();
+
+
+
     private ObservableList<Auditoria> filteredData = FXCollections.observableArrayList();
+
+
     private int itemsPerPage = 10;
     private int currentPage = 1;
     private int totalPages = 1;
@@ -88,7 +94,9 @@ public class AuditoriaController {
         departamentoColumn.setCellValueFactory(new PropertyValueFactory<>("departamentoNombre"));
         accionColumn.setCellValueFactory(new PropertyValueFactory<>("accion"));
         timestampColumn.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
-        detallesColumn.setCellValueFactory(new PropertyValueFactory<>("detalles"));
+        detallesColumn.setCellValueFactory(new PropertyValueFactory<>("cambios")); // Ahora muestra la columna 'cambios'
+
+
 
         // Configurar la columna detalles con estilo de enlace y mostrar un popup
         detallesColumn.setCellFactory(tc -> new TableCell<Auditoria, String>() {
@@ -104,32 +112,15 @@ public class AuditoriaController {
                     setStyle("-fx-text-fill: blue; -fx-underline: true;");
                     setOnMouseClicked(event -> {
                         if (!isEmpty()) {
-                            showDetailsPopup(item);
+                            showDetailsPopup(item);  // Mostramos un popup con los detalles
                         }
                     });
                 }
             }
         });
 
-        actionFilterComboBox.getItems().addAll("Todos", "Agregar", "Modificar", "Eliminar", "Consultar");
-
         // Cargar datos iniciales
         cargarDatos();
-
-        // Copiar los datos cargados a la lista filtrada
-        filteredData.addAll(auditoriaData);
-
-        // Configurar el ChoiceBox de items por página
-        itemsPerPageChoiceBox.setItems(FXCollections.observableArrayList(10, 20, 30, 40));
-        itemsPerPageChoiceBox.setValue(itemsPerPage);
-        itemsPerPageChoiceBox.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
-            itemsPerPage = newVal;
-            totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
-            showPage(1); // Mostrar la primera página después de cambiar items per page
-        });
-
-        // Calcular total de páginas
-        totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
 
         // Mostrar la primera página
         showPage(1);
@@ -240,7 +231,7 @@ public class AuditoriaController {
     @FXML
     private void handleSearch() {
         String supervisorFilter = searchField.getText().trim().toLowerCase();
-        String actionFilter = actionFilterComboBox.getValue();
+        String actionFilter = actionFilterChoiceBox.getValue(); // ChoiceBox
         LocalDate fechaInicio = fechaInicioPicker.getValue();
         LocalDate fechaFin = fechaFinPicker.getValue();
 
@@ -250,6 +241,7 @@ public class AuditoriaController {
             boolean matchesSupervisor = supervisorFilter.isEmpty() ||
                     auditoria.getNombreSupervisor().toLowerCase().contains(supervisorFilter);
 
+            // Verifica si la acción coincide o si se ha seleccionado "Todos"
             boolean matchesAction = actionFilter == null || actionFilter.equals("Todos") ||
                     auditoria.getAccion().equalsIgnoreCase(actionFilter);
 
@@ -259,6 +251,7 @@ public class AuditoriaController {
                 matchesDateRange = !auditDate.isBefore(fechaInicio) && !auditDate.isAfter(fechaFin);
             }
 
+            // Si todos los filtros coinciden, añadir a la lista filtrada
             if (matchesSupervisor && matchesAction && matchesDateRange) {
                 filteredList.add(auditoria);
             }
@@ -276,13 +269,14 @@ public class AuditoriaController {
         auditoriaData.clear();
 
         try {
-            // Obtener los datos de auditoría desde el DAO
             List<Auditoria> datos = BaseDAO.obtenerDatosAuditoria();
-            auditoriaData.addAll(datos);
+            auditoriaData.addAll(datos);  // Añadir los datos a la tabla
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+
 
 
     private void showPage(int pageNumber) {
@@ -376,47 +370,7 @@ public class AuditoriaController {
         alert.showAndWait();
     }
 
-    public static class Auditoria {
-        private String nombreCompletoEmpleado;
-        private String departamentoNombre;
-        private String accion;
-        private String nombreSupervisor;
-        private String timestamp;
-        private String detalles;
 
-        public Auditoria(String nombreCompletoEmpleado, String departamentoNombre, String accion, String nombreSupervisor, String timestamp, String detalles) {
-            this.nombreCompletoEmpleado = nombreCompletoEmpleado;
-            this.departamentoNombre = departamentoNombre;
-            this.accion = accion;
-            this.nombreSupervisor = nombreSupervisor;
-            this.timestamp = timestamp;
-            this.detalles = detalles;
-        }
-
-        public String getNombreCompletoEmpleado() {
-            return nombreCompletoEmpleado;
-        }
-
-        public String getDepartamentoNombre() {
-            return departamentoNombre;
-        }
-
-        public String getAccion() {
-            return accion;
-        }
-
-        public String getNombreSupervisor() {
-            return nombreSupervisor;
-        }
-
-        public String getTimestamp() {
-            return timestamp;
-        }
-
-        public String getDetalles() {
-            return detalles;
-        }
-    }
 
     @FXML
     private void copyToClipboard() {
@@ -426,7 +380,7 @@ public class AuditoriaController {
 
         // Recorrer todos los datos de la lista 'filteredData' para copiar al portapapeles
         for (Auditoria auditoria : filteredData) {
-            String detalles = auditoria.getDetalles().replace("\n", " ").replace("\r", " "); // Reemplazar saltos de línea con un espacio
+            String detalles = auditoria.getCambios().replace("\n", " ").replace("\r", " "); // Reemplazar saltos de línea con un espacio
 
             clipboardContent.append(auditoria.getNombreSupervisor()).append("\t")
                     .append(auditoria.getDepartamentoNombre()).append("\t")
@@ -457,8 +411,8 @@ public class AuditoriaController {
         searchField.clear();
         fechaInicioPicker.setValue(null);
         fechaFinPicker.setValue(null);
-        actionFilterComboBox.getSelectionModel().clearSelection();
-        actionFilterComboBox.getSelectionModel().selectFirst(); // Seleccionar "Todos" si está disponible
+        actionFilterChoiceBox.getSelectionModel().clearSelection();
+        actionFilterChoiceBox.getSelectionModel().selectFirst(); // Seleccionar "Todos" si está disponible
 
         // Volver a cargar los datos iniciales
         cargarDatos(); // Cargar todos los registros desde la base de datos

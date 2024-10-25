@@ -405,6 +405,9 @@ public class EdicionController {
                     empleadoData.put("estatus_id", estatusMap.get(estatusChoiceBox.getValue()));
                     empleadoData.put("id", empleadoId);
 
+                    // Obtener los datos antiguos del empleado antes de actualizar
+                    Map<String, Object> datosAntiguos = BaseDAO.obtenerDatosEmpleado(empleadoId);
+
                     // Llamar al DAO para guardar los cambios
                     boolean success = BaseDAO.actualizarEmpleado(empleadoData);
                     if (success) {
@@ -413,10 +416,27 @@ public class EdicionController {
                         // Registrar el cambio en los logs
                         if (usuarioAutenticado instanceof Supervisor || usuarioAutenticado instanceof Lider) {
                             int userId = usuarioAutenticado.getId(); // Obtener el ID del usuario que realizó el cambio
-                            String detalles = "Actualización de datos para el empleado con ID " + empleadoId;
 
-                            // Llamada a registrar en el log
-                            BaseDAO.registrarCambioLog(userId, "Actualización de datos de empleado", empleadoId, detalles);
+                            // Crear el detalle de los cambios realizados
+                            StringBuilder cambios = new StringBuilder();
+                            if (!datosAntiguos.get("profesion").equals(empleadoData.get("profesion"))) {
+                                cambios.append("Profesion cambió de ")
+                                        .append(datosAntiguos.get("profesion"))
+                                        .append(" a ")
+                                        .append(empleadoData.get("profesion"))
+                                        .append(". ");
+                            }
+                            if (!datosAntiguos.get("rfc").equals(empleadoData.get("rfc"))) {
+                                cambios.append("RFC cambió de ")
+                                        .append(datosAntiguos.get("rfc"))
+                                        .append(" a ")
+                                        .append(empleadoData.get("rfc"))
+                                        .append(". ");
+                            }
+                            // Aquí podrías agregar más validaciones de cambios para otros campos
+
+                            // Llamada a registrar en el log con el campo cambios
+                            BaseDAO.registrarCambioLogCambios(userId, "Actualización de datos de empleado", empleadoId, cambios.toString());
                         }
 
                         // Mostrar alerta de éxito

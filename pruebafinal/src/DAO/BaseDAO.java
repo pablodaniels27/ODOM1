@@ -3,6 +3,8 @@ package DAO;
 import Usuarios.SessionManager;
 import Usuarios.Supervisor;
 import Usuarios.Usuario;
+
+import controllers.Auditoria;
 import controllers.AuditoriaController;
 import controllers.DatabaseConnection;
 import controllers.InicioController;
@@ -60,6 +62,7 @@ public class BaseDAO {
     // Nuevas constantes para las columnas de la tabla de huellas
     private static final String CAMPO_HUELLA = "huella";
     private static final String CAMPO_HUELLA_IMAGEN = "huella_imagen";
+    private static final String CAMPO_CAMBIOS ="cambios";
 
 
 
@@ -96,20 +99,44 @@ public class BaseDAO {
     }
 
 
-    public static void registrarCambioLog(int supervisorId, String accion, int empleadoId, String detalles) throws SQLException {
+    public static void registrarCambioLog(int supervisorId, String accion, int empleadoId, String detalles, String cambios) throws SQLException {
         // Usar las constantes para los nombres de columnas en la consulta
-        String insertLogQuery = "INSERT INTO logs (" + CAMPO_SUPERVISOR_ID + ", " + CAMPO_ACCION + ", " + CAMPO_EMPLEADO_OBJETIVO + ", " + CAMPO_DETALLES + ") VALUES (?, ?, ?, ?)";
+        String insertLogQuery = "INSERT INTO logs (" + CAMPO_SUPERVISOR_ID + ", " + CAMPO_ACCION + ", " + CAMPO_EMPLEADO_OBJETIVO + ", " + CAMPO_DETALLES + ", " + CAMPO_CAMBIOS + ") VALUES (?, ?, ?, ?, ?)";
+
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(insertLogQuery)) {
 
+            // Configurar los valores en la consulta SQL
             preparedStatement.setInt(1, supervisorId);
             preparedStatement.setString(2, accion);
             preparedStatement.setInt(3, empleadoId);
-            preparedStatement.setString(4, detalles);
+            preparedStatement.setString(4, detalles); // Notas o detalles del cambio
+            preparedStatement.setString(5, cambios);  // Descripción del cambio
 
+            // Ejecutar la actualización
             preparedStatement.executeUpdate();
         }
     }
+
+    public static void registrarCambioLogCambios(int supervisorId, String accion, int empleadoId, String cambios) throws SQLException {
+        // Usar las constantes para los nombres de columnas en la consulta
+        String insertLogQuery = "INSERT INTO logs (" + CAMPO_SUPERVISOR_ID + ", " + CAMPO_ACCION + ", " + CAMPO_EMPLEADO_OBJETIVO + ", " + CAMPO_CAMBIOS + ") VALUES (?, ?, ?, ?)";
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(insertLogQuery)) {
+
+            // Configurar los valores en la consulta SQL
+            preparedStatement.setInt(1, supervisorId);
+            preparedStatement.setString(2, accion);
+            preparedStatement.setInt(3, empleadoId);
+            preparedStatement.setString(4, cambios);  // Registrar los cambios
+
+            // Ejecutar la actualización
+            preparedStatement.executeUpdate();
+        }
+    }
+
+
 
 
     //este metodo tambien se usa en Registro controller
@@ -809,19 +836,18 @@ public class BaseDAO {
     }
 
 
-    public static List<AuditoriaController.Auditoria> obtenerDatosAuditoria() throws SQLException {
-        // Construir la consulta usando las constantes
-        String query = "SELECT l." + CAMPO_SUPERVISOR_ID + ", l." + CAMPO_ACCION + ", l." + CAMPO_EMPLEADO_OBJETIVO + ", l.timestamp, l." + CAMPO_DETALLES + ", " +
-                "esuper." + CAMPO_NOMBRES + " AS supervisor_nombres, esuper." + CAMPO_APELLIDOPATERNO + " AS supervisor_apellido_paterno, esuper." + CAMPO_APELLIDOMATERNO + " AS supervisor_apellido_materno, " +
-                "etarget." + CAMPO_NOMBRES + " AS empleado_nombres, etarget." + CAMPO_APELLIDOPATERNO + " AS empleado_apellido_paterno, etarget." + CAMPO_APELLIDOMATERNO + " AS empleado_apellido_materno, " +
-                "d." + CAMPO_NOMBRE + " AS departamento_nombre " +
+    public static List<Auditoria> obtenerDatosAuditoria() throws SQLException {
+        String query = "SELECT l.supervisor_id, l.action, l.target_employee_id, l.timestamp, l.cambios, " +
+                "esuper.nombres AS supervisor_nombres, esuper.apellido_paterno AS supervisor_apellido_paterno, esuper.apellido_materno AS supervisor_apellido_materno, " +
+                "etarget.nombres AS empleado_nombres, etarget.apellido_paterno AS empleado_apellido_paterno, etarget.apellido_materno AS empleado_apellido_materno, " +
+                "d.nombre AS departamento_nombre " +
                 "FROM logs l " +
-                "JOIN empleados esuper ON l." + CAMPO_SUPERVISOR_ID + " = esuper.id " +
-                "JOIN empleados etarget ON l." + CAMPO_EMPLEADO_OBJETIVO + " = etarget.id " +
-                "JOIN " + CAMPO_DEPARTAMENTOS + " d ON etarget." + CAMPO_DEPARTAMENTO_ID + " = d.id " +
+                "JOIN empleados esuper ON l.supervisor_id = esuper.id " +
+                "JOIN empleados etarget ON l.target_employee_id = etarget.id " +
+                "JOIN departamentos d ON etarget.departamento_id = d.id " +
                 "ORDER BY l.timestamp DESC";
 
-        List<AuditoriaController.Auditoria> auditoriaList = new ArrayList<>();
+        List<Auditoria> auditoriaList = new ArrayList<>();
 
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query);
@@ -837,16 +863,20 @@ public class BaseDAO {
                         resultSet.getString("empleado_apellido_materno");
 
                 String departamentoNombre = resultSet.getString("departamento_nombre");
-                String accion = resultSet.getString(CAMPO_ACCION);
+                String accion = resultSet.getString("action");
                 String timestamp = resultSet.getString("timestamp");
-                String detalles = resultSet.getString(CAMPO_DETALLES);
+                String cambios = resultSet.getString("cambios");  // Recuperamos el valor de la columna "cambios"
 
-                auditoriaList.add(new AuditoriaController.Auditoria(nombreCompletoEmpleado, departamentoNombre, accion, nombreCompletoSupervisor, timestamp, detalles));
+                auditoriaList.add(new Auditoria(nombreCompletoEmpleado, departamentoNombre, accion, nombreCompletoSupervisor, timestamp, cambios));
             }
         }
 
         return auditoriaList;
     }
+
+
+
+
 
     //TERMINA AUDITORIA/////////////////////////
     //REGISTRO CONTROLLER/

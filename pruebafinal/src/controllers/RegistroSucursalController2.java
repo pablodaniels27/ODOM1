@@ -311,7 +311,7 @@ public class RegistroSucursalController2 {
                         String detalles = "Empleado con ID " + empleadoId + " fue dado de baja.";
 
                         // Registrar el cambio en los logs
-                        BaseDAO.registrarCambioLog(userId, "Dar de baja empleado", empleadoId, detalles);
+                        BaseDAO.registrarCambioLogCambios(userId, "Dar de baja empleado", empleadoId, detalles);
                     }
 
                     // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
