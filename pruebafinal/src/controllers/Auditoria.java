@@ -1,5 +1,6 @@
 package controllers;
 
+
 public class Auditoria {
     private String nombreCompletoEmpleado;
     private String departamentoNombre;
