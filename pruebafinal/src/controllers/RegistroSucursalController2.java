@@ -305,11 +305,18 @@ public class RegistroSucursalController2 {
                     // Cambiar el estatus del empleado a 'Baja' usando el método en el DAO
                     BaseDAO.darDeBajaEmpleado(empleadoId);
 
+                    // Registrar en los logs si el usuario es un Supervisor o un Líder
+                    if (usuarioAutenticado instanceof Supervisor || usuarioAutenticado instanceof Lider) {
+                        int userId = usuarioAutenticado.getId(); // Obtener el ID del supervisor o líder
+                        String detalles = "Empleado con ID " + empleadoId + " fue dado de baja.";
+
+                        // Registrar el cambio en los logs
+                        BaseDAO.registrarCambioLog(userId, "Dar de baja empleado", empleadoId, detalles);
+                    }
+
                     // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
                     empleadosContainer.getChildren().remove(empleadoBox);
-
-                    // Remover el empleado de la vista
-                    empleadosContainer.getChildren().remove(empleadoBox);
+                    supervisoresContainer.getChildren().remove(empleadoBox);
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -318,7 +325,6 @@ public class RegistroSucursalController2 {
                 System.out.println("La acción de dar de baja fue cancelada.");
             }
         });
-
     }
 
 

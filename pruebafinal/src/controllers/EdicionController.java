@@ -410,6 +410,15 @@ public class EdicionController {
                     if (success) {
                         System.out.println("Los cambios se han guardado correctamente.");
 
+                        // Registrar el cambio en los logs
+                        if (usuarioAutenticado instanceof Supervisor || usuarioAutenticado instanceof Lider) {
+                            int userId = usuarioAutenticado.getId(); // Obtener el ID del usuario que realizó el cambio
+                            String detalles = "Actualización de datos para el empleado con ID " + empleadoId;
+
+                            // Llamada a registrar en el log
+                            BaseDAO.registrarCambioLog(userId, "Actualización de datos de empleado", empleadoId, detalles);
+                        }
+
                         // Mostrar alerta de éxito
                         Alert exitoAlert = new Alert(Alert.AlertType.INFORMATION);
                         exitoAlert.setTitle("Éxito");
