@@ -1069,7 +1069,7 @@ public class BaseDAO {
 
     public static Map<String, Integer> obtenerPuestosid() throws SQLException {
         // Construir la consulta usando las constantes
-        String sql = "SELECT id, " + CAMPO_NOMBRE + " FROM jerarquias";
+        String sql = "SELECT id, " + CAMPO_NOMBRE + " FROM jerarquias WHERE id != 1";
         Map<String, Integer> puestos = new HashMap<>();
 
         try (Connection connection = DatabaseConnection.getConnection();

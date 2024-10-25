@@ -88,32 +88,26 @@ public class IdentificarseController {
                     byte[] templateBytes = (byte[]) huellaData.get("huella");
 
                     if (templateBytes != null) {
-                        try (ByteArrayInputStream bais = new ByteArrayInputStream(templateBytes);
-                             ObjectInputStream ois = new ObjectInputStream(bais)) {
+                        // Ya no es necesario usar ObjectInputStream, directamente crea el template
+                        DPFPTemplate template = DPFPGlobal.getTemplateFactory().createTemplate(templateBytes);
 
-                            byte[] serializedTemplate = (byte[]) ois.readObject();
-                            DPFPTemplate template = DPFPGlobal.getTemplateFactory().createTemplate(serializedTemplate);
+                        DPFPVerificationResult result = verifier.verify(features, template);
 
-                            DPFPVerificationResult result = verifier.verify(features, template);
+                        if (result.isVerified()) {
+                            String nombreEmpleado = (String) huellaData.get("nombres");
+                            String apellidoPaterno = (String) huellaData.get("apellido_paterno");
+                            empleadoId = (int) huellaData.get("id");
 
-                            if (result.isVerified()) {
-                                String nombreEmpleado = (String) huellaData.get("nombres");
-                                String apellidoPaterno = (String) huellaData.get("apellido_paterno");
-                                empleadoId = (int) huellaData.get("id");
-
-                                int finalEmpleadoId = empleadoId;
-                                Platform.runLater(() -> {
-                                    welcomeLabel.setText("Bienvenido, " + nombreEmpleado + " " + apellidoPaterno);
-                                    welcomeLabel.setVisible(true);
-                                    statusLabel.setText("Verificación exitosa.");
-                                    startRedirectTimer(finalEmpleadoId);
-                                });
-                                stopCapture();
-                                found = true;
-                                break;
-                            }
-                        } catch (Exception e) {
-                            Platform.runLater(() -> statusLabel.setText("Error al deserializar la huella: " + e.getMessage()));
+                            int finalEmpleadoId = empleadoId;
+                            Platform.runLater(() -> {
+                                welcomeLabel.setText("Bienvenido, " + nombreEmpleado + " " + apellidoPaterno);
+                                welcomeLabel.setVisible(true);
+                                statusLabel.setText("Verificación exitosa.");
+                                startRedirectTimer(finalEmpleadoId);
+                            });
+                            stopCapture();
+                            found = true;
+                            break;
                         }
                     }
                 }
