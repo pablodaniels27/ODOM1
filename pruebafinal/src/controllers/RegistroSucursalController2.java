@@ -54,7 +54,7 @@ public class RegistroSucursalController2 {
     private HBox selectedBox;
     private int empleadosOffset = 0;
     private int supervisoresOffset = 0;
-    private static final int ITEMS_PER_PAGE = 400;
+    private static final int ITEMS_PER_PAGE = 14;
 
     private MainController mainController;
 
