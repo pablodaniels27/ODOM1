@@ -375,16 +375,14 @@ public class EdicionController {
         confirmacion.setHeaderText("¿Desea guardar los cambios?");
         confirmacion.setContentText("Haga clic en 'Confirmar cambios' para guardar o 'Cancelar' para descartar.");
 
-        // Botones de confirmación
         ButtonType botonConfirmar = new ButtonType("Confirmar cambios");
         ButtonType botonCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
         confirmacion.getButtonTypes().setAll(botonConfirmar, botonCancelar);
 
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == botonConfirmar) {
-                // Validar los campos antes de guardar
                 if (!validarCampos()) {
-                    return; // No se guardarán los cambios si la validación falla
+                    return;
                 }
 
                 try {
@@ -402,52 +400,53 @@ public class EdicionController {
                     empleadoData.put("curp", curpField.getText());
                     empleadoData.put("profesion", profesionField.getText());
                     empleadoData.put("fecha_nacimiento", java.sql.Date.valueOf(fechaNacimientoPicker.getValue()));
-                    empleadoData.put("departamento_id", departamentoMap.get(departamentoChoiceBox.getValue()));
+                    int nuevoDepartamentoId = departamentoMap.get(departamentoChoiceBox.getValue());
+                    int nuevoEstatusId = estatusMap.get(estatusChoiceBox.getValue());
+                    empleadoData.put("departamento_id", nuevoDepartamentoId);
                     empleadoData.put("jerarquia_id", puestoMap.get(puestoChoiceBox.getValue()));
-                    empleadoData.put("estatus_id", estatusMap.get(estatusChoiceBox.getValue()));
+                    empleadoData.put("estatus_id", nuevoEstatusId);
                     empleadoData.put("id", empleadoId);
 
-                    // Obtener los datos antiguos del empleado antes de actualizar
                     Map<String, Object> datosAntiguos = BaseDAO.obtenerDatosEmpleado(empleadoId);
 
-                    // Llamar al DAO para guardar los cambios
                     boolean success = BaseDAO.actualizarEmpleado(empleadoData);
                     if (success) {
                         System.out.println("Los cambios se han guardado correctamente.");
 
-                        // Registrar el cambio en los logs
                         if (usuarioAutenticado instanceof Supervisor || usuarioAutenticado instanceof Lider) {
-                            int userId = usuarioAutenticado.getId(); // Obtener el ID del usuario que realizó el cambio
+                            int userId = usuarioAutenticado.getId();
 
-                            // Crear el detalle de los cambios realizados
                             StringBuilder cambios = new StringBuilder();
-                            if (!datosAntiguos.get("profesion").equals(empleadoData.get("profesion"))) {
-                                cambios.append("Profesion cambió de ")
-                                        .append(datosAntiguos.get("profesion"))
-                                        .append(" a ")
-                                        .append(empleadoData.get("profesion"))
-                                        .append(". ");
-                            }
-                            if (!datosAntiguos.get("rfc").equals(empleadoData.get("rfc"))) {
-                                cambios.append("RFC cambió de ")
-                                        .append(datosAntiguos.get("rfc"))
-                                        .append(" a ")
-                                        .append(empleadoData.get("rfc"))
-                                        .append(". ");
-                            }
-                            // Aquí podrías agregar más validaciones de cambios para otros campos
 
-                            // Llamada a registrar en el log con el campo cambios
+                            // Registrar cambios en el departamento
+                            int antiguoDepartamentoId = (int) datosAntiguos.get("departamento_id");
+                            if (antiguoDepartamentoId != nuevoDepartamentoId) {
+                                String nombreAntiguoDepartamento = BaseDAO.obtenerNombreDepartamento(antiguoDepartamentoId);
+                                String nombreNuevoDepartamento = BaseDAO.obtenerNombreDepartamento(nuevoDepartamentoId);
+                                cambios.append("Departamento cambió de ")
+                                        .append(nombreAntiguoDepartamento).append(" a ")
+                                        .append(nombreNuevoDepartamento).append(".\n");
+                            }
+
+                            // Registrar cambios en el estatus
+                            int antiguoEstatusId = (int) datosAntiguos.get("estatus_id");
+                            if (antiguoEstatusId != nuevoEstatusId) {
+                                String nombreAntiguoEstatus = BaseDAO.obtenerNombreEstatus(antiguoEstatusId);
+                                String nombreNuevoEstatus = BaseDAO.obtenerNombreEstatus(nuevoEstatusId);
+                                cambios.append("Estatus cambió de ")
+                                        .append(nombreAntiguoEstatus).append(" a ")
+                                        .append(nombreNuevoEstatus).append(".\n");
+                            }
+
+                            // Registrar en el log
                             BaseDAO.registrarCambioLogCambios(userId, "Actualización de datos de empleado", empleadoId, cambios.toString());
                         }
 
-                        // Mostrar alerta de éxito
                         Alert exitoAlert = new Alert(Alert.AlertType.INFORMATION);
                         exitoAlert.setTitle("Éxito");
                         exitoAlert.setHeaderText(null);
                         exitoAlert.setContentText("Los cambios fueron guardados exitosamente.");
                         exitoAlert.showAndWait();
-
                     } else {
                         System.out.println("No se pudo actualizar el registro.");
                     }

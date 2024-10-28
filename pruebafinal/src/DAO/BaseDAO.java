@@ -1286,6 +1286,33 @@ public class BaseDAO {
         }
     }
 
+    public static String obtenerNombreDepartamento(int departamentoId) throws SQLException {
+        String query = "SELECT nombre FROM departamentos WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, departamentoId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getString("nombre");
+            }
+        }
+        return null; // o un valor predeterminado si el ID no existe
+    }
+
+    public static String obtenerNombreEstatus(int estatusId) throws SQLException {
+        String query = "SELECT nombre FROM estatus_empleado WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, estatusId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getString("nombre");
+            }
+        }
+        return null; // o un valor predeterminado si el ID no existe
+    }
+
+
 
     //TERMINA EDICION//
     //IDENTIFICARSE CONTROLLER///////
