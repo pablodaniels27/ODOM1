@@ -2,6 +2,7 @@ package controllers;
 
 import DAO.BaseDAO;
 import Lector.EnrollmentFormController;
+import Usuarios.Lider;
 import Usuarios.Supervisor;
 import Usuarios.Usuario;
 import com.digitalpersona.onetouch.DPFPTemplate;
@@ -26,6 +27,7 @@ import java.util.regex.Pattern;
 
 public class RegistroController {
 
+    public Button rellenarButton;
     @FXML
     private TextField nombreField;
     @FXML
@@ -98,6 +100,8 @@ public class RegistroController {
             // Para puestos, solo cargar "Empleado" y "Supervisor"
             puestoChoiceBox.getItems().clear();
             puestoChoiceBox.getItems().addAll("Empleado", "Supervisor");
+            rellenarButton.setVisible(false);
+
         }
     }
 
@@ -133,12 +137,34 @@ public class RegistroController {
 
     @FXML
     private void enviarDatos() {
-        // Validar si la huella digital ha sido ingresada
         if (template == null) {
             mostrarError("No se ha ingresado la huella digital. Por favor, regístrela antes de continuar.");
             return;
         }
 
+        if (!validarCampos()) {
+            return; // No se enviarán datos si la validación falla
+        }
+
+        // Insertar el nuevo empleado en la base de datos
+        insertarNuevoEmpleado();
+
+        // Obtener el empleado ID a partir del correo para registrar el log
+        String email = emailField.getText();
+        try {
+            int empleadoId = BaseDAO.obtenerEmpleadoIdPorCorreo(email);
+            if (empleadoId != -1) {
+                registrarLogDeRegistro(empleadoId);
+                mostrarConfirmacionRegistro(); // Mostrar mensaje de confirmación
+            } else {
+                mostrarError("No se pudo obtener el ID del empleado recién registrado.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void insertarNuevoEmpleado() {
         String nombre = nombreField.getText();
         String apellidoMaterno = apellidoMaternoField.getText();
         String apellidoPaterno = apellidoPaternoField.getText();
@@ -151,28 +177,21 @@ public class RegistroController {
         String rfc = rfcField.getText();
         String curp = curpField.getText();
         String profesion = profesionField.getText();
-
-        if (!validarCampos()) {
-            return; // No se enviarán datos si la validación falla
-        }
-
         String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
         String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
 
         try {
-            // Obtener el ID del departamento y el puesto
             int departamentoId = BaseDAO.obtenerIdDepartamento(departamentoSeleccionado);
             int jerarquiaId = BaseDAO.obtenerIdPuesto(puestoSeleccionado);
 
-            // Insertar empleado en la base de datos
             int empleadoId = BaseDAO.insertarEmpleado(nombre, apellidoMaterno, apellidoPaterno, fechaNacimiento, pais, ciudad, email, lada, telefono, rfc, curp, profesion, departamentoId, jerarquiaId);
+
             if (empleadoId == -1) {
-                throw new SQLException("No se pudo insertar el empleado, no se generaron filas.");
+                throw new SQLException("No se pudo insertar el empleado.");
             }
 
-            // Insertar la huella en la base de datos
             if (template != null) {
-                byte[] serializedTemplate = template.serialize(); // Usa el método de la API para serializar
+                byte[] serializedTemplate = template.serialize();
                 if (serializedTemplate != null) {
                     int huellaId = BaseDAO.insertarHuella(empleadoId, serializedTemplate, fingerprintImageBytes);
                     if (huellaId != -1) {
@@ -180,11 +199,43 @@ public class RegistroController {
                     }
                 }
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+    private void registrarLogDeRegistro(int empleadoId) {
+        String nombre = nombreField.getText();
+        String apellidoMaterno = apellidoMaternoField.getText();
+        String apellidoPaterno = apellidoPaternoField.getText();
+        String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
+        String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
+
+        String detalles = String.format("Se registró un nuevo empleado: %s %s %s, Departamento: %s, Puesto: %s", nombre, apellidoPaterno, apellidoMaterno, departamentoSeleccionado, puestoSeleccionado);
+        String cambios = String.format("Nombre: %s, Apellido Materno: %s, Apellido Paterno: %s, Ciudad: %s, Email: %s, Teléfono: %s, RFC: %s, CURP: %s, Profesión: %s",
+                nombre, apellidoMaterno, apellidoPaterno, ciudadField.getText(), emailField.getText(), telefonoField.getText(), rfcField.getText(), curpField.getText(), profesionField.getText());
+
+        try {
+            int supervisorId = usuarioAutenticado.getId();
+            BaseDAO.registrarCambioLog(supervisorId, "Agregó un empleado", empleadoId, detalles, cambios);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void mostrarConfirmacionRegistro() {
+        String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
+        String mensaje = "Se ha registrado al nuevo " + (puestoSeleccionado.equals("Empleado") ? "Empleado" : "Supervisor") + " con éxito.";
+
+        Alert confirmacion = new Alert(Alert.AlertType.INFORMATION);
+        confirmacion.setTitle("Registro Exitoso");
+        confirmacion.setHeaderText(null);
+        confirmacion.setContentText(mensaje);
+        confirmacion.showAndWait();
+    }
+
+
+
 
     private boolean validarCampos() {
         // Validación de Lada
@@ -277,4 +328,38 @@ public class RegistroController {
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
+
+    public void borrarCampos(ActionEvent actionEvent) {
+        Alert confirmacion = new Alert(Alert.AlertType.WARNING);
+        confirmacion.setTitle("Confirmación de Borrado");
+        confirmacion.setHeaderText("¿Está seguro de que desea borrar todos los campos?");
+        confirmacion.setContentText("Esta acción borrará todos los datos ingresados en el formulario.");
+
+        ButtonType botonBorrar = new ButtonType("Borrar");
+        ButtonType botonCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+        confirmacion.getButtonTypes().setAll(botonBorrar, botonCancelar);
+
+        confirmacion.showAndWait().ifPresent(response -> {
+            if (response == botonBorrar) {
+                // Vaciar todos los campos
+                nombreField.setText("");
+                apellidoMaternoField.setText("");
+                apellidoPaternoField.setText("");
+                fechaNacimientoPicker.setValue(null);
+                emailField.setText("");
+                ladaField.setText("");
+                telefonoField.setText("");
+                rfcField.setText("");
+                curpField.setText("");
+                profesionField.setText("");
+
+                if (usuarioAutenticado instanceof Lider) {
+                    puestoChoiceBox.getSelectionModel().clearSelection();
+                    departamentoChoiceBox.getSelectionModel().clearSelection();
+                }
+            }
+            // Si el usuario selecciona "Cancelar", no se hace nada
+        });
+    }
+
 }

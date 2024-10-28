@@ -25,7 +25,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -457,10 +459,121 @@ public class EdicionController {
         });
     }
 
+    private boolean compararConDatosOriginales(Map<String, Object> datosOriginalesBD) {
+        return !nombreField.getText().equals(datosOriginalesBD.get("nombres")) ||
+                !apellidoPaternoField.getText().equals(datosOriginalesBD.get("apellido_paterno")) ||
+                !apellidoMaternoField.getText().equals(datosOriginalesBD.get("apellido_materno")) ||
+                !paisField.getText().equals(datosOriginalesBD.get("pais")) ||
+                !ciudadField.getText().equals(datosOriginalesBD.get("ciudad")) ||
+                !ladaField.getText().equals(datosOriginalesBD.get("lada")) ||
+                !telefonoField.getText().equals(datosOriginalesBD.get("telefono")) ||
+                !emailField.getText().equals(datosOriginalesBD.get("correo_electronico")) ||
+                !rfcField.getText().equals(datosOriginalesBD.get("rfc")) ||
+                !curpField.getText().equals(datosOriginalesBD.get("curp")) ||
+                !profesionField.getText().equals(datosOriginalesBD.get("profesion")) ||
+                !fechaNacimientoPicker.getValue().equals(((java.sql.Date) datosOriginalesBD.get("fecha_nacimiento")).toLocalDate()) ||
+                !departamentoChoiceBox.getValue().equals(getKeyByValue(departamentoMap, (int) datosOriginalesBD.get("departamento_id"))) ||
+                !puestoChoiceBox.getValue().equals(getKeyByValue(puestoMap, (int) datosOriginalesBD.get("jerarquia_id"))) ||
+                !estatusChoiceBox.getValue().equals(getKeyByValue(estatusMap, (int) datosOriginalesBD.get("estatus_id")));
+    }
+
     // Método para regresar a la vista de registro de sucursal
     @FXML
     private void regresarARegistroSucursal() {
 
+        try {
+            // Obtener los datos originales desde la base de datos
+            Map<String, Object> datosOriginalesBD = BaseDAO.obtenerDatosEmpleado(empleadoId);
+
+            // Comparar con los valores actuales en la vista y obtener los campos que han cambiado
+            List<String> camposModificados = obtenerCamposModificados(datosOriginalesBD);
+
+            if (!camposModificados.isEmpty()) {
+                // Mostrar alerta de confirmación con los campos modificados
+                Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+                confirmacion.setTitle("Cambios sin guardar");
+                confirmacion.setHeaderText("Hay cambios sin guardar.");
+                confirmacion.setContentText("Los siguientes campos han sido modificados: " + String.join(", ", camposModificados) +
+                        "\n\n¿Desea salir de todas formas?");
+
+                ButtonType botonSalir = new ButtonType("Salir");
+                ButtonType botonGuardar = new ButtonType("Guardar cambios");
+                ButtonType botonCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+                confirmacion.getButtonTypes().setAll(botonSalir, botonGuardar, botonCancelar);
+
+                confirmacion.showAndWait().ifPresent(response -> {
+                    if (response == botonGuardar) {
+                        guardarCambios();
+                    } else if (response == botonSalir) {
+                        navegarARegistroSucursal();
+                    }
+                    // Si se selecciona cancelar, no hacer nada
+                });
+            } else {
+                // Si no hay cambios, proceder con la navegación
+                navegarARegistroSucursal();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private List<String> obtenerCamposModificados(Map<String, Object> datosOriginalesBD) {
+        List<String> camposModificados = new ArrayList<>();
+
+        if (!nombreField.getText().equals(datosOriginalesBD.get("nombres"))) {
+            camposModificados.add("Nombre");
+        }
+        if (!apellidoPaternoField.getText().equals(datosOriginalesBD.get("apellido_paterno"))) {
+            camposModificados.add("Apellido Paterno");
+        }
+        if (!apellidoMaternoField.getText().equals(datosOriginalesBD.get("apellido_materno"))) {
+            camposModificados.add("Apellido Materno");
+        }
+        if (!paisField.getText().equals(datosOriginalesBD.get("pais"))) {
+            camposModificados.add("País");
+        }
+        if (!ciudadField.getText().equals(datosOriginalesBD.get("ciudad"))) {
+            camposModificados.add("Ciudad");
+        }
+        if (!ladaField.getText().equals(datosOriginalesBD.get("lada"))) {
+            camposModificados.add("Lada");
+        }
+        if (!telefonoField.getText().equals(datosOriginalesBD.get("telefono"))) {
+            camposModificados.add("Teléfono");
+        }
+        if (!emailField.getText().equals(datosOriginalesBD.get("correo_electronico"))) {
+            camposModificados.add("Correo Electrónico");
+        }
+        if (!rfcField.getText().equals(datosOriginalesBD.get("rfc"))) {
+            camposModificados.add("RFC");
+        }
+        if (!curpField.getText().equals(datosOriginalesBD.get("curp"))) {
+            camposModificados.add("CURP");
+        }
+        if (!profesionField.getText().equals(datosOriginalesBD.get("profesion"))) {
+            camposModificados.add("Profesión");
+        }
+        if (!fechaNacimientoPicker.getValue().equals(((java.sql.Date) datosOriginalesBD.get("fecha_nacimiento")).toLocalDate())) {
+            camposModificados.add("Fecha de Nacimiento");
+        }
+        if (!departamentoChoiceBox.getValue().equals(getKeyByValue(departamentoMap, (int) datosOriginalesBD.get("departamento_id")))) {
+            camposModificados.add("Departamento");
+        }
+        if (!puestoChoiceBox.getValue().equals(getKeyByValue(puestoMap, (int) datosOriginalesBD.get("jerarquia_id")))) {
+            camposModificados.add("Puesto");
+        }
+        if (!estatusChoiceBox.getValue().equals(getKeyByValue(estatusMap, (int) datosOriginalesBD.get("estatus_id")))) {
+            camposModificados.add("Estatus");
+        }
+
+        return camposModificados;
+    }
+
+
+
+    private void navegarARegistroSucursal() {
         if (usuarioAutenticado instanceof Lider){
             try {
                 // Obtén el StackPane principal desde la escena actual
@@ -505,7 +618,6 @@ public class EdicionController {
                 e.printStackTrace();
             }
         }
-
     }
 
     // Método para verificar si hay cambios entre los valores actuales y los originales

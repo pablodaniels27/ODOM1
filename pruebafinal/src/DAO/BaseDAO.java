@@ -1017,6 +1017,23 @@ public class BaseDAO {
         }
     }
 
+    public static int obtenerEmpleadoIdPorCorreo(String correo) throws SQLException {
+        String query = "SELECT id FROM empleados WHERE " + CAMPO_CORREO + " = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, correo);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getInt("id");
+            }
+        }
+        return -1; // Retornar -1 si no se encuentra el empleado
+    }
+
+
+
 
     //aqui termina registroController///
     //REGISTRO SUCURSAL//////////////////////////////////7
