@@ -329,6 +329,7 @@ public class EdicionController {
             return false;
         }
 
+
         // Validación de CURP
         String curp = curpField.getText();
         if (!curp.matches("[A-Z][AEIOU][A-Z]{2}\\d{6}[HM][A-Z]{5}[A-Z0-9]{2}")) {
