@@ -418,6 +418,28 @@ public class EdicionController {
 
                             StringBuilder cambios = new StringBuilder();
 
+                            // Registrar cambios en cada campo
+                            registrarCambioCampo(datosAntiguos, "nombres", empleadoData, "Nombre", cambios);
+                            registrarCambioCampo(datosAntiguos, "apellido_paterno", empleadoData, "Apellido Paterno", cambios);
+                            registrarCambioCampo(datosAntiguos, "apellido_materno", empleadoData, "Apellido Materno", cambios);
+                            registrarCambioCampo(datosAntiguos, "pais", empleadoData, "País", cambios);
+                            registrarCambioCampo(datosAntiguos, "ciudad", empleadoData, "Ciudad", cambios);
+                            registrarCambioCampo(datosAntiguos, "lada", empleadoData, "Lada", cambios);
+                            registrarCambioCampo(datosAntiguos, "telefono", empleadoData, "Teléfono", cambios);
+                            registrarCambioCampo(datosAntiguos, "correo_electronico", empleadoData, "Correo Electrónico", cambios);
+                            registrarCambioCampo(datosAntiguos, "rfc", empleadoData, "RFC", cambios);
+                            registrarCambioCampo(datosAntiguos, "curp", empleadoData, "CURP", cambios);
+                            registrarCambioCampo(datosAntiguos, "profesion", empleadoData, "Profesión", cambios);
+
+                            // Registrar cambios en fecha de nacimiento
+                            if (!datosAntiguos.get("fecha_nacimiento").equals(empleadoData.get("fecha_nacimiento"))) {
+                                cambios.append("Fecha de nacimiento cambió de ")
+                                        .append(datosAntiguos.get("fecha_nacimiento"))
+                                        .append(" a ")
+                                        .append(empleadoData.get("fecha_nacimiento"))
+                                        .append(".\n");
+                            }
+
                             // Registrar cambios en el departamento
                             int antiguoDepartamentoId = (int) datosAntiguos.get("departamento_id");
                             if (antiguoDepartamentoId != nuevoDepartamentoId) {
@@ -456,6 +478,15 @@ public class EdicionController {
                 }
             }
         });
+    }
+
+    // Método auxiliar para registrar cambios en campos específicos
+    private void registrarCambioCampo(Map<String, Object> datosAntiguos, String campo, Map<String, Object> datosNuevos, String nombreCampo, StringBuilder cambios) {
+        Object valorAntiguo = datosAntiguos.get(campo);
+        Object valorNuevo = datosNuevos.get(campo);
+        if (valorAntiguo != null && valorNuevo != null && !valorAntiguo.equals(valorNuevo)) {
+            cambios.append(nombreCampo).append(" cambió de ").append(valorAntiguo).append(" a ").append(valorNuevo).append(".\n");
+        }
     }
 
     private boolean compararConDatosOriginales(Map<String, Object> datosOriginalesBD) {
