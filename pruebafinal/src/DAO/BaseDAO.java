@@ -1470,6 +1470,5 @@ public class BaseDAO {
 
 //permisos comienzo
 
-
 }
 

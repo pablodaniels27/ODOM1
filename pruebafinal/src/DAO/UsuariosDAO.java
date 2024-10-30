@@ -6,9 +6,12 @@ import java.util.Map;
 import java.util.Set;
 
 import Usuarios.*;
+import controllers.AuthResult;
 import controllers.DatabaseConnection;
 import javafx.scene.control.CheckBox;
 import org.mindrot.jbcrypt.BCrypt;
+
+import static controllers.DatabaseConnection.getConnection;
 
 public class UsuariosDAO {
 
@@ -18,9 +21,7 @@ public class UsuariosDAO {
         this.conexion = conexion;
     }
 
-    public Usuario autenticar(String correo, String contrasena) {
-        Usuario usuario = null;
-
+    public AuthResult autenticar(String correo, String contrasena) {
         String query = "SELECT e.id AS empleado_id, e.nombres AS empleado_nombres, e.correo_electronico, " +
                 "u.contrasena_hash, j.nombre AS tipo_usuario, e.departamento_id, d.nombre AS departamento_nombre " +
                 "FROM empleados e " +
@@ -43,6 +44,7 @@ public class UsuariosDAO {
                         int departamentoId = rs.getInt("departamento_id");
                         String departamentoNombre = rs.getString("departamento_nombre");
 
+                        Usuario usuario = null;
                         switch (tipoUsuario) {
                             case "Empleado":
                                 usuario = new Empleado(id, nombre, correo);
@@ -52,26 +54,26 @@ public class UsuariosDAO {
                                 usuario = new Supervisor(id, nombre, correo, departamentoId, departamentoNombre, permisos, this);
                                 break;
                             case "Líder":
-                                // Obtener todos los permisos para el líder
                                 Set<Permisos> permisosLider = Lider.obtenerTodosLosPermisos();
                                 usuario = new Lider(id, nombre, correo);
                                 break;
                         }
 
                         SessionManager.setCurrentUser(usuario);
+                        return new AuthResult(true, null, usuario);
                     } else {
-                        System.out.println("Contraseña incorrecta.");
+                        return new AuthResult(false, "Contraseña incorrecta.", null);
                     }
                 } else {
-                    System.out.println("Correo no encontrado.");
+                    return new AuthResult(false, "Correo no encontrado.", null);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            return new AuthResult(false, "Error de base de datos.", null);
         }
-
-        return usuario;
     }
+
 
     // Nuevo método para obtener un supervisor junto con sus permisos
     public Supervisor obtenerSupervisorConPermisos(String nombreCompleto) throws SQLException {
@@ -176,6 +178,22 @@ public class UsuariosDAO {
             stmt.setString(2, permisoNombre);
             stmt.executeUpdate();
         }
+    }
+
+    public static boolean verificarUsuario(String username) {
+        String query = "SELECT COUNT(*) FROM usuarios WHERE nombre_usuario = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0; // Retorna true si el usuario existe
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Retorna false si el usuario no existe o en caso de error
     }
 
 }
