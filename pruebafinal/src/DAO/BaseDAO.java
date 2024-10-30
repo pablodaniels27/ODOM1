@@ -1135,6 +1135,21 @@ public class BaseDAO {
         }
     }
 
+    public static String obtenerNombreEmpleado(int empleadoId) throws SQLException {
+        String query = "SELECT CONCAT(" + CAMPO_NOMBRES + ", ' ', " + CAMPO_APELLIDOPATERNO + ", ' ', " + CAMPO_APELLIDOMATERNO + ") AS nombre_completo FROM empleados WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, empleadoId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getString("nombre_completo");
+            }
+        }
+        return null; // Retorna null si el empleado no se encuentra
+    }
+
+
 
     //termina gestion de empleados
     //EDICION CONTROLLER///////////////////
