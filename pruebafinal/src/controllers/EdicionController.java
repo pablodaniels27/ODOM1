@@ -4,8 +4,7 @@ import DAO.BaseDAO;
 import Usuarios.Lider;
 import Usuarios.Supervisor;
 import Usuarios.Usuario;
-import com.digitalpersona.onetouch.DPFPGlobal;
-import com.digitalpersona.onetouch.DPFPTemplate;
+
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
