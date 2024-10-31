@@ -137,10 +137,7 @@ public class RegistroController {
 
     @FXML
     private void enviarDatos() {
-        if (template == null) {
-            mostrarError("No se ha ingresado la huella digital. Por favor, regístrela antes de continuar.");
-            return;
-        }
+
 
         if (!validarCampos()) {
             return; // No se enviarán datos si la validación falla
@@ -149,11 +146,22 @@ public class RegistroController {
         // Insertar el nuevo empleado en la base de datos
         insertarNuevoEmpleado();
 
-        // Obtener el empleado ID a partir del correo para registrar el log
+        // Generar y enviar la contraseña
         String email = emailField.getText();
+        String nuevaContraseña = PasswordController.generatePassword();
+        String contraseñaHasheada = PasswordController.hashPassword(nuevaContraseña);
+
         try {
+            // Obtener el empleado ID a partir del correo
             int empleadoId = BaseDAO.obtenerEmpleadoIdPorCorreo(email);
             if (empleadoId != -1) {
+                // Insertar la contraseña hasheada en la tabla de contraseñas
+                BaseDAO.insertarContraseña(empleadoId, contraseñaHasheada);
+
+                // Enviar la contraseña en texto plano al correo del usuario
+                MailController.EmailSender.sendEmail(email, "Tu nueva contraseña", "Tu contraseña es: " + nuevaContraseña);
+
+                // Registrar el log del registro
                 registrarLogDeRegistro(empleadoId);
                 mostrarConfirmacionRegistro(); // Mostrar mensaje de confirmación
             } else {
@@ -162,6 +170,7 @@ public class RegistroController {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
     }
 
     private void insertarNuevoEmpleado() {
@@ -352,6 +361,8 @@ public class RegistroController {
                 rfcField.setText("");
                 curpField.setText("");
                 profesionField.setText("");
+                ciudadField.setText("");
+                paisField.setText("");
 
                 if (usuarioAutenticado instanceof Lider) {
                     puestoChoiceBox.getSelectionModel().clearSelection();
