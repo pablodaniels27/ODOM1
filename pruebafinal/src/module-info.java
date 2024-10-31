@@ -11,8 +11,10 @@ module pruebafinal {
     requires java.sql;
     requires com.github.benmanes.caffeine;
     requires jbcrypt;
-    requires jakarta.mail;
     requires jakarta.activation;
+    requires jakarta.mail;
+    opens Usuarios to javafx.base;
+    exports Usuarios;
 
 
     opens Lector to javafx.fxml;

@@ -1,10 +1,7 @@
 package controllers;
 
 import DAO.BaseDAO;
-import Usuarios.Lider;
-import Usuarios.SessionManager;
-import Usuarios.Supervisor;
-import Usuarios.Usuario;
+import Usuarios.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -180,9 +177,45 @@ public class MonitoreoController {
             // El líder está autenticado, habilitar el ChoiceBox de departamentos
             departamentoChoiceBox.setDisable(false);
 
+        } else if (currentUser instanceof Empleado) {
+            // Configuración para el Empleado
+            Empleado empleado = (Empleado) currentUser;
 
+            // Bloquear el ChoiceBox de departamentos y establecer su valor al del empleado
+            departamentoChoiceBox.setDisable(true);
+            String departamentoNombre = empleado.getDepartamentoNombre();
+            departamentoChoiceBox.setValue(departamentoNombre);
+
+            // Deshabilitar el filtro de nombre y mostrar solo el nombre del empleado
+            searchField.setText(empleado.getNombreCompleto());
+            searchField.setDisable(true);
+
+            // Cargar solo los registros del empleado
+            mostrarRegistrosDeEmpleado(empleado.getId());
+        }
+
+
+    }
+
+    private void mostrarRegistrosDeEmpleado(int empleadoId) {
+        try {
+            employees.clear();
+            List<Map<String, Object>> registros = BaseDAO.obtenerEntradasPorEmpleado(empleadoId);
+
+            for (Map<String, Object> registro : registros) {
+                // Cálculo de tiempo laborado, etc.
+                employees.add(registro);
+            }
+
+            // Mostrar los datos en la tabla
+            showPage(1);
+            updatePaginationButtons();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
+
 
 
 
@@ -259,21 +292,27 @@ public class MonitoreoController {
     }
 
     private void handleSelection(Object newSelection) {
-        String nombreEmpleado = ((Empleado)newSelection).getNombreCompleto();
-        System.out.println("Empleado seleccionado: " + nombreEmpleado);
+        if (newSelection instanceof Empleado) {
+            Empleado empleadoSeleccionado = (Empleado) newSelection;
+            String nombreEmpleado = empleadoSeleccionado.getNombreCompleto();
+            System.out.println("Empleado seleccionado: " + nombreEmpleado);
 
-        String tipoAsistencia = obtenerTipoAsistenciaSeleccionado();
-        String departamentoSeleccionado = obtenerDepartamentoSeleccionado();
+            String tipoAsistencia = obtenerTipoAsistenciaSeleccionado();
+            String departamentoSeleccionado = obtenerDepartamentoSeleccionado();
 
-        if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
-            String fechaInicio = fechaInicioPicker.getValue().toString();
-            String fechaFin = fechaFinPicker.getValue().toString();
+            if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
+                String fechaInicio = fechaInicioPicker.getValue().toString();
+                String fechaFin = fechaFinPicker.getValue().toString();
 
-            mostrarFechasPorEmpleado(departamentoSeleccionado, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
+                mostrarFechasPorEmpleado(departamentoSeleccionado, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
+            } else {
+                System.out.println("Por favor, selecciona un rango de fechas válido.");
+            }
         } else {
-            System.out.println("Por favor, selecciona un rango de fechas válido.");
+            System.out.println("La selección no es un objeto de tipo Empleado.");
         }
     }
+
 
     private void configureGraficosController() {
         graficosController = new GraficosController();
@@ -792,12 +831,20 @@ public class MonitoreoController {
             boolean incluirSupervisores = supervisoresCheckBox.isSelected();
             boolean incluirEmpleados = empleadosCheckBox.isSelected();
 
-            Set<String> empleadosUnicos = BaseDAO.buscarNombresPorAsistencia(departamento, tipoAsistencia, fechaInicio, fechaFin, searchQuery, incluirSupervisores, incluirEmpleados);
+            // Asumimos que BaseDAO.buscarNombresPorAsistencia devuelve un Set<String> de nombres completos
+            Set<String> nombresEmpleados = BaseDAO.buscarNombresPorAsistencia(departamento, tipoAsistencia, fechaInicio, fechaFin, searchQuery, incluirSupervisores, incluirEmpleados);
 
-            // Convertir el Set en una lista observable para el TableView
+            // Convertir el Set en una lista observable de objetos Empleado para el TableView
             ObservableList<Empleado> empleados = FXCollections.observableArrayList();
-            for (String nombre : empleadosUnicos) {
-                empleados.add(new Empleado(nombre));  // Agregar el nombre único al TableView
+            for (String nombreCompleto : nombresEmpleados) {
+                // Dividir el nombre completo en partes si es necesario (nombres, apellidos)
+                String[] partesNombre = nombreCompleto.split(" ");
+                String nombres = partesNombre[0];
+                String apellidoPaterno = partesNombre.length > 1 ? partesNombre[1] : "";
+                String apellidoMaterno = partesNombre.length > 2 ? partesNombre[2] : "";
+
+                // Crear una instancia de Empleado (ajusta el constructor según tus necesidades)
+                empleados.add(new Empleado(0, nombres, apellidoPaterno, apellidoMaterno, "correo@ejemplo.com", departamento));
             }
 
             // Asignar los datos al TableView
@@ -810,18 +857,13 @@ public class MonitoreoController {
         }
     }
 
-    // Clase auxiliar para representar empleados
-    public static class Empleado {
-        private final String nombreCompleto;
 
-        public Empleado(String nombreCompleto) {
-            this.nombreCompleto = nombreCompleto;
-        }
 
-        public String getNombreCompleto() {
-            return nombreCompleto;
-        }
-    }
+
+
+
+
+
 
     public String getSearchFieldText() {
         return (searchField != null) ? searchField.getText().trim() : "";  // Si searchField no está enlazado correctamente, este valor será null

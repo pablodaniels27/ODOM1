@@ -39,23 +39,26 @@ public class UsuariosDAO {
 
                     if (BCrypt.checkpw(contrasena, storedHash)) {
                         int id = rs.getInt("empleado_id");
-                        String nombre = rs.getString("empleado_nombres");
+                        String nombres = rs.getString("empleado_nombres");
+                        String apellidoPaterno = rs.getString("apellido_paterno");
+                        String apellidoMaterno = rs.getString("apellido_materno");
                         String tipoUsuario = rs.getString("tipo_usuario");
-                        int departamentoId = rs.getInt("departamento_id");
+                        String correoElectronico = rs.getString("correo_electronico");
                         String departamentoNombre = rs.getString("departamento_nombre");
 
                         Usuario usuario = null;
                         switch (tipoUsuario) {
                             case "Empleado":
-                                usuario = new Empleado(id, nombre, correo);
+                                usuario = new Empleado(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico, departamentoNombre);
                                 break;
                             case "Supervisor":
+                                int departamentoId = rs.getInt("departamento_id");
                                 Set<Permisos> permisos = obtenerPermisos(id);
-                                usuario = new Supervisor(id, nombre, correo, departamentoId, departamentoNombre, permisos, this);
+                                usuario = new Supervisor(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico, departamentoId, departamentoNombre, permisos, this);
                                 break;
                             case "Líder":
                                 Set<Permisos> permisosLider = Lider.obtenerTodosLosPermisos();
-                                usuario = new Lider(id, nombre, correo);
+                                usuario = new Lider(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico);
                                 break;
                         }
 
@@ -75,6 +78,7 @@ public class UsuariosDAO {
     }
 
 
+
     // Nuevo método para obtener un supervisor junto con sus permisos
     public Supervisor obtenerSupervisorConPermisos(String nombreCompleto) throws SQLException {
         Supervisor supervisor = null;
@@ -85,7 +89,7 @@ public class UsuariosDAO {
         String apellidoPaterno = nombrePartes.length > 1 ? nombrePartes[1] : "";
         String apellidoMaterno = nombrePartes.length > 2 ? nombrePartes[2] : "";
 
-        String query = "SELECT e.id, e.nombres, e.correo_electronico, e.departamento_id, d.nombre AS departamento_nombre " +
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, e.correo_electronico, e.departamento_id, d.nombre AS departamento_nombre " +
                 "FROM empleados e " +
                 "JOIN departamentos d ON e.departamento_id = d.id " +
                 "WHERE LOWER(e.nombres) LIKE LOWER(?) " +
@@ -101,15 +105,18 @@ public class UsuariosDAO {
 
             if (rs.next()) {
                 int id = rs.getInt("id");
+                String nombre = rs.getString("nombres");
+                String apellidoPaternoDB = rs.getString("apellido_paterno");
+                String apellidoMaternoDB = rs.getString("apellido_materno");
                 String correo = rs.getString("correo_electronico");
                 int departamentoId = rs.getInt("departamento_id");
                 String departamentoNombre = rs.getString("departamento_nombre");
 
                 // Obtener permisos del supervisor
                 Set<Permisos> permisos = obtenerPermisos(id);
-                supervisor = new Supervisor(id, nombreCompleto, correo, departamentoId, departamentoNombre, permisos, this);
+                supervisor = new Supervisor(id, nombre, apellidoPaternoDB, apellidoMaternoDB, correo, departamentoId, departamentoNombre, permisos, this);
 
-                System.out.println("Supervisor encontrado en base de datos: " + supervisor.getNombre());
+                System.out.println("Supervisor encontrado en base de datos: " + supervisor.getNombres() + " " + supervisor.getApellidoPaterno() + " " + supervisor.getApellidoMaterno());
             } else {
                 System.out.println("No se encontró el supervisor en la base de datos.");
             }
@@ -117,6 +124,7 @@ public class UsuariosDAO {
 
         return supervisor;
     }
+
 
     // Método para obtener permisos de un supervisor específico (generalizable)
     public Set<Permisos> obtenerPermisos(int supervisorId) throws SQLException {
@@ -215,7 +223,7 @@ public class UsuariosDAO {
 
     // Método para obtener un objeto Usuario por su correo electrónico
     public Usuario obtenerUsuarioPorCorreo(String correo) {
-        String query = "SELECT e.id, e.nombres, e.correo_electronico, j.nombre AS tipo_usuario, " +
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, e.correo_electronico, j.nombre AS tipo_usuario, " +
                 "e.departamento_id, d.nombre AS departamento_nombre " +
                 "FROM empleados e " +
                 "JOIN jerarquias j ON e.jerarquia_id = j.id " +
@@ -226,19 +234,22 @@ public class UsuariosDAO {
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 int id = rs.getInt("id");
-                String nombre = rs.getString("nombres");
+                String nombres = rs.getString("nombres");
+                String apellidoPaterno = rs.getString("apellido_paterno");
+                String apellidoMaterno = rs.getString("apellido_materno");
+                String correoDB = rs.getString("correo_electronico");
                 String tipoUsuario = rs.getString("tipo_usuario");
-                int departamentoId = rs.getInt("departamento_id");
                 String departamentoNombre = rs.getString("departamento_nombre");
 
                 switch (tipoUsuario) {
                     case "Empleado":
-                        return new Empleado(id, nombre, correo);
+                        return new Empleado(id, nombres, apellidoPaterno, apellidoMaterno, correoDB, departamentoNombre);
                     case "Supervisor":
+                        int departamentoId = rs.getInt("departamento_id");
                         Set<Permisos> permisos = obtenerPermisos(id);
-                        return new Supervisor(id, nombre, correo, departamentoId, departamentoNombre, permisos, this);
+                        return new Supervisor(id, nombres, apellidoPaterno, apellidoMaterno, correoDB, departamentoId, departamentoNombre, permisos, this);
                     case "Líder":
-                        return new Lider(id, nombre, correo);
+                        return new Lider(id, nombres, apellidoPaterno, apellidoMaterno, correoDB);
                 }
             }
         } catch (SQLException e) {
@@ -246,5 +257,7 @@ public class UsuariosDAO {
         }
         return null; // Retorna null si no se encuentra el usuario
     }
+
+
 
 }

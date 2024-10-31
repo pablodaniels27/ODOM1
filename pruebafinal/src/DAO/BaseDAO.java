@@ -1483,5 +1483,28 @@ public class BaseDAO {
 
 //permisos comienzo
 
+    public static List<Map<String, Object>> obtenerEntradasPorEmpleado(int empleadoId) throws SQLException {
+        List<Map<String, Object>> entradas = new ArrayList<>();
+        String query = "SELECT * FROM entradas_salidas WHERE empleado_id = ?";
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, empleadoId);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Map<String, Object> entrada = new HashMap<>();
+                entrada.put("id", rs.getInt("id"));
+                entrada.put("fechaEntrada", rs.getDate("fecha_entrada"));
+                entrada.put("horaEntrada", rs.getTime("hora_entrada"));
+                // Agrega más campos según lo necesites
+                entradas.add(entrada);
+            }
+        }
+
+        return entradas;
+    }
+
+
 }
 

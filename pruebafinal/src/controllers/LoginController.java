@@ -116,7 +116,7 @@ public class LoginController {
             if (BCrypt.checkpw(contrasena, hashedPasswordFromDB) || contrasena.equals("prueba123")) {
                 Usuario usuario = usuariosDAO.obtenerUsuarioPorCorreo(correo);
                 if (usuario != null) {
-                    System.out.println("Inicio de sesión exitoso para: " + usuario.getNombre());
+                    System.out.println("Inicio de sesión exitoso para: " + usuario.getNombres());
                     SessionManager.setCurrentUser(usuario);
                     loadMainView();
                     return;

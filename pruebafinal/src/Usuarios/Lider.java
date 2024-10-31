@@ -11,8 +11,8 @@ import controllers.DatabaseConnection;
 
 public class Lider extends Usuario {
 
-    public Lider(int id, String nombre, String correo) {
-        super(id, nombre, correo, "Lider");
+    public Lider(int id, String nombre, String apellidoPaterno, String apellidoMaterno, String correo) {
+        super(id, nombre, apellidoPaterno, apellidoMaterno, correo, "Lider");
     }
 
     @Override
