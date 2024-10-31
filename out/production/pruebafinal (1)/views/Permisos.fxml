@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PermisosController">
+<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PermisosController">
     <children>
         <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
@@ -17,47 +18,16 @@
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label style="-fx-font-weight: bold;" text="Buscar Supervisor:" />
                         <TextField fx:id="searchField" onKeyReleased="#searchForSupervisors" prefWidth="300" promptText="Buscar supervisor..." />
-                        <Button text="Buscar" onAction="#handleSearch" />
+                        <Button text="Buscar" onAction="#handleSearchButton" />
                     </HBox>
                 </VBox>
             </top>
 
             <center>
-                <ScrollPane prefHeight="500.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
+                <ScrollPane prefHeight="500.0" prefWidth="800.0" BorderPane.alignment="CENTER">
                     <content>
-                        <VBox alignment="CENTER" spacing="10" fillWidth="true">
-
-                            <!-- Sección Registro -->
-                            <HBox spacing="5" alignment="CENTER_LEFT">
-                                <Label text="Registro" />
-                                <CheckBox fx:id="checkBoxRegistro" onAction="#toggleRegistro" />
-                            </HBox>
-                            <VBox alignment="CENTER_LEFT" spacing="10">
-                                <CheckBox text="Si el supervisor puede registrar más empleados" fx:id="registroPermiso1" disable="true" />
-                            </VBox>
-
-                            <!-- Sección Gestión de empleados -->
-                            <HBox spacing="5" alignment="CENTER_LEFT">
-                                <Label text="Gestión de empleados" />
-                                <CheckBox fx:id="checkBoxGestion" onAction="#toggleGestion" />
-                            </HBox>
-                            <VBox alignment="CENTER_LEFT" spacing="10">
-                                <CheckBox text="Si el supervisor puede editar empleados" fx:id="gestionPermiso1" disable="true" />
-                                <CheckBox text="Si el supervisor puede editar la huella" fx:id="gestionPermiso2" disable="true" />
-                                <CheckBox text="Si el supervisor puede cambiar un Estatus al empleado" fx:id="gestionPermiso3" disable="true" />
-                                <CheckBox text="Si el supervisor puede dar de baja empleados" fx:id="gestionPermiso4" disable="true" />
-                            </VBox>
-
-                            <!-- Sección Monitoreo -->
-                            <HBox spacing="5" alignment="CENTER_LEFT">
-                                <Label text="Monitoreo" />
-                                <CheckBox fx:id="checkBoxMonitoreo" onAction="#toggleMonitoreo" />
-                            </HBox>
-                            <VBox alignment="CENTER_LEFT" spacing="10">
-                                <CheckBox text="Si puede editar su tipo de asistencia" fx:id="monitoreoPermiso1" disable="true" />
-                                <CheckBox text="Si el supervisor puede editar la nota" fx:id="monitoreoPermiso2" disable="true" />
-                            </VBox>
-
+                        <VBox fx:id="permisosContainer" alignment="CENTER_LEFT" spacing="10" fillWidth="true">
+                            <!-- Aquí se agregarán dinámicamente los CheckBoxes de permisos -->
                         </VBox>
                     </content>
                 </ScrollPane>

@@ -332,11 +332,16 @@ public class MonitoreoController {
                 showAlert("Advertencia", "Faltan fechas", "Por favor, selecciona una fecha de inicio y una fecha final.");
                 return;
             }
+            // Actualizar el Label con el departamento seleccionado
+            String departamentoSeleccionado = departamentoChoiceBox.getValue();
+            selectedDepartmentLabel.setText("Departamento: " + departamentoSeleccionado);
+
+
             personTableView.getSelectionModel().clearSelection();
             dateTableView.getSelectionModel().clearSelection();
             personTableView.getItems().clear();
             dateTableView.getItems().clear();
-            String departamentoSeleccionado = departamentoChoiceBox.getValue();
+
             String searchQuery = searchField.getText().trim();
             boolean incluirSupervisores = supervisoresCheckBox.isSelected();
             boolean incluirEmpleados = empleadosCheckBox.isSelected();
@@ -700,6 +705,9 @@ public class MonitoreoController {
         employeeTableView.setManaged(!isTableVisible); // Esto asegura que el espacio se gestiona correctamente
         chartContainer.setVisible(isTableVisible);
         chartContainer.setManaged(isTableVisible);
+
+        // Ocultar o mostrar el Label de departamento
+        selectedDepartmentLabel.setVisible(!isTableVisible);
 
         if (isTableVisible) {
             // Obtener los valores seleccionados de los filtros

@@ -25,6 +25,8 @@
             <VBox alignment="CENTER" maxWidth="485.6" minWidth="485.6" prefHeight="675.0" prefWidth="485.6" spacing="10" style="-fx-background-color: #F7F7F7; -fx-padding: 30; -fx-border-color: transparent; -fx-border-radius: 10; -fx-background-radius: 10;">
                 <Label style="-fx-font-size: 24px; -fx-text-fill: #333333;" text="ACCOUNT LOGIN" />
 
+                <Label fx:id="errorMessage" text="" style="-fx-text-fill: red; -fx-font-size: 14px;" visible="false" />
+
                 <TextField fx:id="usernameField" onKeyPressed="#handleEnterKey" prefWidth="250.0" promptText="User name" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />
 
                 <PasswordField fx:id="passwordField" onKeyPressed="#handleEnterKey" prefWidth="250.0" promptText="Password" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />

@@ -351,15 +351,17 @@ public class RegistroSucursalController {
         // Mostrar la alerta y esperar la respuesta del usuario
         confirmacion.showAndWait().ifPresent(response -> {
             if (response == botonSi) {
-                // Si el usuario confirma, procedemos a dar de baja al empleado
                 try {
+                    // Obtener el nombre completo del empleado antes de darlo de baja
+                    String nombreEmpleado = BaseDAO.obtenerNombreEmpleado(empleadoId);
+
                     // Cambiar el estatus del empleado a 'Baja' usando el método en el DAO
                     BaseDAO.darDeBajaEmpleado(empleadoId);
 
                     // Registrar en los logs si el usuario es un Supervisor o un Líder
                     if (usuarioAutenticado instanceof Supervisor || usuarioAutenticado instanceof Lider) {
                         int userId = usuarioAutenticado.getId(); // Obtener el ID del supervisor o líder
-                        String detalles = "Empleado con ID " + empleadoId + " fue dado de baja.";
+                        String detalles = "El empleado " + nombreEmpleado + " fue dado de baja.";
 
                         // Registrar el cambio en los logs
                         BaseDAO.registrarCambioLogCambios(userId, "Dar de baja empleado", empleadoId, detalles);
@@ -377,6 +379,7 @@ public class RegistroSucursalController {
             }
         });
     }
+
 
 
 

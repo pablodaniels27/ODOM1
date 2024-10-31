@@ -1135,6 +1135,21 @@ public class BaseDAO {
         }
     }
 
+    public static String obtenerNombreEmpleado(int empleadoId) throws SQLException {
+        String query = "SELECT CONCAT(" + CAMPO_NOMBRES + ", ' ', " + CAMPO_APELLIDOPATERNO + ", ' ', " + CAMPO_APELLIDOMATERNO + ") AS nombre_completo FROM empleados WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, empleadoId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getString("nombre_completo");
+            }
+        }
+        return null; // Retorna null si el empleado no se encuentra
+    }
+
+
 
     //termina gestion de empleados
     //EDICION CONTROLLER///////////////////
@@ -1286,6 +1301,33 @@ public class BaseDAO {
         }
     }
 
+    public static String obtenerNombreDepartamento(int departamentoId) throws SQLException {
+        String query = "SELECT nombre FROM departamentos WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, departamentoId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getString("nombre");
+            }
+        }
+        return null; // o un valor predeterminado si el ID no existe
+    }
+
+    public static String obtenerNombreEstatus(int estatusId) throws SQLException {
+        String query = "SELECT nombre FROM estatus_empleado WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, estatusId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getString("nombre");
+            }
+        }
+        return null; // o un valor predeterminado si el ID no existe
+    }
+
+
 
     //TERMINA EDICION//
     //IDENTIFICARSE CONTROLLER///////
@@ -1427,7 +1469,6 @@ public class BaseDAO {
     }
 
 //permisos comienzo
-
 
 }
 

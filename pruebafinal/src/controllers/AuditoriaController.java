@@ -88,6 +88,20 @@ public class AuditoriaController {
 
     @FXML
     public void initialize() {
+        // Configurar las opciones de itemsPerPageChoiceBox
+        itemsPerPageChoiceBox.getItems().addAll(10, 20, 50, 100); // Añadir las opciones
+        itemsPerPageChoiceBox.setValue(itemsPerPage); // Valor inicial
+
+        // Agregar listener para actualizar itemsPerPage cuando el usuario cambie la selección
+        itemsPerPageChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                itemsPerPage = newValue;
+                totalPages = (int) Math.ceil((double) filteredData.size() / itemsPerPage);
+                currentPage = 1; // Reiniciar a la primera página
+                showPage(currentPage);
+            }
+        });
+
         // Configurar las columnas con las propiedades correctas
         nombreCompletoSupervisor.setCellValueFactory(new PropertyValueFactory<>("nombreSupervisor"));
         nombreCompletoEmpleado.setCellValueFactory(new PropertyValueFactory<>("nombreCompletoEmpleado"));
@@ -95,8 +109,6 @@ public class AuditoriaController {
         accionColumn.setCellValueFactory(new PropertyValueFactory<>("accion"));
         timestampColumn.setCellValueFactory(new PropertyValueFactory<>("timestamp"));
         detallesColumn.setCellValueFactory(new PropertyValueFactory<>("cambios")); // Ahora muestra la columna 'cambios'
-
-
 
         // Configurar la columna detalles con estilo de enlace y mostrar un popup
         detallesColumn.setCellFactory(tc -> new TableCell<Auditoria, String>() {
@@ -119,11 +131,7 @@ public class AuditoriaController {
             }
         });
 
-        // Cargar datos iniciales
-        cargarDatos();
-
-        // Mostrar la primera página
-        showPage(1);
+        restablecerFiltros();
     }
 
     @FXML
@@ -269,12 +277,13 @@ public class AuditoriaController {
         auditoriaData.clear();
 
         try {
-            List<Auditoria> datos = BaseDAO.obtenerDatosAuditoria();
+            List<Auditoria> datos = BaseDAO.obtenerDatosAuditoria();  // Asegúrate de que estén en orden descendente por fecha
             auditoriaData.addAll(datos);  // Añadir los datos a la tabla
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
 
 
@@ -365,10 +374,20 @@ public class AuditoriaController {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Detalles");
         alert.setHeaderText("Detalles de la Acción:");
-        alert.setContentText(detalle);
+
+        // Usamos un TextArea para mostrar el texto con saltos de línea
+        TextArea textArea = new TextArea(detalle);
+        textArea.setEditable(false);  // No permitimos edición
+        textArea.setWrapText(true);   // Permitir que el texto se ajuste a la línea
+        textArea.setPrefWidth(400);   // Ajusta el ancho según sea necesario
+        textArea.setPrefHeight(200);  // Ajusta la altura según sea necesario
+
+        // Añadir el TextArea al contenido del Alert
+        alert.getDialogPane().setContent(textArea);
         alert.initModality(Modality.APPLICATION_MODAL);
         alert.showAndWait();
     }
+
 
 
 

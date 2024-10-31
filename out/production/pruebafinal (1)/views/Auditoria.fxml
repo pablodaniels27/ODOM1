@@ -43,6 +43,7 @@
                                     <String fx:value="Actualización de datos de empleado" />
                                     <String fx:value="Dar de baja empleado" />
                                     <String fx:value="Cambio de tipo de asistencia" />
+                                    <String fx:value="Agregó un empleado" />
                                 </FXCollections>
                             </items>
                         </ChoiceBox>
