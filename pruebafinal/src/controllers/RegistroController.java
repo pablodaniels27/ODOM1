@@ -352,6 +352,8 @@ public class RegistroController {
                 rfcField.setText("");
                 curpField.setText("");
                 profesionField.setText("");
+                ciudadField.setText("");
+                paisField.setText("");
 
                 if (usuarioAutenticado instanceof Lider) {
                     puestoChoiceBox.getSelectionModel().clearSelection();
