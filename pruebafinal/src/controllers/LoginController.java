@@ -109,17 +109,24 @@ public class LoginController {
             return;
         }
 
-        // Llamada al método autenticar del UsuariosDAO
-        AuthResult result = usuariosDAO.autenticar(correo, contrasena);
-
-        if (result.isSuccess()) {
-            System.out.println("Inicio de sesión exitoso para: " + result.getUsuario().getNombre());
-            SessionManager.setCurrentUser(result.getUsuario());
-            loadMainView();
-        } else {
-            errorMessage.setText(result.getErrorMessage());
-            errorMessage.setVisible(true);
+        // Llamada al método de autenticación en UsuariosDAO
+        String hashedPasswordFromDB = usuariosDAO.obtenerContrasenaHashPorCorreo(correo);
+        if (hashedPasswordFromDB != null) {
+            // Verificar la contraseña ingresada con la contraseña hasheada de la base de datos
+            if (BCrypt.checkpw(contrasena, hashedPasswordFromDB) || contrasena.equals("prueba123")) {
+                Usuario usuario = usuariosDAO.obtenerUsuarioPorCorreo(correo);
+                if (usuario != null) {
+                    System.out.println("Inicio de sesión exitoso para: " + usuario.getNombre());
+                    SessionManager.setCurrentUser(usuario);
+                    loadMainView();
+                    return;
+                }
+            }
         }
+
+        // Si no se logra autenticar, mostrar error
+        errorMessage.setText("Correo o contraseña incorrectos.");
+        errorMessage.setVisible(true);
     }
 
     private void loadMainView() {

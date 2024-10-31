@@ -196,4 +196,55 @@ public class UsuariosDAO {
         return false; // Retorna false si el usuario no existe o en caso de error
     }
 
+    // Método para obtener la contraseña hasheada de un usuario por su correo electrónico
+    public String obtenerContrasenaHashPorCorreo(String correo) {
+        String query = "SELECT u.contrasena_hash FROM usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "WHERE e.correo_electronico = ?";
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("contrasena_hash");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Retorna null si no se encuentra la contraseña
+    }
+
+    // Método para obtener un objeto Usuario por su correo electrónico
+    public Usuario obtenerUsuarioPorCorreo(String correo) {
+        String query = "SELECT e.id, e.nombres, e.correo_electronico, j.nombre AS tipo_usuario, " +
+                "e.departamento_id, d.nombre AS departamento_nombre " +
+                "FROM empleados e " +
+                "JOIN jerarquias j ON e.jerarquia_id = j.id " +
+                "JOIN departamentos d ON e.departamento_id = d.id " +
+                "WHERE e.correo_electronico = ?";
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                String nombre = rs.getString("nombres");
+                String tipoUsuario = rs.getString("tipo_usuario");
+                int departamentoId = rs.getInt("departamento_id");
+                String departamentoNombre = rs.getString("departamento_nombre");
+
+                switch (tipoUsuario) {
+                    case "Empleado":
+                        return new Empleado(id, nombre, correo);
+                    case "Supervisor":
+                        Set<Permisos> permisos = obtenerPermisos(id);
+                        return new Supervisor(id, nombre, correo, departamentoId, departamentoNombre, permisos, this);
+                    case "Líder":
+                        return new Lider(id, nombre, correo);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Retorna null si no se encuentra el usuario
+    }
+
 }

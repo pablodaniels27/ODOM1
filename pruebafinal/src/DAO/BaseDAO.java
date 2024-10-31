@@ -928,6 +928,19 @@ public class BaseDAO {
         return 0; // Retornar 0 si no se encuentra el puesto
     }
 
+    public static boolean insertarContraseña(int empleadoId, String contraseñaHash) throws SQLException {
+        String query = "INSERT INTO usuarios (empleado_id, contrasena_hash) VALUES (?, ?)";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, empleadoId);
+            statement.setString(2, contraseñaHash);
+
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0; // Devuelve true si la inserción fue exitosa
+        }
+    }
+
 
     public static int insertarEmpleado(String nombre, String apellidoMaterno, String apellidoPaterno, Date fechaNacimiento, String pais, String ciudad, String email,
                                        String lada, String telefono, String rfc, String curp, String profesion, int departamentoId, int jerarquiaId) throws SQLException {
