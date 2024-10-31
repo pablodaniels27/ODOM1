@@ -156,7 +156,7 @@ public class PermisosController {
 
 
 
-    @FXML
+     @FXML
     private void handleSearchButton() {
         System.out.println("Botón de búsqueda presionado");
 
