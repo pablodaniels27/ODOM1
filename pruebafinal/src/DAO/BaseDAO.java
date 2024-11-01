@@ -803,11 +803,11 @@ public class BaseDAO {
     //AuditoriaController
 
     public static ObservableList<String> buscarSupervisores(String searchQuery) throws SQLException {
-        // Consulta SQL para buscar supervisores coincidentes con la consulta
-        String query = "SELECT DISTINCT CONCAT(esuper." + CAMPO_NOMBRES + ", ' ', esuper." + CAMPO_APELLIDOPATERNO + ", ' ', esuper." + CAMPO_APELLIDOMATERNO + ") AS supervisorNombre " +
-                "FROM logs l " +
-                "JOIN empleados esuper ON l." + CAMPO_SUPERVISOR_ID + " = esuper.id " +
-                "WHERE CONCAT(LOWER(TRIM(esuper." + CAMPO_NOMBRES + ")), ' ', LOWER(TRIM(esuper." + CAMPO_APELLIDOPATERNO + ")), ' ', LOWER(TRIM(esuper." + CAMPO_APELLIDOMATERNO + "))) LIKE ? " +
+        // Consulta SQL para buscar supervisores en la tabla empleados basándose en su jerarquía
+        String query = "SELECT DISTINCT CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") AS supervisorNombre " +
+                "FROM empleados e " +
+                "WHERE e.jerarquia_id = 2 " +  // Suponiendo que la jerarquía 2 es para supervisores
+                "AND CONCAT(LOWER(TRIM(e." + CAMPO_NOMBRES + ")), ' ', LOWER(TRIM(e." + CAMPO_APELLIDOPATERNO + ")), ' ', LOWER(TRIM(e." + CAMPO_APELLIDOMATERNO + "))) LIKE ? " +
                 "ORDER BY supervisorNombre ASC";
 
         ObservableList<String> results = FXCollections.observableArrayList();
@@ -834,6 +834,7 @@ public class BaseDAO {
 
         return results;
     }
+
 
 
     public static List<Auditoria> obtenerDatosAuditoria() throws SQLException {
