@@ -159,7 +159,6 @@ public class MonitoreoController {
         loadInitialEntries();
         cargarDepartamentos(); // Cargar departamentos en el ChoiceBox
 
-
         Usuario currentUser = SessionManager.getCurrentUser();
 
         if (currentUser instanceof Supervisor) {
@@ -173,9 +172,15 @@ public class MonitoreoController {
             String departamentoNombre = supervisor.getDepartamentoNombre();
             departamentoChoiceBox.setValue(departamentoNombre);
 
+            // Actualizar el label del departamento
+            selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+
         } else if (currentUser instanceof Lider) {
             // El líder está autenticado, habilitar el ChoiceBox de departamentos
             departamentoChoiceBox.setDisable(false);
+
+            // Mostrar "Todos los departamentos" por defecto
+            selectedDepartmentLabel.setText("Departamento: Todos los departamentos");
 
         } else if (currentUser instanceof Empleado) {
             // Configuración para el Empleado
@@ -186,15 +191,22 @@ public class MonitoreoController {
             String departamentoNombre = empleado.getDepartamentoNombre();
             departamentoChoiceBox.setValue(departamentoNombre);
 
+            // Actualizar el label del departamento
+            selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+
             // Deshabilitar el filtro de nombre y mostrar solo el nombre del empleado
             searchField.setText(empleado.getNombreCompleto());
             searchField.setDisable(true);
 
+            // Deshabilitar y ocultar los CheckBoxes de supervisores y empleados
+            supervisoresCheckBox.setDisable(true);
+            supervisoresCheckBox.setVisible(false);
+            empleadosCheckBox.setDisable(true);
+            empleadosCheckBox.setVisible(false);
+
             // Cargar solo los registros del empleado
             mostrarRegistrosDeEmpleado(empleado.getId());
         }
-
-
     }
 
     private void mostrarRegistrosDeEmpleado(int empleadoId) {
@@ -790,12 +802,27 @@ public class MonitoreoController {
         // Obtener el usuario autenticado
         Usuario currentUser = SessionManager.getCurrentUser();
 
-        // Si el usuario es un supervisor, restablecer con su departamento
-        if (currentUser instanceof Supervisor) {
-            Supervisor supervisor = (Supervisor) currentUser;
-            String departamentoNombre = supervisor.getDepartamentoNombre();  // Obtener el departamento del supervisor
-            departamentoChoiceBox.setValue(departamentoNombre);  // Restablecer al departamento del supervisor
+        if (currentUser instanceof Empleado) {
+            // Si es un empleado, mantener su nombre y departamento
+            Empleado empleado = (Empleado) currentUser;
+            searchField.setText(empleado.getNombreCompleto());
+            searchField.setDisable(true); // Mantener el TextField deshabilitado para que no se edite manualmente
+
+            String departamentoNombre = empleado.getDepartamentoNombre();
+            departamentoChoiceBox.setValue(departamentoNombre);
+            departamentoChoiceBox.setDisable(true); // Mantener el ChoiceBox deshabilitado
             selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+
+            // Cargar solo los registros del empleado
+            mostrarRegistrosDeEmpleado(empleado.getId());
+
+        } else if (currentUser instanceof Supervisor) {
+            // Si es un supervisor, restablecer con su departamento
+            Supervisor supervisor = (Supervisor) currentUser;
+            String departamentoNombre = supervisor.getDepartamentoNombre();
+            departamentoChoiceBox.setValue(departamentoNombre);
+            selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+
         } else {
             // Para otros usuarios (por ejemplo, Líder), restablecer al valor por defecto
             departamentoChoiceBox.getSelectionModel().selectFirst();

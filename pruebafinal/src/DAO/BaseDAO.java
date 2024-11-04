@@ -1,5 +1,6 @@
 package DAO;
 
+import Usuarios.Empleado;
 import Usuarios.SessionManager;
 import Usuarios.Supervisor;
 import Usuarios.Usuario;
@@ -16,8 +17,11 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.*;
 import java.sql.Date;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -177,27 +181,36 @@ public class BaseDAO {
                 "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
                 "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id ";
 
-        // Verificar si el usuario autenticado es un Supervisor
-        if (currentUser instanceof Supervisor) {
+        // Verificar si el usuario autenticado es un Empleado o Supervisor y agregar filtros específicos
+        if (currentUser instanceof Empleado) {
+            // Si es un empleado, agregar el filtro para cargar solo sus registros
+            Empleado empleado = (Empleado) currentUser;
+            query += "WHERE e.id = ? "; // Filtrar por el ID del empleado
+
+        } else if (currentUser instanceof Supervisor) {
             // Si es un supervisor, agregar el filtro de departamento
             Supervisor supervisor = (Supervisor) currentUser;
             int departamentoId = supervisor.getDepartamentoId();
-
-            query += "WHERE e.departamento_id = ? ";  // Filtrar por departamento
+            query += "WHERE e.departamento_id = ? "; // Filtrar por departamento
         }
 
-        query += "ORDER BY dias.fecha DESC, en.hora_entrada DESC";  // Ordenar por fecha y hora de entrada
+        query += "ORDER BY dias.fecha DESC, en.hora_entrada DESC"; // Ordenar por fecha y hora de entrada
 
         List<Map<String, Object>> entries = new ArrayList<>();
 
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
 
-            // Si es un supervisor, establecer el parámetro de departamento
-            if (currentUser instanceof Supervisor) {
+            // Si es un empleado, establecer el parámetro de su ID
+            if (currentUser instanceof Empleado) {
+                Empleado empleado = (Empleado) currentUser;
+                statement.setInt(1, empleado.getId()); // Asignar el ID del empleado al parámetro
+
+            } else if (currentUser instanceof Supervisor) {
+                // Si es un supervisor, establecer el parámetro de departamento
                 Supervisor supervisor = (Supervisor) currentUser;
                 int departamentoId = supervisor.getDepartamentoId();
-                statement.setInt(1, departamentoId);  // Asignar el ID del departamento al parámetro
+                statement.setInt(1, departamentoId); // Asignar el ID del departamento al parámetro
             }
 
             ResultSet resultSet = statement.executeQuery();
@@ -214,7 +227,7 @@ public class BaseDAO {
                 employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
                 employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
                 employeeData.put("estado", resultSet.getString("estado"));
-                employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");  // Si no hay notas, mostrar vacío
+                employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : ""); // Si no hay notas, mostrar vacío
 
                 entries.add(employeeData);
             }
@@ -222,6 +235,7 @@ public class BaseDAO {
 
         return entries;
     }
+
 //desde aqui pa bajo
 
     public static List<Map<String, Object>> buscarPorFechaYDepartamento(String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados, String fechaInicio, String fechaFin) throws SQLException {
@@ -1486,25 +1500,93 @@ public class BaseDAO {
 
     public static List<Map<String, Object>> obtenerEntradasPorEmpleado(int empleadoId) throws SQLException {
         List<Map<String, Object>> entradas = new ArrayList<>();
-        String query = "SELECT * FROM entradas_salidas WHERE empleado_id = ?";
+
+        // Base de la consulta SQL
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, " +
+                "es.nombre AS estado, dias.fecha, es.id AS estado_id, " +
+                "en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
+                "ts.nombre AS tipo_salida, " +
+                "(SELECT l2.details FROM logs l2 " +
+                " WHERE l2.target_employee_id = e.id " +
+                " AND l2.action = 'Cambio de tipo de asistencia' " +
+                " AND DATE(l2.timestamp) = dias.fecha " +
+                " ORDER BY l2.timestamp DESC LIMIT 1) AS notas " +
+                "FROM entradas_salidas en " +
+                "JOIN empleados e ON en.empleado_id = e.id " +
+                "JOIN dias ON en.dia_id = dias.id " +
+                "JOIN estatus_empleado es ON e.estatus_id = es.id " +
+                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
+                "WHERE e.id = ? " + // Filtrar por el ID del empleado
+                "ORDER BY dias.fecha DESC, en.hora_entrada DESC"; // Ordenar por fecha y hora de entrada
 
         try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, empleadoId);
-            ResultSet rs = stmt.executeQuery();
+             PreparedStatement statement = connection.prepareStatement(query)) {
 
-            while (rs.next()) {
-                Map<String, Object> entrada = new HashMap<>();
-                entrada.put("id", rs.getInt("id"));
-                entrada.put("fechaEntrada", rs.getDate("fecha_entrada"));
-                entrada.put("horaEntrada", rs.getTime("hora_entrada"));
-                // Agrega más campos según lo necesites
-                entradas.add(entrada);
+            // Establecer el ID del empleado en la consulta
+            statement.setInt(1, empleadoId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Map<String, Object> employeeData = new HashMap<>();
+                employeeData.put("id", String.valueOf(resultSet.getInt("id")));
+                employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " +
+                        resultSet.getString("apellido_paterno") + " " +
+                        resultSet.getString("apellido_materno"));
+                employeeData.put("fechaEntrada", resultSet.getString("fecha"));
+                employeeData.put("horaEntrada", resultSet.getString("hora_entrada"));
+                employeeData.put("horaSalida", resultSet.getString("hora_salida"));
+                employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
+                employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
+                employeeData.put("estado", resultSet.getString("estado"));
+                employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : ""); // Si no hay notas, mostrar vacío
+
+                // Calcular el tiempo laborado si hay hora de entrada y salida
+                String horaEntrada = resultSet.getString("hora_entrada");
+                String horaSalida = resultSet.getString("hora_salida");
+                if (horaEntrada != null && horaSalida != null) {
+                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
+                } else {
+                    employeeData.put("tiempoLaborado", "N/A");
+                }
+
+                entradas.add(employeeData);
             }
         }
 
         return entradas;
     }
+
+    // Método para calcular el tiempo laborado
+    private static String calculateTiempoLaborado(String horaEntrada, String horaSalida) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+        try {
+            // Parsear las horas de entrada y salida
+            LocalTime entrada = LocalTime.parse(horaEntrada, formatter);
+            LocalTime salida = LocalTime.parse(horaSalida, formatter);
+
+            // Calcular la duración entre la hora de entrada y la hora de salida
+            Duration duracion = Duration.between(entrada, salida);
+
+            // Convertir la duración a horas y minutos
+            long horas = duracion.toHours();
+            long minutos = duracion.toMinutes() % 60;
+
+            // Devolver la duración en el formato "X horas Y minutos"
+            return String.format("%d horas %d minutos", horas, minutos);
+
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return "Formato de hora inválido";
+        }
+    }
+
+
+
+
+
 
 
 }
