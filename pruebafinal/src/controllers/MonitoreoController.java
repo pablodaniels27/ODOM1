@@ -418,6 +418,12 @@ public class MonitoreoController {
                 // Llamar a BaseDAO para cargar los empleados del departamento del supervisor
                 List<Map<String, Object>> entries = BaseDAO.obtenerEntradasPorDepartamento(departamentoId);
                 for (Map<String, Object> employeeData : entries) {
+                    // Verificar si entradaId es nulo y manejarlo adecuadamente
+                    Object entradaId = employeeData.get("entradaId");
+                    if (entradaId == null) {
+                        employeeData.put("entradaId", -1); // Asignar un valor por defecto si es nulo
+                    }
+
                     // Calcular el tiempo laborado si hay hora de entrada y salida
                     String horaEntrada = (String) employeeData.get("horaEntrada");
                     String horaSalida = (String) employeeData.get("horaSalida");
@@ -439,6 +445,7 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
 
 
     private void showAlert(String title, String header, String content) {
@@ -527,6 +534,7 @@ public class MonitoreoController {
                     if (tipoAsistenciaId != -1) {
                         int empleadoId = Integer.parseInt(employeeData.get("id").toString());
                         String fechaEntrada = employeeData.get("fechaEntrada").toString();
+                        int entradaId = Integer.parseInt(employeeData.get("entradaId").toString()); // Obtener entrada_id
 
                         // Actualizar el tipo de asistencia del empleado
                         BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
@@ -535,8 +543,8 @@ public class MonitoreoController {
                         if (currentUser instanceof Supervisor || currentUser instanceof Lider) {
                             int userId = currentUser.getId(); // Obtener el ID del supervisor o líder
 
-                            // Registrar el cambio en los logs, incluyendo notas y la descripción del cambio
-                            BaseDAO.registrarCambioLog(userId, "Cambio de tipo de asistencia", empleadoId, notas, descripcionCambio);
+                            // Registrar el cambio en los logs, incluyendo entrada_id, notas y la descripción del cambio
+                            BaseDAO.registrarCambioLog(userId, "Cambio de tipo de asistencia", empleadoId, entradaId, notas, descripcionCambio);
                         } else {
                             System.out.println("El usuario actual no tiene permisos para registrar cambios en los logs.");
                         }
@@ -553,6 +561,7 @@ public class MonitoreoController {
             System.out.println("El usuario no tiene permiso para cambiar el tipo de asistencia.");
         }
     }
+
 
 
 
@@ -585,6 +594,12 @@ public class MonitoreoController {
                 } else {
                     employeeData.put("tiempoLaborado", "N/A");
                 }
+
+                // Verificar si las notas están presentes, si no, asignar una cadena vacía
+                if (!employeeData.containsKey("notas") || employeeData.get("notas") == null) {
+                    employeeData.put("notas", "");
+                }
+
                 employees.add(employeeData);
             }
         } catch (SQLException e) {
@@ -597,6 +612,7 @@ public class MonitoreoController {
         // Mostrar la primera página de resultados
         showPage(1);
     }
+
 
 
     private void searchByDateAndDepartment(String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados, String fechaInicio, String fechaFin) throws SQLException {

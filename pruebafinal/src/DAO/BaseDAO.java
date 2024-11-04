@@ -67,6 +67,7 @@ public class BaseDAO {
     private static final String CAMPO_HUELLA = "huella";
     private static final String CAMPO_HUELLA_IMAGEN = "huella_imagen";
     private static final String CAMPO_CAMBIOS ="cambios";
+    private static final String CAMPO_ENTRADA_ID = "entrada_id";
 
 
 
@@ -103,9 +104,10 @@ public class BaseDAO {
     }
 
 
-    public static void registrarCambioLog(int supervisorId, String accion, int empleadoId, String detalles, String cambios) throws SQLException {
-        // Usar las constantes para los nombres de columnas en la consulta
-        String insertLogQuery = "INSERT INTO logs (" + CAMPO_SUPERVISOR_ID + ", " + CAMPO_ACCION + ", " + CAMPO_EMPLEADO_OBJETIVO + ", " + CAMPO_DETALLES + ", " + CAMPO_CAMBIOS + ") VALUES (?, ?, ?, ?, ?)";
+    public static void registrarCambioLog(int supervisorId, String accion, int empleadoId, Integer entradaId, String detalles, String cambios) throws SQLException {
+        // Consulta SQL para insertar el registro, incluyendo la columna entrada_id
+        String insertLogQuery = "INSERT INTO logs (" + CAMPO_SUPERVISOR_ID + ", " + CAMPO_ACCION + ", " + CAMPO_EMPLEADO_OBJETIVO + ", " +
+                CAMPO_ENTRADA_ID + ", " + CAMPO_DETALLES + ", " + CAMPO_CAMBIOS + ") VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(insertLogQuery)) {
@@ -114,13 +116,22 @@ public class BaseDAO {
             preparedStatement.setInt(1, supervisorId);
             preparedStatement.setString(2, accion);
             preparedStatement.setInt(3, empleadoId);
-            preparedStatement.setString(4, detalles); // Notas o detalles del cambio
-            preparedStatement.setString(5, cambios);  // Descripción del cambio
+
+            // Verificar si entradaId es null y configurarlo adecuadamente
+            if (entradaId != null) {
+                preparedStatement.setInt(4, entradaId);
+            } else {
+                preparedStatement.setNull(4, Types.INTEGER);
+            }
+
+            preparedStatement.setString(5, detalles); // Notas o detalles del cambio
+            preparedStatement.setString(6, cambios);  // Descripción del cambio
 
             // Ejecutar la actualización
             preparedStatement.executeUpdate();
         }
     }
+
 
     public static void registrarCambioLogCambios(int supervisorId, String accion, int empleadoId, String cambios) throws SQLException {
         // Usar las constantes para los nombres de columnas en la consulta
@@ -578,12 +589,13 @@ public class BaseDAO {
 
         return results;
     }
+
     public static List<Map<String, Object>> obtenerEntradasPorDepartamento(int departamentoId) throws SQLException {
         // Construir la consulta para obtener empleados filtrados por departamento
         String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, " +
                 "es.nombre AS estado, dias.fecha, es.id AS estado_id, " +
-                "en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
-                "ts.nombre AS tipo_salida, " +
+                "en.id AS entradaId, en.hora_entrada, en.hora_salida, " +
+                "t.nombre AS tipo_asistencia, ts.nombre AS tipo_salida, " +
                 "(SELECT l2.details FROM logs l2 " +
                 " WHERE l2.target_employee_id = e.id " +
                 " AND l2.action = 'Cambio de tipo de asistencia' " +
@@ -621,6 +633,7 @@ public class BaseDAO {
                 employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
                 employeeData.put("estado", resultSet.getString("estado"));
                 employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : ""); // Si no hay notas, mostrar vacío
+                employeeData.put("entradaId", resultSet.getInt("entradaId")); // Agregar entradaId al mapa
 
                 entries.add(employeeData);
             }
@@ -628,6 +641,7 @@ public class BaseDAO {
 
         return entries;
     }
+
 
     // aqui se cierra monitoreo  ////////////////////////////////////////////////////
 

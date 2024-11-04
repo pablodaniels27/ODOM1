@@ -226,7 +226,7 @@ public class RegistroController {
 
         try {
             int supervisorId = usuarioAutenticado.getId();
-            BaseDAO.registrarCambioLog(supervisorId, "Agregó un empleado", empleadoId, detalles, cambios);
+            BaseDAO.registrarCambioLog(supervisorId, "Agregó un empleado", empleadoId,null, detalles, cambios);
         } catch (SQLException e) {
             e.printStackTrace();
         }
