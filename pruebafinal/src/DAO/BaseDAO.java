@@ -1047,6 +1047,27 @@ public class BaseDAO {
         return -1; // Retornar -1 si no se pudo insertar la huella
     }
 
+    public static int actualizarCambioHuella(int empleadoId, byte[] serializedTemplate, byte[] fingerprintImageBytes) throws SQLException {
+        // Construir la consulta de actualización
+        String query = "UPDATE huellas SET " + CAMPO_HUELLA + " = ?, " + CAMPO_HUELLA_IMAGEN + " = ? WHERE " + CAMPO_EMPLEADO_ID + " = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setBytes(1, serializedTemplate);
+            statement.setBytes(2, fingerprintImageBytes);
+            statement.setInt(3, empleadoId);
+
+            int rowsAffected = statement.executeUpdate();
+            if (rowsAffected > 0) {
+                return empleadoId; // Retornar el ID del empleado si se pudo actualizar la huella
+            }
+        }
+        return -1; // Retornar -1 si no se pudo actualizar la huella
+    }
+
+
+
+
     public static void actualizarHuellaEmpleado(int empleadoId, int huellaId) throws SQLException {
         // Construir la consulta usando las constantes
         String query = "UPDATE empleados SET " + CAMPO_HUELLA + " = ? WHERE id = ?";

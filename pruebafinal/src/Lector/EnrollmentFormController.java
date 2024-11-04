@@ -4,6 +4,7 @@ import com.digitalpersona.onetouch.*;
 import com.digitalpersona.onetouch.capture.*;
 import com.digitalpersona.onetouch.capture.event.*;
 import com.digitalpersona.onetouch.processing.*;
+import controllers.EdicionController;
 import controllers.RegistroController;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
@@ -46,6 +47,9 @@ public class EnrollmentFormController {
     private DPFPEnrollment enrollment;
     private DPFPTemplate template;
     private BufferedImage bufferedImage;
+    private EdicionController edicionController;
+    private boolean bandera = false;
+
 
     private RegistroController registroController;
 
@@ -57,6 +61,10 @@ public class EnrollmentFormController {
         stopButton.setDisable(true);
 
         startCapture();
+    }
+
+    public void setEdicionController(EdicionController controller) {
+        this.edicionController = controller;
     }
 
     public void setRegistroController(RegistroController registroController) {
@@ -131,13 +139,27 @@ public class EnrollmentFormController {
                             saveTemplateButton.setDisable(false);
 
                             // Enviar el template y la imagen de la huella al RegistroController
-                            if (registroController != null) {
-                                registroController.setTemplate(template);
-                                if (bufferedImage != null) {
+                            if (registroController != null || edicionController != null) {
+                                if (registroController != null){
+                                    registroController.setTemplate(template);
+                                } else if (edicionController != null) {
+                                    edicionController.setTemplate(template);
+                                    bandera = true;
+                                }
+
+                                if (bufferedImage != null && bandera ==false) {
                                     try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                                         ImageIO.write(bufferedImage, "png", baos);
                                         byte[] imageBytes = baos.toByteArray();
                                         registroController.setFingerprintImageBytes(imageBytes);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else if (bufferedImage != null && bandera) {
+                                    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                                        ImageIO.write(bufferedImage, "png", baos);
+                                        byte[] imageBytes = baos.toByteArray();
+                                        edicionController.setFingerprintImageBytes(imageBytes);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -210,8 +232,14 @@ public class EnrollmentFormController {
         Image fingerprintImage = SwingFXUtils.toFXImage(bufferedImage, null);
         fingerprintImageView.setImage(fingerprintImage);
 
-        if (registroController != null) {
-            registroController.updateFingerprintImage(fingerprintImage);
+        if (registroController != null || edicionController != null) {
+            if (registroController != null){
+                registroController.updateFingerprintImage(fingerprintImage);
+            } else if (edicionController != null) {
+                edicionController.updateFingerprintImage(fingerprintImage);
+            }
+
+
         }
     }
 
