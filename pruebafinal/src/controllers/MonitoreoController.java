@@ -492,7 +492,7 @@ public class MonitoreoController {
             choiceBox.getItems().addAll("Asistencia", "No Asistencia", "Retardo", "Justificación");
 
             // Obtener el tipo de asistencia actual del empleado para registrarlo luego
-            String tipoAsistenciaActual = (String) employeeData.get("tipoAsistencia");
+            String tipoAsistenciaActual = (String) employeeData.getOrDefault("tipoAsistencia", "Desconocido");
 
             // Crear un TextArea para las notas
             TextArea notasTextArea = new TextArea();
@@ -522,22 +522,27 @@ public class MonitoreoController {
                 String notas = response[1]; // Nota del cambio
 
                 // Crear la descripción del cambio
-                String descripcionCambio = tipoAsistenciaActual + " cambio a " + newTipoAsistencia;
+                String descripcionCambio = (tipoAsistenciaActual != null ? tipoAsistenciaActual : "N/A") + " cambio a " + (newTipoAsistencia != null ? newTipoAsistencia : "N/A");
 
                 // Actualizar el tipo de asistencia en los datos de la tabla
-                employeeData.put("tipoAsistencia", newTipoAsistencia);
-                employeeData.put("notas", notas); // Actualizar también las notas
+                employeeData.put("tipoAsistencia", newTipoAsistencia != null ? newTipoAsistencia : "N/A");
+                employeeData.put("notas", notas != null ? notas : ""); // Actualizar también las notas
 
                 // Llamar al DAO para actualizar el tipo de asistencia, las notas y registrar el cambio
                 try {
                     int tipoAsistenciaId = BaseDAO.obtenerIdTipoAsistencia(newTipoAsistencia);
                     if (tipoAsistenciaId != -1) {
                         int empleadoId = Integer.parseInt(employeeData.get("id").toString());
-                        String fechaEntrada = employeeData.get("fechaEntrada").toString();
-                        int entradaId = Integer.parseInt(employeeData.get("entradaId").toString()); // Obtener entrada_id
+                        String fechaEntrada = employeeData.get("fechaEntrada") != null ? employeeData.get("fechaEntrada").toString() : "1970-01-01"; // Valor por defecto en caso de ser nulo
+                        Object entradaIdObj = employeeData.get("entradaId");
 
-                        // Actualizar el tipo de asistencia del empleado
-                        BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
+                        // Verificar si entradaId es nulo y manejarlo adecuadamente
+                        int entradaId = (entradaIdObj != null && entradaIdObj instanceof Integer) ? (int) entradaIdObj : -1;
+
+                        // Actualizar el tipo de asistencia del empleado si es válido
+                        if (entradaId != -1) {
+                            BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
+                        }
 
                         // Verificar si el usuario es un Supervisor o un Líder para registrar cambios
                         if (currentUser instanceof Supervisor || currentUser instanceof Lider) {
@@ -561,6 +566,7 @@ public class MonitoreoController {
             System.out.println("El usuario no tiene permiso para cambiar el tipo de asistencia.");
         }
     }
+
 
 
 

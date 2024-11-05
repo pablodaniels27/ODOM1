@@ -285,15 +285,13 @@ public class BaseDAO {
     }
 
     private static String construirConsultaBase(int supervisorDepartamentoId) {
-        // Si el supervisor tiene un departamento asignado, se incluye en la consulta base
         String baseQuery = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, " +
                 "es.nombre AS estado, dias.fecha, es.id AS estado_id, " +
-                "en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
+                "en.id AS entradaId, en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
                 "ts.nombre AS tipo_salida, " +
                 "(SELECT l2.details FROM logs l2 " +
-                " WHERE l2.target_employee_id = e.id " +
+                " WHERE l2.entrada_id = en.id " +  // Usar entrada_id en lugar de target_employee_id
                 " AND l2.action = 'Cambio de tipo de asistencia' " +
-                " AND DATE(l2.timestamp) = dias.fecha " +
                 " ORDER BY l2.timestamp DESC LIMIT 1) AS notas " +
                 "FROM entradas_salidas en " +
                 "JOIN empleados e ON en.empleado_id = e.id " +
@@ -303,13 +301,14 @@ public class BaseDAO {
                 "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
                 "WHERE dias.fecha BETWEEN ? AND ? ";
 
-        // Agregar el filtro por departamento del supervisor si está disponible
         if (supervisorDepartamentoId != -1) {
             baseQuery += "AND e." + CAMPO_DEPARTAMENTO_ID + " = " + supervisorDepartamentoId + " ";
         }
 
         return baseQuery;
     }
+
+
 
     private static String agregarFiltroDepartamento(String departamentoSeleccionado) {
         // Solo aplicamos el filtro de departamento seleccionado si no es "Todos los departamentos"
@@ -376,8 +375,18 @@ public class BaseDAO {
         employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
         employeeData.put("estado", resultSet.getString("estado"));
         employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");
+
+        // Agregar entradaId al mapa
+        int entradaId = resultSet.getInt("entradaId");
+        if (!resultSet.wasNull()) {
+            employeeData.put("entradaId", entradaId);
+        } else {
+            employeeData.put("entradaId", null); // o -1 según la lógica de tu aplicación
+        }
+
         return employeeData;
     }
+
 
 
 
