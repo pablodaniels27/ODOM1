@@ -1,5 +1,6 @@
 package DAO;
 
+import Usuarios.Empleado;
 import Usuarios.SessionManager;
 import Usuarios.Supervisor;
 import Usuarios.Usuario;
@@ -16,8 +17,11 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.*;
 import java.sql.Date;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,6 +67,7 @@ public class BaseDAO {
     private static final String CAMPO_HUELLA = "huella";
     private static final String CAMPO_HUELLA_IMAGEN = "huella_imagen";
     private static final String CAMPO_CAMBIOS ="cambios";
+    private static final String CAMPO_ENTRADA_ID = "entrada_id";
 
 
 
@@ -99,9 +104,10 @@ public class BaseDAO {
     }
 
 
-    public static void registrarCambioLog(int supervisorId, String accion, int empleadoId, String detalles, String cambios) throws SQLException {
-        // Usar las constantes para los nombres de columnas en la consulta
-        String insertLogQuery = "INSERT INTO logs (" + CAMPO_SUPERVISOR_ID + ", " + CAMPO_ACCION + ", " + CAMPO_EMPLEADO_OBJETIVO + ", " + CAMPO_DETALLES + ", " + CAMPO_CAMBIOS + ") VALUES (?, ?, ?, ?, ?)";
+    public static void registrarCambioLog(int supervisorId, String accion, int empleadoId, Integer entradaId, String detalles, String cambios) throws SQLException {
+        // Consulta SQL para insertar el registro, incluyendo la columna entrada_id
+        String insertLogQuery = "INSERT INTO logs (" + CAMPO_SUPERVISOR_ID + ", " + CAMPO_ACCION + ", " + CAMPO_EMPLEADO_OBJETIVO + ", " +
+                CAMPO_ENTRADA_ID + ", " + CAMPO_DETALLES + ", " + CAMPO_CAMBIOS + ") VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(insertLogQuery)) {
@@ -110,13 +116,22 @@ public class BaseDAO {
             preparedStatement.setInt(1, supervisorId);
             preparedStatement.setString(2, accion);
             preparedStatement.setInt(3, empleadoId);
-            preparedStatement.setString(4, detalles); // Notas o detalles del cambio
-            preparedStatement.setString(5, cambios);  // Descripción del cambio
+
+            // Verificar si entradaId es null y configurarlo adecuadamente
+            if (entradaId != null) {
+                preparedStatement.setInt(4, entradaId);
+            } else {
+                preparedStatement.setNull(4, Types.INTEGER);
+            }
+
+            preparedStatement.setString(5, detalles); // Notas o detalles del cambio
+            preparedStatement.setString(6, cambios);  // Descripción del cambio
 
             // Ejecutar la actualización
             preparedStatement.executeUpdate();
         }
     }
+
 
     public static void registrarCambioLogCambios(int supervisorId, String accion, int empleadoId, String cambios) throws SQLException {
         // Usar las constantes para los nombres de columnas en la consulta
@@ -177,27 +192,36 @@ public class BaseDAO {
                 "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
                 "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id ";
 
-        // Verificar si el usuario autenticado es un Supervisor
-        if (currentUser instanceof Supervisor) {
+        // Verificar si el usuario autenticado es un Empleado o Supervisor y agregar filtros específicos
+        if (currentUser instanceof Empleado) {
+            // Si es un empleado, agregar el filtro para cargar solo sus registros
+            Empleado empleado = (Empleado) currentUser;
+            query += "WHERE e.id = ? "; // Filtrar por el ID del empleado
+
+        } else if (currentUser instanceof Supervisor) {
             // Si es un supervisor, agregar el filtro de departamento
             Supervisor supervisor = (Supervisor) currentUser;
             int departamentoId = supervisor.getDepartamentoId();
-
-            query += "WHERE e.departamento_id = ? ";  // Filtrar por departamento
+            query += "WHERE e.departamento_id = ? "; // Filtrar por departamento
         }
 
-        query += "ORDER BY dias.fecha DESC, en.hora_entrada DESC";  // Ordenar por fecha y hora de entrada
+        query += "ORDER BY dias.fecha DESC, en.hora_entrada DESC"; // Ordenar por fecha y hora de entrada
 
         List<Map<String, Object>> entries = new ArrayList<>();
 
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(query)) {
 
-            // Si es un supervisor, establecer el parámetro de departamento
-            if (currentUser instanceof Supervisor) {
+            // Si es un empleado, establecer el parámetro de su ID
+            if (currentUser instanceof Empleado) {
+                Empleado empleado = (Empleado) currentUser;
+                statement.setInt(1, empleado.getId()); // Asignar el ID del empleado al parámetro
+
+            } else if (currentUser instanceof Supervisor) {
+                // Si es un supervisor, establecer el parámetro de departamento
                 Supervisor supervisor = (Supervisor) currentUser;
                 int departamentoId = supervisor.getDepartamentoId();
-                statement.setInt(1, departamentoId);  // Asignar el ID del departamento al parámetro
+                statement.setInt(1, departamentoId); // Asignar el ID del departamento al parámetro
             }
 
             ResultSet resultSet = statement.executeQuery();
@@ -214,7 +238,7 @@ public class BaseDAO {
                 employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
                 employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
                 employeeData.put("estado", resultSet.getString("estado"));
-                employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");  // Si no hay notas, mostrar vacío
+                employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : ""); // Si no hay notas, mostrar vacío
 
                 entries.add(employeeData);
             }
@@ -222,6 +246,7 @@ public class BaseDAO {
 
         return entries;
     }
+
 //desde aqui pa bajo
 
     public static List<Map<String, Object>> buscarPorFechaYDepartamento(String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados, String fechaInicio, String fechaFin) throws SQLException {
@@ -260,15 +285,13 @@ public class BaseDAO {
     }
 
     private static String construirConsultaBase(int supervisorDepartamentoId) {
-        // Si el supervisor tiene un departamento asignado, se incluye en la consulta base
         String baseQuery = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, " +
                 "es.nombre AS estado, dias.fecha, es.id AS estado_id, " +
-                "en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
+                "en.id AS entradaId, en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
                 "ts.nombre AS tipo_salida, " +
                 "(SELECT l2.details FROM logs l2 " +
-                " WHERE l2.target_employee_id = e.id " +
+                " WHERE l2.entrada_id = en.id " +  // Usar entrada_id en lugar de target_employee_id
                 " AND l2.action = 'Cambio de tipo de asistencia' " +
-                " AND DATE(l2.timestamp) = dias.fecha " +
                 " ORDER BY l2.timestamp DESC LIMIT 1) AS notas " +
                 "FROM entradas_salidas en " +
                 "JOIN empleados e ON en.empleado_id = e.id " +
@@ -278,13 +301,14 @@ public class BaseDAO {
                 "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
                 "WHERE dias.fecha BETWEEN ? AND ? ";
 
-        // Agregar el filtro por departamento del supervisor si está disponible
         if (supervisorDepartamentoId != -1) {
             baseQuery += "AND e." + CAMPO_DEPARTAMENTO_ID + " = " + supervisorDepartamentoId + " ";
         }
 
         return baseQuery;
     }
+
+
 
     private static String agregarFiltroDepartamento(String departamentoSeleccionado) {
         // Solo aplicamos el filtro de departamento seleccionado si no es "Todos los departamentos"
@@ -351,8 +375,18 @@ public class BaseDAO {
         employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
         employeeData.put("estado", resultSet.getString("estado"));
         employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : "");
+
+        // Agregar entradaId al mapa
+        int entradaId = resultSet.getInt("entradaId");
+        if (!resultSet.wasNull()) {
+            employeeData.put("entradaId", entradaId);
+        } else {
+            employeeData.put("entradaId", null); // o -1 según la lógica de tu aplicación
+        }
+
         return employeeData;
     }
+
 
 
 
@@ -564,12 +598,13 @@ public class BaseDAO {
 
         return results;
     }
+
     public static List<Map<String, Object>> obtenerEntradasPorDepartamento(int departamentoId) throws SQLException {
         // Construir la consulta para obtener empleados filtrados por departamento
         String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, " +
                 "es.nombre AS estado, dias.fecha, es.id AS estado_id, " +
-                "en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
-                "ts.nombre AS tipo_salida, " +
+                "en.id AS entradaId, en.hora_entrada, en.hora_salida, " +
+                "t.nombre AS tipo_asistencia, ts.nombre AS tipo_salida, " +
                 "(SELECT l2.details FROM logs l2 " +
                 " WHERE l2.target_employee_id = e.id " +
                 " AND l2.action = 'Cambio de tipo de asistencia' " +
@@ -607,6 +642,7 @@ public class BaseDAO {
                 employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
                 employeeData.put("estado", resultSet.getString("estado"));
                 employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : ""); // Si no hay notas, mostrar vacío
+                employeeData.put("entradaId", resultSet.getInt("entradaId")); // Agregar entradaId al mapa
 
                 entries.add(employeeData);
             }
@@ -614,6 +650,7 @@ public class BaseDAO {
 
         return entries;
     }
+
 
     // aqui se cierra monitoreo  ////////////////////////////////////////////////////
 
@@ -803,11 +840,11 @@ public class BaseDAO {
     //AuditoriaController
 
     public static ObservableList<String> buscarSupervisores(String searchQuery) throws SQLException {
-        // Consulta SQL para buscar supervisores coincidentes con la consulta
-        String query = "SELECT DISTINCT CONCAT(esuper." + CAMPO_NOMBRES + ", ' ', esuper." + CAMPO_APELLIDOPATERNO + ", ' ', esuper." + CAMPO_APELLIDOMATERNO + ") AS supervisorNombre " +
-                "FROM logs l " +
-                "JOIN empleados esuper ON l." + CAMPO_SUPERVISOR_ID + " = esuper.id " +
-                "WHERE CONCAT(LOWER(TRIM(esuper." + CAMPO_NOMBRES + ")), ' ', LOWER(TRIM(esuper." + CAMPO_APELLIDOPATERNO + ")), ' ', LOWER(TRIM(esuper." + CAMPO_APELLIDOMATERNO + "))) LIKE ? " +
+        // Consulta SQL para buscar supervisores en la tabla empleados basándose en su jerarquía
+        String query = "SELECT DISTINCT CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") AS supervisorNombre " +
+                "FROM empleados e " +
+                "WHERE e.jerarquia_id = 2 " +  // Suponiendo que la jerarquía 2 es para supervisores
+                "AND CONCAT(LOWER(TRIM(e." + CAMPO_NOMBRES + ")), ' ', LOWER(TRIM(e." + CAMPO_APELLIDOPATERNO + ")), ' ', LOWER(TRIM(e." + CAMPO_APELLIDOMATERNO + "))) LIKE ? " +
                 "ORDER BY supervisorNombre ASC";
 
         ObservableList<String> results = FXCollections.observableArrayList();
@@ -834,6 +871,7 @@ public class BaseDAO {
 
         return results;
     }
+
 
 
     public static List<Auditoria> obtenerDatosAuditoria() throws SQLException {
@@ -928,6 +966,19 @@ public class BaseDAO {
         return 0; // Retornar 0 si no se encuentra el puesto
     }
 
+    public static boolean insertarContraseña(int empleadoId, String contraseñaHash) throws SQLException {
+        String query = "INSERT INTO usuarios (empleado_id, contrasena_hash) VALUES (?, ?)";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setInt(1, empleadoId);
+            statement.setString(2, contraseñaHash);
+
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0; // Devuelve true si la inserción fue exitosa
+        }
+    }
+
 
     public static int insertarEmpleado(String nombre, String apellidoMaterno, String apellidoPaterno, Date fechaNacimiento, String pais, String ciudad, String email,
                                        String lada, String telefono, String rfc, String curp, String profesion, int departamentoId, int jerarquiaId) throws SQLException {
@@ -1004,6 +1055,27 @@ public class BaseDAO {
         }
         return -1; // Retornar -1 si no se pudo insertar la huella
     }
+
+    public static int actualizarCambioHuella(int empleadoId, byte[] serializedTemplate, byte[] fingerprintImageBytes) throws SQLException {
+        // Construir la consulta de actualización
+        String query = "UPDATE huellas SET " + CAMPO_HUELLA + " = ?, " + CAMPO_HUELLA_IMAGEN + " = ? WHERE " + CAMPO_EMPLEADO_ID + " = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setBytes(1, serializedTemplate);
+            statement.setBytes(2, fingerprintImageBytes);
+            statement.setInt(3, empleadoId);
+
+            int rowsAffected = statement.executeUpdate();
+            if (rowsAffected > 0) {
+                return empleadoId; // Retornar el ID del empleado si se pudo actualizar la huella
+            }
+        }
+        return -1; // Retornar -1 si no se pudo actualizar la huella
+    }
+
+
+
 
     public static void actualizarHuellaEmpleado(int empleadoId, int huellaId) throws SQLException {
         // Construir la consulta usando las constantes
@@ -1134,6 +1206,21 @@ public class BaseDAO {
             statement.executeUpdate();
         }
     }
+
+    public static String obtenerNombreEmpleado(int empleadoId) throws SQLException {
+        String query = "SELECT CONCAT(" + CAMPO_NOMBRES + ", ' ', " + CAMPO_APELLIDOPATERNO + ", ' ', " + CAMPO_APELLIDOMATERNO + ") AS nombre_completo FROM empleados WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, empleadoId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getString("nombre_completo");
+            }
+        }
+        return null; // Retorna null si el empleado no se encuentra
+    }
+
 
 
     //termina gestion de empleados
@@ -1454,6 +1541,96 @@ public class BaseDAO {
     }
 
 //permisos comienzo
+
+    public static List<Map<String, Object>> obtenerEntradasPorEmpleado(int empleadoId) throws SQLException {
+        List<Map<String, Object>> entradas = new ArrayList<>();
+
+        // Base de la consulta SQL
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, " +
+                "es.nombre AS estado, dias.fecha, es.id AS estado_id, " +
+                "en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
+                "ts.nombre AS tipo_salida, " +
+                "(SELECT l2.details FROM logs l2 " +
+                " WHERE l2.target_employee_id = e.id " +
+                " AND l2.action = 'Cambio de tipo de asistencia' " +
+                " AND DATE(l2.timestamp) = dias.fecha " +
+                " ORDER BY l2.timestamp DESC LIMIT 1) AS notas " +
+                "FROM entradas_salidas en " +
+                "JOIN empleados e ON en.empleado_id = e.id " +
+                "JOIN dias ON en.dia_id = dias.id " +
+                "JOIN estatus_empleado es ON e.estatus_id = es.id " +
+                "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
+                "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
+                "WHERE e.id = ? " + // Filtrar por el ID del empleado
+                "ORDER BY dias.fecha DESC, en.hora_entrada DESC"; // Ordenar por fecha y hora de entrada
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            // Establecer el ID del empleado en la consulta
+            statement.setInt(1, empleadoId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Map<String, Object> employeeData = new HashMap<>();
+                employeeData.put("id", String.valueOf(resultSet.getInt("id")));
+                employeeData.put("nombreCompleto", resultSet.getString("nombres") + " " +
+                        resultSet.getString("apellido_paterno") + " " +
+                        resultSet.getString("apellido_materno"));
+                employeeData.put("fechaEntrada", resultSet.getString("fecha"));
+                employeeData.put("horaEntrada", resultSet.getString("hora_entrada"));
+                employeeData.put("horaSalida", resultSet.getString("hora_salida"));
+                employeeData.put("tipoAsistencia", resultSet.getString("tipo_asistencia"));
+                employeeData.put("tipoSalida", resultSet.getString("tipo_salida"));
+                employeeData.put("estado", resultSet.getString("estado"));
+                employeeData.put("notas", resultSet.getString("notas") != null ? resultSet.getString("notas") : ""); // Si no hay notas, mostrar vacío
+
+                // Calcular el tiempo laborado si hay hora de entrada y salida
+                String horaEntrada = resultSet.getString("hora_entrada");
+                String horaSalida = resultSet.getString("hora_salida");
+                if (horaEntrada != null && horaSalida != null) {
+                    employeeData.put("tiempoLaborado", calculateTiempoLaborado(horaEntrada, horaSalida));
+                } else {
+                    employeeData.put("tiempoLaborado", "N/A");
+                }
+
+                entradas.add(employeeData);
+            }
+        }
+
+        return entradas;
+    }
+
+    // Método para calcular el tiempo laborado
+    private static String calculateTiempoLaborado(String horaEntrada, String horaSalida) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+        try {
+            // Parsear las horas de entrada y salida
+            LocalTime entrada = LocalTime.parse(horaEntrada, formatter);
+            LocalTime salida = LocalTime.parse(horaSalida, formatter);
+
+            // Calcular la duración entre la hora de entrada y la hora de salida
+            Duration duracion = Duration.between(entrada, salida);
+
+            // Convertir la duración a horas y minutos
+            long horas = duracion.toHours();
+            long minutos = duracion.toMinutes() % 60;
+
+            // Devolver la duración en el formato "X horas Y minutos"
+            return String.format("%d horas %d minutos", horas, minutos);
+
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return "Formato de hora inválido";
+        }
+    }
+
+
+
+
+
 
 
 }

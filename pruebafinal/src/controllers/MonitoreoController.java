@@ -1,10 +1,7 @@
 package controllers;
 
 import DAO.BaseDAO;
-import Usuarios.Lider;
-import Usuarios.SessionManager;
-import Usuarios.Supervisor;
-import Usuarios.Usuario;
+import Usuarios.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -162,7 +159,6 @@ public class MonitoreoController {
         loadInitialEntries();
         cargarDepartamentos(); // Cargar departamentos en el ChoiceBox
 
-
         Usuario currentUser = SessionManager.getCurrentUser();
 
         if (currentUser instanceof Supervisor) {
@@ -176,13 +172,62 @@ public class MonitoreoController {
             String departamentoNombre = supervisor.getDepartamentoNombre();
             departamentoChoiceBox.setValue(departamentoNombre);
 
+            // Actualizar el label del departamento
+            selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+
         } else if (currentUser instanceof Lider) {
             // El líder está autenticado, habilitar el ChoiceBox de departamentos
             departamentoChoiceBox.setDisable(false);
 
+            // Mostrar "Todos los departamentos" por defecto
+            selectedDepartmentLabel.setText("Departamento: Todos los departamentos");
 
+        } else if (currentUser instanceof Empleado) {
+            // Configuración para el Empleado
+            Empleado empleado = (Empleado) currentUser;
+
+            // Bloquear el ChoiceBox de departamentos y establecer su valor al del empleado
+            departamentoChoiceBox.setDisable(true);
+            String departamentoNombre = empleado.getDepartamentoNombre();
+            departamentoChoiceBox.setValue(departamentoNombre);
+
+            // Actualizar el label del departamento
+            selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+
+            // Deshabilitar el filtro de nombre y mostrar solo el nombre del empleado
+            searchField.setText(empleado.getNombreCompleto());
+            searchField.setDisable(true);
+
+            // Deshabilitar y ocultar los CheckBoxes de supervisores y empleados
+            supervisoresCheckBox.setDisable(true);
+            supervisoresCheckBox.setVisible(false);
+            empleadosCheckBox.setDisable(true);
+            empleadosCheckBox.setVisible(false);
+
+            // Cargar solo los registros del empleado
+            mostrarRegistrosDeEmpleado(empleado.getId());
         }
     }
+
+    private void mostrarRegistrosDeEmpleado(int empleadoId) {
+        try {
+            employees.clear();
+            List<Map<String, Object>> registros = BaseDAO.obtenerEntradasPorEmpleado(empleadoId);
+
+            for (Map<String, Object> registro : registros) {
+                // Cálculo de tiempo laborado, etc.
+                employees.add(registro);
+            }
+
+            // Mostrar los datos en la tabla
+            showPage(1);
+            updatePaginationButtons();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 
@@ -259,21 +304,27 @@ public class MonitoreoController {
     }
 
     private void handleSelection(Object newSelection) {
-        String nombreEmpleado = ((Empleado)newSelection).getNombreCompleto();
-        System.out.println("Empleado seleccionado: " + nombreEmpleado);
+        if (newSelection instanceof Empleado) {
+            Empleado empleadoSeleccionado = (Empleado) newSelection;
+            String nombreEmpleado = empleadoSeleccionado.getNombreCompleto();
+            System.out.println("Empleado seleccionado: " + nombreEmpleado);
 
-        String tipoAsistencia = obtenerTipoAsistenciaSeleccionado();
-        String departamentoSeleccionado = obtenerDepartamentoSeleccionado();
+            String tipoAsistencia = obtenerTipoAsistenciaSeleccionado();
+            String departamentoSeleccionado = obtenerDepartamentoSeleccionado();
 
-        if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
-            String fechaInicio = fechaInicioPicker.getValue().toString();
-            String fechaFin = fechaFinPicker.getValue().toString();
+            if (fechaInicioPicker.getValue() != null && fechaFinPicker.getValue() != null) {
+                String fechaInicio = fechaInicioPicker.getValue().toString();
+                String fechaFin = fechaFinPicker.getValue().toString();
 
-            mostrarFechasPorEmpleado(departamentoSeleccionado, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
+                mostrarFechasPorEmpleado(departamentoSeleccionado, tipoAsistencia, nombreEmpleado, fechaInicio, fechaFin);
+            } else {
+                System.out.println("Por favor, selecciona un rango de fechas válido.");
+            }
         } else {
-            System.out.println("Por favor, selecciona un rango de fechas válido.");
+            System.out.println("La selección no es un objeto de tipo Empleado.");
         }
     }
+
 
     private void configureGraficosController() {
         graficosController = new GraficosController();
@@ -367,6 +418,12 @@ public class MonitoreoController {
                 // Llamar a BaseDAO para cargar los empleados del departamento del supervisor
                 List<Map<String, Object>> entries = BaseDAO.obtenerEntradasPorDepartamento(departamentoId);
                 for (Map<String, Object> employeeData : entries) {
+                    // Verificar si entradaId es nulo y manejarlo adecuadamente
+                    Object entradaId = employeeData.get("entradaId");
+                    if (entradaId == null) {
+                        employeeData.put("entradaId", -1); // Asignar un valor por defecto si es nulo
+                    }
+
                     // Calcular el tiempo laborado si hay hora de entrada y salida
                     String horaEntrada = (String) employeeData.get("horaEntrada");
                     String horaSalida = (String) employeeData.get("horaSalida");
@@ -388,6 +445,7 @@ public class MonitoreoController {
             e.printStackTrace();
         }
     }
+
 
 
     private void showAlert(String title, String header, String content) {
@@ -434,7 +492,7 @@ public class MonitoreoController {
             choiceBox.getItems().addAll("Asistencia", "No Asistencia", "Retardo", "Justificación");
 
             // Obtener el tipo de asistencia actual del empleado para registrarlo luego
-            String tipoAsistenciaActual = (String) employeeData.get("tipoAsistencia");
+            String tipoAsistenciaActual = (String) employeeData.getOrDefault("tipoAsistencia", "Desconocido");
 
             // Crear un TextArea para las notas
             TextArea notasTextArea = new TextArea();
@@ -464,28 +522,34 @@ public class MonitoreoController {
                 String notas = response[1]; // Nota del cambio
 
                 // Crear la descripción del cambio
-                String descripcionCambio = tipoAsistenciaActual + " cambio a " + newTipoAsistencia;
+                String descripcionCambio = (tipoAsistenciaActual != null ? tipoAsistenciaActual : "N/A") + " cambio a " + (newTipoAsistencia != null ? newTipoAsistencia : "N/A");
 
                 // Actualizar el tipo de asistencia en los datos de la tabla
-                employeeData.put("tipoAsistencia", newTipoAsistencia);
-                employeeData.put("notas", notas); // Actualizar también las notas
+                employeeData.put("tipoAsistencia", newTipoAsistencia != null ? newTipoAsistencia : "N/A");
+                employeeData.put("notas", notas != null ? notas : ""); // Actualizar también las notas
 
                 // Llamar al DAO para actualizar el tipo de asistencia, las notas y registrar el cambio
                 try {
                     int tipoAsistenciaId = BaseDAO.obtenerIdTipoAsistencia(newTipoAsistencia);
                     if (tipoAsistenciaId != -1) {
                         int empleadoId = Integer.parseInt(employeeData.get("id").toString());
-                        String fechaEntrada = employeeData.get("fechaEntrada").toString();
+                        String fechaEntrada = employeeData.get("fechaEntrada") != null ? employeeData.get("fechaEntrada").toString() : "1970-01-01"; // Valor por defecto en caso de ser nulo
+                        Object entradaIdObj = employeeData.get("entradaId");
 
-                        // Actualizar el tipo de asistencia del empleado
-                        BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
+                        // Verificar si entradaId es nulo y manejarlo adecuadamente
+                        int entradaId = (entradaIdObj != null && entradaIdObj instanceof Integer) ? (int) entradaIdObj : -1;
+
+                        // Actualizar el tipo de asistencia del empleado si es válido
+                        if (entradaId != -1) {
+                            BaseDAO.actualizarTipoAsistencia(empleadoId, fechaEntrada, tipoAsistenciaId);
+                        }
 
                         // Verificar si el usuario es un Supervisor o un Líder para registrar cambios
                         if (currentUser instanceof Supervisor || currentUser instanceof Lider) {
                             int userId = currentUser.getId(); // Obtener el ID del supervisor o líder
 
-                            // Registrar el cambio en los logs, incluyendo notas y la descripción del cambio
-                            BaseDAO.registrarCambioLog(userId, "Cambio de tipo de asistencia", empleadoId, notas, descripcionCambio);
+                            // Registrar el cambio en los logs, incluyendo entrada_id, notas y la descripción del cambio
+                            BaseDAO.registrarCambioLog(userId, "Cambio de tipo de asistencia", empleadoId, entradaId, notas, descripcionCambio);
                         } else {
                             System.out.println("El usuario actual no tiene permisos para registrar cambios en los logs.");
                         }
@@ -502,6 +566,8 @@ public class MonitoreoController {
             System.out.println("El usuario no tiene permiso para cambiar el tipo de asistencia.");
         }
     }
+
+
 
 
 
@@ -534,6 +600,12 @@ public class MonitoreoController {
                 } else {
                     employeeData.put("tiempoLaborado", "N/A");
                 }
+
+                // Verificar si las notas están presentes, si no, asignar una cadena vacía
+                if (!employeeData.containsKey("notas") || employeeData.get("notas") == null) {
+                    employeeData.put("notas", "");
+                }
+
                 employees.add(employeeData);
             }
         } catch (SQLException e) {
@@ -546,6 +618,7 @@ public class MonitoreoController {
         // Mostrar la primera página de resultados
         showPage(1);
     }
+
 
 
     private void searchByDateAndDepartment(String departamentoSeleccionado, String searchQuery, boolean incluirSupervisores, boolean incluirEmpleados, String fechaInicio, String fechaFin) throws SQLException {
@@ -751,12 +824,27 @@ public class MonitoreoController {
         // Obtener el usuario autenticado
         Usuario currentUser = SessionManager.getCurrentUser();
 
-        // Si el usuario es un supervisor, restablecer con su departamento
-        if (currentUser instanceof Supervisor) {
-            Supervisor supervisor = (Supervisor) currentUser;
-            String departamentoNombre = supervisor.getDepartamentoNombre();  // Obtener el departamento del supervisor
-            departamentoChoiceBox.setValue(departamentoNombre);  // Restablecer al departamento del supervisor
+        if (currentUser instanceof Empleado) {
+            // Si es un empleado, mantener su nombre y departamento
+            Empleado empleado = (Empleado) currentUser;
+            searchField.setText(empleado.getNombreCompleto());
+            searchField.setDisable(true); // Mantener el TextField deshabilitado para que no se edite manualmente
+
+            String departamentoNombre = empleado.getDepartamentoNombre();
+            departamentoChoiceBox.setValue(departamentoNombre);
+            departamentoChoiceBox.setDisable(true); // Mantener el ChoiceBox deshabilitado
             selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+
+            // Cargar solo los registros del empleado
+            mostrarRegistrosDeEmpleado(empleado.getId());
+
+        } else if (currentUser instanceof Supervisor) {
+            // Si es un supervisor, restablecer con su departamento
+            Supervisor supervisor = (Supervisor) currentUser;
+            String departamentoNombre = supervisor.getDepartamentoNombre();
+            departamentoChoiceBox.setValue(departamentoNombre);
+            selectedDepartmentLabel.setText("Departamento: " + departamentoNombre);
+
         } else {
             // Para otros usuarios (por ejemplo, Líder), restablecer al valor por defecto
             departamentoChoiceBox.getSelectionModel().selectFirst();
@@ -792,12 +880,20 @@ public class MonitoreoController {
             boolean incluirSupervisores = supervisoresCheckBox.isSelected();
             boolean incluirEmpleados = empleadosCheckBox.isSelected();
 
-            Set<String> empleadosUnicos = BaseDAO.buscarNombresPorAsistencia(departamento, tipoAsistencia, fechaInicio, fechaFin, searchQuery, incluirSupervisores, incluirEmpleados);
+            // Asumimos que BaseDAO.buscarNombresPorAsistencia devuelve un Set<String> de nombres completos
+            Set<String> nombresEmpleados = BaseDAO.buscarNombresPorAsistencia(departamento, tipoAsistencia, fechaInicio, fechaFin, searchQuery, incluirSupervisores, incluirEmpleados);
 
-            // Convertir el Set en una lista observable para el TableView
+            // Convertir el Set en una lista observable de objetos Empleado para el TableView
             ObservableList<Empleado> empleados = FXCollections.observableArrayList();
-            for (String nombre : empleadosUnicos) {
-                empleados.add(new Empleado(nombre));  // Agregar el nombre único al TableView
+            for (String nombreCompleto : nombresEmpleados) {
+                // Dividir el nombre completo en partes si es necesario (nombres, apellidos)
+                String[] partesNombre = nombreCompleto.split(" ");
+                String nombres = partesNombre[0];
+                String apellidoPaterno = partesNombre.length > 1 ? partesNombre[1] : "";
+                String apellidoMaterno = partesNombre.length > 2 ? partesNombre[2] : "";
+
+                // Crear una instancia de Empleado (ajusta el constructor según tus necesidades)
+                empleados.add(new Empleado(0, nombres, apellidoPaterno, apellidoMaterno, "correo@ejemplo.com", departamento));
             }
 
             // Asignar los datos al TableView
@@ -810,18 +906,13 @@ public class MonitoreoController {
         }
     }
 
-    // Clase auxiliar para representar empleados
-    public static class Empleado {
-        private final String nombreCompleto;
 
-        public Empleado(String nombreCompleto) {
-            this.nombreCompleto = nombreCompleto;
-        }
 
-        public String getNombreCompleto() {
-            return nombreCompleto;
-        }
-    }
+
+
+
+
+
 
     public String getSearchFieldText() {
         return (searchField != null) ? searchField.getText().trim() : "";  // Si searchField no está enlazado correctamente, este valor será null

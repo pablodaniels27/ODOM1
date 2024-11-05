@@ -15,8 +15,8 @@ public class Supervisor extends Usuario {
     private Set<Permisos> permisos;  // Usar la clase Permisos en lugar de String
     private UsuariosDAO usuariosDAO;
 
-    public Supervisor(int id, String nombre, String correo, int departamentoId, String departamentoNombre, Set<Permisos> permisos, UsuariosDAO usuariosDAO) {
-        super(id, nombre, correo, "Supervisor");
+    public Supervisor(int id, String nombre, String apellidoPaterno, String apellidoMaterno, String correo, int departamentoId, String departamentoNombre, Set<Permisos> permisos, UsuariosDAO usuariosDAO) {
+        super(id, nombre, apellidoPaterno, apellidoMaterno, correo, "Supervisor");
         this.departamentoId = departamentoId;
         this.departamentoNombre = departamentoNombre;
         this.permisos = permisos;

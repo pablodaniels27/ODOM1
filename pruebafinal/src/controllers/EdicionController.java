@@ -1,19 +1,26 @@
 package controllers;
 
 import DAO.BaseDAO;
+import Lector.EnrollmentFormController;
 import Usuarios.Lider;
 import Usuarios.Supervisor;
 import Usuarios.Usuario;
 
+import com.digitalpersona.onetouch.DPFPTemplate;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+import com.digitalpersona.onetouch.DPFPTemplate;
+import Lector.EnrollmentFormController;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -35,6 +42,7 @@ import javax.imageio.ImageIO;
 
 public class EdicionController {
 
+
     @FXML
     private TextField nombreField, apellidoPaternoField, apellidoMaternoField, paisField, ciudadField,
             ladaField, telefonoField, emailField, rfcField, curpField, profesionField;
@@ -46,7 +54,7 @@ public class EdicionController {
     private ChoiceBox<String> departamentoChoiceBox, puestoChoiceBox, estatusChoiceBox;
 
     @FXML
-    private Button deshacerButton, guardarButton, regresarButton;
+    private Button deshacerButton, guardarButton, regresarButton, ingresarHuellaButton;
 
     @FXML
     private ImageView fingerprintImageView;
@@ -54,6 +62,8 @@ public class EdicionController {
     private final Map<String, Integer> departamentoMap = new HashMap<>();
     private final Map<String, Integer> puestoMap = new HashMap<>();
     private final Map<String, Integer> estatusMap = new HashMap<>();
+    private DPFPTemplate template; // Variable para almacenar el template de la huella digital
+    private byte[] fingerprintImageBytes; // Variable para almacenar la imagen de la huella en bytes
 
     // Mapa para almacenar los valores originales de los campos
     private final Map<String, Object> datosOriginales = new HashMap<>();
@@ -111,7 +121,45 @@ public class EdicionController {
         deshacerButton.setOnAction(event -> deshacerCambios());
         guardarButton.setOnAction(event -> guardarCambios());
         regresarButton.setOnAction(event -> regresarARegistroSucursal() );
+
     }
+
+    @FXML
+    public void handleIngresarHuellaButton(ActionEvent event) {
+        cambiarHuella();
+    }
+
+    @FXML
+    public void cambiarHuella() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/EnrollmentForm.fxml"));
+            Parent root = loader.load();
+
+            EnrollmentFormController controller = loader.getController();
+            controller.setEdicionController(this); // Pasar referencia para que pueda devolver la imagen
+
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Cambiar Huella");
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void updateFingerprintImage(javafx.scene.image.Image image) {
+        fingerprintImageView.setImage(image);
+    }
+
+    public void setTemplate(DPFPTemplate template) {
+        this.template = template;
+    }
+
+    public void setFingerprintImageBytes(byte[] fingerprintImageBytes) {
+        this.fingerprintImageBytes = fingerprintImageBytes;
+    }
+
 
     private void cargarDepartamentos() {
         try {
@@ -328,6 +376,7 @@ public class EdicionController {
             return false;
         }
 
+
         // Validación de CURP
         String curp = curpField.getText();
         if (!curp.matches("[A-Z][AEIOU][A-Z]{2}\\d{6}[HM][A-Z]{5}[A-Z0-9]{2}")) {
@@ -407,6 +456,13 @@ public class EdicionController {
                     empleadoData.put("id", empleadoId);
 
                     Map<String, Object> datosAntiguos = BaseDAO.obtenerDatosEmpleado(empleadoId);
+
+                    if (template != null) {
+                        byte[] serializedTemplate = template.serialize();
+                        if (serializedTemplate != null) {
+                            BaseDAO.actualizarCambioHuella(empleadoId, serializedTemplate, fingerprintImageBytes);
+                        }
+                    }
 
                     boolean success = BaseDAO.actualizarEmpleado(empleadoData);
                     if (success) {

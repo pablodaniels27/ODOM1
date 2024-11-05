@@ -6,9 +6,12 @@ import java.util.Map;
 import java.util.Set;
 
 import Usuarios.*;
+import controllers.AuthResult;
 import controllers.DatabaseConnection;
 import javafx.scene.control.CheckBox;
 import org.mindrot.jbcrypt.BCrypt;
+
+import static controllers.DatabaseConnection.getConnection;
 
 public class UsuariosDAO {
 
@@ -18,9 +21,7 @@ public class UsuariosDAO {
         this.conexion = conexion;
     }
 
-    public Usuario autenticar(String correo, String contrasena) {
-        Usuario usuario = null;
-
+    public AuthResult autenticar(String correo, String contrasena) {
         String query = "SELECT e.id AS empleado_id, e.nombres AS empleado_nombres, e.correo_electronico, " +
                 "u.contrasena_hash, j.nombre AS tipo_usuario, e.departamento_id, d.nombre AS departamento_nombre " +
                 "FROM empleados e " +
@@ -38,40 +39,45 @@ public class UsuariosDAO {
 
                     if (BCrypt.checkpw(contrasena, storedHash)) {
                         int id = rs.getInt("empleado_id");
-                        String nombre = rs.getString("empleado_nombres");
+                        String nombres = rs.getString("empleado_nombres");
+                        String apellidoPaterno = rs.getString("apellido_paterno");
+                        String apellidoMaterno = rs.getString("apellido_materno");
                         String tipoUsuario = rs.getString("tipo_usuario");
-                        int departamentoId = rs.getInt("departamento_id");
+                        String correoElectronico = rs.getString("correo_electronico");
                         String departamentoNombre = rs.getString("departamento_nombre");
 
+                        Usuario usuario = null;
                         switch (tipoUsuario) {
                             case "Empleado":
-                                usuario = new Empleado(id, nombre, correo);
+                                usuario = new Empleado(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico, departamentoNombre);
                                 break;
                             case "Supervisor":
+                                int departamentoId = rs.getInt("departamento_id");
                                 Set<Permisos> permisos = obtenerPermisos(id);
-                                usuario = new Supervisor(id, nombre, correo, departamentoId, departamentoNombre, permisos, this);
+                                usuario = new Supervisor(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico, departamentoId, departamentoNombre, permisos, this);
                                 break;
                             case "Líder":
-                                // Obtener todos los permisos para el líder
                                 Set<Permisos> permisosLider = Lider.obtenerTodosLosPermisos();
-                                usuario = new Lider(id, nombre, correo);
+                                usuario = new Lider(id, nombres, apellidoPaterno, apellidoMaterno, correoElectronico);
                                 break;
                         }
 
                         SessionManager.setCurrentUser(usuario);
+                        return new AuthResult(true, null, usuario);
                     } else {
-                        System.out.println("Contraseña incorrecta.");
+                        return new AuthResult(false, "Contraseña incorrecta.", null);
                     }
                 } else {
-                    System.out.println("Correo no encontrado.");
+                    return new AuthResult(false, "Correo no encontrado.", null);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            return new AuthResult(false, "Error de base de datos.", null);
         }
-
-        return usuario;
     }
+
+
 
     // Nuevo método para obtener un supervisor junto con sus permisos
     public Supervisor obtenerSupervisorConPermisos(String nombreCompleto) throws SQLException {
@@ -83,7 +89,7 @@ public class UsuariosDAO {
         String apellidoPaterno = nombrePartes.length > 1 ? nombrePartes[1] : "";
         String apellidoMaterno = nombrePartes.length > 2 ? nombrePartes[2] : "";
 
-        String query = "SELECT e.id, e.nombres, e.correo_electronico, e.departamento_id, d.nombre AS departamento_nombre " +
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, e.correo_electronico, e.departamento_id, d.nombre AS departamento_nombre " +
                 "FROM empleados e " +
                 "JOIN departamentos d ON e.departamento_id = d.id " +
                 "WHERE LOWER(e.nombres) LIKE LOWER(?) " +
@@ -99,15 +105,18 @@ public class UsuariosDAO {
 
             if (rs.next()) {
                 int id = rs.getInt("id");
+                String nombre = rs.getString("nombres");
+                String apellidoPaternoDB = rs.getString("apellido_paterno");
+                String apellidoMaternoDB = rs.getString("apellido_materno");
                 String correo = rs.getString("correo_electronico");
                 int departamentoId = rs.getInt("departamento_id");
                 String departamentoNombre = rs.getString("departamento_nombre");
 
                 // Obtener permisos del supervisor
                 Set<Permisos> permisos = obtenerPermisos(id);
-                supervisor = new Supervisor(id, nombreCompleto, correo, departamentoId, departamentoNombre, permisos, this);
+                supervisor = new Supervisor(id, nombre, apellidoPaternoDB, apellidoMaternoDB, correo, departamentoId, departamentoNombre, permisos, this);
 
-                System.out.println("Supervisor encontrado en base de datos: " + supervisor.getNombre());
+                System.out.println("Supervisor encontrado en base de datos: " + supervisor.getNombres() + " " + supervisor.getApellidoPaterno() + " " + supervisor.getApellidoMaterno());
             } else {
                 System.out.println("No se encontró el supervisor en la base de datos.");
             }
@@ -115,6 +124,7 @@ public class UsuariosDAO {
 
         return supervisor;
     }
+
 
     // Método para obtener permisos de un supervisor específico (generalizable)
     public Set<Permisos> obtenerPermisos(int supervisorId) throws SQLException {
@@ -177,5 +187,77 @@ public class UsuariosDAO {
             stmt.executeUpdate();
         }
     }
+
+    public static boolean verificarUsuario(String username) {
+        String query = "SELECT COUNT(*) FROM usuarios WHERE nombre_usuario = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+
+            statement.setString(1, username);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0; // Retorna true si el usuario existe
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false; // Retorna false si el usuario no existe o en caso de error
+    }
+
+    // Método para obtener la contraseña hasheada de un usuario por su correo electrónico
+    public String obtenerContrasenaHashPorCorreo(String correo) {
+        String query = "SELECT u.contrasena_hash FROM usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "WHERE e.correo_electronico = ?";
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("contrasena_hash");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Retorna null si no se encuentra la contraseña
+    }
+
+    // Método para obtener un objeto Usuario por su correo electrónico
+    public Usuario obtenerUsuarioPorCorreo(String correo) {
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, e.correo_electronico, j.nombre AS tipo_usuario, " +
+                "e.departamento_id, d.nombre AS departamento_nombre " +
+                "FROM empleados e " +
+                "JOIN jerarquias j ON e.jerarquia_id = j.id " +
+                "JOIN departamentos d ON e.departamento_id = d.id " +
+                "WHERE e.correo_electronico = ?";
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                String nombres = rs.getString("nombres");
+                String apellidoPaterno = rs.getString("apellido_paterno");
+                String apellidoMaterno = rs.getString("apellido_materno");
+                String correoDB = rs.getString("correo_electronico");
+                String tipoUsuario = rs.getString("tipo_usuario");
+                String departamentoNombre = rs.getString("departamento_nombre");
+
+                switch (tipoUsuario) {
+                    case "Empleado":
+                        return new Empleado(id, nombres, apellidoPaterno, apellidoMaterno, correoDB, departamentoNombre);
+                    case "Supervisor":
+                        int departamentoId = rs.getInt("departamento_id");
+                        Set<Permisos> permisos = obtenerPermisos(id);
+                        return new Supervisor(id, nombres, apellidoPaterno, apellidoMaterno, correoDB, departamentoId, departamentoNombre, permisos, this);
+                    case "Líder":
+                        return new Lider(id, nombres, apellidoPaterno, apellidoMaterno, correoDB);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Retorna null si no se encuentra el usuario
+    }
+
+
 
 }
