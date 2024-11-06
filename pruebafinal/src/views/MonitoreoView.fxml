@@ -40,11 +40,11 @@
 
                 <TableView fx:id="employeeTableView" layoutX="-3.0" layoutY="29.0" prefHeight="1036.0" prefWidth="1250.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-3.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="29.0">
                     <columns>
-                        <TableColumn fx:id="nombreColumn" minWidth="200" text="Nombre completo" />
+                        <TableColumn fx:id="nombreColumn" minWidth="200"  />
                         <TableColumn fx:id="idColumn" minWidth="20" text="ID" />
-                        <TableColumn fx:id="fechaEntradaColumn" minWidth="80" text="Fecha" />
-                        <TableColumn fx:id="horaEntradaColumn" minWidth="150" text="H.de entrada" />
-                        <TableColumn fx:id="horaSalidaColumn" minWidth="150" text="H.de salida" />
+                        <TableColumn fx:id="fechaEntradaColumn" minWidth="80"  />
+                        <TableColumn fx:id="horaEntradaColumn" minWidth="150"  />
+                        <TableColumn fx:id="horaSalidaColumn" minWidth="150"  />
                         <TableColumn fx:id="tiempoLaboradoColumn" minWidth="250" text="Tiempo laborado en horas" />
                         <TableColumn fx:id="tipoAsistenciaColumn" minWidth="170" text="Tipo de Asistencia" />
                         <TableColumn fx:id="tipoSalidaColumn" minWidth="150" text="Tipo de Salida" />
