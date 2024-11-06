@@ -191,3 +191,6 @@
     -fx-padding: 0;
     -fx-shape: "M0 0"; /* Removes the shape */
 }
+.check-box {
+    -fx-font-size: 16px; /* Aumenta el tamaño del texto de los CheckBoxes */
+} agregen este a su css
