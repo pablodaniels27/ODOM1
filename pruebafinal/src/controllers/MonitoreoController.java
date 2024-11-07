@@ -146,6 +146,13 @@ public class MonitoreoController {
 
     @FXML
     public void initialize() {
+
+        idColumn.setSortable(false);
+        tiempoLaboradoColumn.setSortable(false);
+        tipoAsistenciaColumn.setSortable(false);
+        tipoSalidaColumn.setSortable(false);
+        estadoColumn.setSortable(false);
+        notasColum.setSortable(false);
         configureSearchField();
         configureNotasColumn();
         configureTableColumns();
