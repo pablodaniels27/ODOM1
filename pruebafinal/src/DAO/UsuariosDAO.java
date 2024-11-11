@@ -258,6 +258,54 @@ public class UsuariosDAO {
         return null; // Retorna null si no se encuentra el usuario
     }
 
+    public Supervisor obtenerSupervisorConPermisosPorId(int supervisorId) throws SQLException {
+        Supervisor supervisor = null;
+
+        String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, e.correo_electronico, e.departamento_id, d.nombre AS departamento_nombre " +
+                "FROM empleados e " +
+                "JOIN departamentos d ON e.departamento_id = d.id " +
+                "WHERE e.id = ? AND e.jerarquia_id = 2"; // jerarquia_id=2 es para supervisores
+
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setInt(1, supervisorId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                String nombre = rs.getString("nombres");
+                String apellidoPaterno = rs.getString("apellido_paterno");
+                String apellidoMaterno = rs.getString("apellido_materno");
+                String correo = rs.getString("correo_electronico");
+                int departamentoId = rs.getInt("departamento_id");
+                String departamentoNombre = rs.getString("departamento_nombre");
+
+                Set<Permisos> permisos = obtenerPermisos(supervisorId);
+                supervisor = new Supervisor(supervisorId, nombre, apellidoPaterno, apellidoMaterno, correo, departamentoId, departamentoNombre, permisos, this);
+
+                System.out.println("Supervisor encontrado en base de datos: " + supervisor.getNombres() + " " + supervisor.getApellidoPaterno());
+            }
+        }
+
+        return supervisor;
+    }
+
+    public String obtenerNombreCompletoSupervisor(int supervisorId) throws SQLException {
+        String query = "SELECT CONCAT(nombres, ' ', apellido_paterno, ' ', apellido_materno) AS nombre_completo " +
+                "FROM empleados " +
+                "WHERE id = ? AND jerarquia_id = 2"; // jerarquia_id = 2 es para supervisores, según tu base de datos
+
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setInt(1, supervisorId);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString("nombre_completo");
+            } else {
+                System.out.println("Supervisor no encontrado en la base de datos.");
+                return null;
+            }
+        }
+    }
+
 
 
 }

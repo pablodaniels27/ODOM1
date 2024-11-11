@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PermisosController">
+<?import java.net.URL?>
+<AnchorPane prefHeight="1351.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/11.0.14-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.PermisosController">
     <children>
-        <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <BorderPane prefHeight="1324.0" prefWidth="820.0" style="-fx-padding: 10;" AnchorPane.bottomAnchor="27.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
             <top>
-                <VBox spacing="10" BorderPane.alignment="CENTER">
+                <VBox spacing="10" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" BorderPane.alignment="CENTER">
                     <!-- Título -->
                     <HBox alignment="CENTER" spacing="10">
                         <Label style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Acceso de Administración" />
@@ -16,8 +18,8 @@
                     <!-- Barra de búsqueda de supervisores -->
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label style="-fx-font-weight: bold;" text="Buscar Supervisor:" />
-                        <TextField fx:id="searchField" onKeyReleased="#searchForSupervisors" prefWidth="300" promptText="Buscar supervisor..." />
-                        <Button text="Buscar" onAction="#handleSearchButton" />
+                        <TextField fx:id="searchField"  prefWidth="300" promptText="Buscar supervisor..." />
+                        <Button  text="Buscar" />
                     </HBox>
 
                     <!-- Label para mostrar el nombre del supervisor -->
@@ -26,21 +28,27 @@
             </top>
 
             <center>
-                <ScrollPane prefHeight="500.0" prefWidth="800.0" BorderPane.alignment="CENTER">
+                <ScrollPane prefHeight="1139.0" prefWidth="800.0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" BorderPane.alignment="CENTER">
                     <content>
-                        <VBox fx:id="permisosContainer" alignment="CENTER_LEFT" spacing="10" fillWidth="true">
+                        <VBox fx:id="permisosContainer" alignment="CENTER_LEFT" fillWidth="true" spacing="10">
                             <!-- Aquí se agregarán dinámicamente los CheckBoxes de permisos -->
+                            <stylesheets>
+                                <URL value="@../resources/style.css" />
+                            </stylesheets>
                         </VBox>
                     </content>
                 </ScrollPane>
             </center>
 
-            <!-- Botones de aplicar cambios y deshacer cambiosss -->
+            <!-- Botones de aplicar cambios y deshacer cambios -->
             <bottom>
-                <HBox alignment="CENTER" spacing="10" BorderPane.alignment="CENTER">
-                    <Button fx:id="applyChangesButton" text="Aplicar cambios" onAction="#applyChanges" />
-                    <Button fx:id="undoChangesButton" text="Deshacer cambios" onAction="#undoChanges" />
-                </HBox>
+                <AnchorPane minHeight="45.0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                    <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <Button fx:id="applyChangesButton" onAction="#applyChanges" text="Aplicar cambios" />
+                        <Button fx:id="undoChangesButton" onAction="#undoChanges" text="Deshacer cambios" />
+                        <Button fx:id="regresarButton" onAction="#regresarARegistroSucursal" text="Regresar" />
+                    </HBox>
+                </AnchorPane>
             </bottom>
         </BorderPane>
     </children>

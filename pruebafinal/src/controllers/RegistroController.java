@@ -143,11 +143,33 @@ public class RegistroController {
             return; // No se enviarán datos si la validación falla
         }
 
-        // Insertar el nuevo empleado en la base de datos
-        insertarNuevoEmpleado();
+        /*
+        //Método para validar que se haya ingresado una huella.
+
+        if (template == null) {
+            mostrarError("No se ha ingresado la huella digital. Por favor, regístrela antes de continuar.");
+            return;
+        }*/
 
         // Generar y enviar la contraseña
         String email = emailField.getText();
+
+        try {
+            if (BaseDAO.verificarCorreoExistente(email)) {
+                mostrarError("El correo electrónico ya está registrado. Ingrese un correo diferente.");
+                return; // Detener el registro
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            mostrarError("Error al verificar el correo electrónico.");
+            return;
+        }
+
+        // Insertar el nuevo empleado en la base de datos
+        insertarNuevoEmpleado();
+
+
+
         String nuevaContraseña = PasswordController.generatePassword();
         String contraseñaHasheada = PasswordController.hashPassword(nuevaContraseña);
 
@@ -247,6 +269,27 @@ public class RegistroController {
 
 
     private boolean validarCampos() {
+
+        // Validación de Fecha de Nacimiento
+        LocalDate fechaNacimiento = fechaNacimientoPicker.getValue();
+
+        if (fechaNacimiento == null) {
+            mostrarError("La fecha de nacimiento no puede estar vacía.");
+            return false;
+        }
+
+        LocalDate hoy = LocalDate.now();
+        LocalDate fechaMinima = hoy.minusYears(100);
+        LocalDate fechaMaxima = hoy.minusYears(17);
+
+        if (fechaNacimiento.isBefore(fechaMinima) || fechaNacimiento.isAfter(fechaMaxima)) {
+            mostrarError("La fecha de nacimiento debe estar entre 17 y 100 años antes de la fecha actual.");
+            return false;
+        }
+
+
+
+
         // Validación de Lada
         String lada = ladaField.getText();
         if (!lada.matches("\\d{2,3}")) {
@@ -281,6 +324,20 @@ public class RegistroController {
         Matcher matcher = pattern.matcher(email);
         if (!matcher.find()) {
             mostrarError("Correo electrónico inválido. Ingrese un correo válido.");
+            return false;
+        }
+
+        // Validación de Departamento
+        String departamentoSeleccionado = departamentoChoiceBox.getSelectionModel().getSelectedItem();
+        if (departamentoSeleccionado == null || departamentoSeleccionado.isEmpty()) {
+            mostrarError("Debe seleccionar un departamento válido.");
+            return false;
+        }
+
+// Validación de Puesto
+        String puestoSeleccionado = puestoChoiceBox.getSelectionModel().getSelectedItem();
+        if (puestoSeleccionado == null || puestoSeleccionado.isEmpty()) {
+            mostrarError("Debe seleccionar un puesto válido.");
             return false;
         }
 
