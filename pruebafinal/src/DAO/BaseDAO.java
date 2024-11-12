@@ -299,7 +299,7 @@ public class BaseDAO {
                 "JOIN estatus_empleado es ON e.estatus_id = es.id " +
                 "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
                 "LEFT JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " + // Cambiado a LEFT JOIN
-                "WHERE dias.fecha BETWEEN ? AND ? ";
+                "WHERE dias.fecha BETWEEN?AND?";
 
         if (supervisorDepartamentoId != -1) {
             baseQuery += "AND e." + CAMPO_DEPARTAMENTO_ID + " = " + supervisorDepartamentoId + " ";
@@ -1104,6 +1104,22 @@ public class BaseDAO {
         return -1; // Retornar -1 si no se encuentra el empleado
     }
 
+    public static boolean verificarCorreoExistente(String email) throws SQLException {
+        String query = "SELECT COUNT(*) FROM empleados WHERE correo_electronico = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setString(1, email);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next() && resultSet.getInt(1) > 0) {
+                return true; // El correo ya existe en la base de datos
+            }
+        }
+        return false; // El correo no está registrado
+    }
+
+
 
 
 
@@ -1504,7 +1520,7 @@ public class BaseDAO {
             int diaId = obtenerDiaId(connection, fecha);
 
             // Actualizar la salida en la base de datos
-            String sql = "UPDATE entradas_salidas SET hora_salida = ?, WHERE empleado_id = ? AND dia_id = ?";
+            String sql = "UPDATE entradas_salidas SET hora_salida = ? WHERE empleado_id = ? AND dia_id = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setTime(1, java.sql.Time.valueOf(horaSalida));
                 statement.setInt(2, empleadoId);

@@ -1,6 +1,7 @@
 package controllers;
 
 import DAO.BaseDAO;
+import DAO.UsuariosDAO;
 import Services.CacheService;
 import Usuarios.Lider;
 import Usuarios.Supervisor;
@@ -9,6 +10,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -215,7 +217,7 @@ public class RegistroSucursalController {
                 String profesion = (String) supervisor.get("profesion");
                 int estatusId = (int) supervisor.get("estatus_id");
 
-                HBox supervisorBox = crearEmpleadoBox(id, nombre, apellidoPaterno, profesion, estatusId);
+                HBox supervisorBox = crearSupervisorBox(id, nombre, apellidoPaterno, profesion, estatusId);
                 supervisoresContainer.getChildren().add(supervisorBox);
             }
         } catch (SQLException e) {
@@ -223,12 +225,11 @@ public class RegistroSucursalController {
         }
     }
 
-
-
-    private HBox crearEmpleadoBox(int empleadoId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
-        HBox empleadoBox = new HBox();
-        empleadoBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;");
-        empleadoBox.setSpacing(10);
+    private HBox crearSupervisorBox(int supervisorId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
+        HBox supervisorBox = new HBox();
+        supervisorBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;");
+        supervisorBox.setPrefHeight(50);
+        supervisorBox.setSpacing(10);
 
         ImageView statusIcon = new ImageView();
         statusIcon.setFitHeight(10);
@@ -276,6 +277,141 @@ public class RegistroSucursalController {
         botonesContainer.setSpacing(5);
         botonesContainer.setVisible(false);
 
+        // Botón para editar el supervisor
+        Button editarButton = new Button("Editar");
+        editarButton.setOnAction(event -> cargarVistaEdicion(supervisorId));
+        editarButton.setStyle("-fx-font-size: 14px; -fx-background-color: #0078D7; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+        editarButton.setPrefWidth(100); // Asignar ancho fijo
+        botonesContainer.getChildren().add(editarButton);
+
+
+        // Color #2A87CA
+        // Botón dinámico para acceder a la vista de permisos
+        Button permisosButton = new Button("Permisos");
+        permisosButton.setOnAction(event -> cargarVistaPermisos(supervisorId));
+        permisosButton.setStyle("-fx-font-size: 14px; -fx-background-color: #5BC0DE; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+        permisosButton.setPrefWidth(100);
+        botonesContainer.getChildren().add(permisosButton);
+
+        Button eliminarButton = new Button("Dar baja");
+        eliminarButton.setOnAction(event -> darDeBajaEmpleado(supervisorId, supervisorBox));
+        eliminarButton.setStyle("-fx-font-size: 14px; -fx-background-color: #D9534F; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+        eliminarButton.setPrefWidth(100);
+        botonesContainer.getChildren().add(eliminarButton);
+
+        supervisorBox.getChildren().addAll(statusIcon, textContainer, spacer, botonesContainer);
+
+        // Efecto hover
+        supervisorBox.setOnMouseEntered(event -> {
+            if (selectedBox != supervisorBox) {
+                supervisorBox.setStyle("-fx-background-color: #f0f8ff; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
+            }
+        });
+
+        supervisorBox.setOnMouseExited(event -> {
+            if (selectedBox != supervisorBox) {
+                supervisorBox.setStyle("-fx-background-color: white; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
+            }
+        });
+
+        // Efecto de selección
+        supervisorBox.setOnMouseClicked(event -> {
+            if (selectedBox != null) {
+                selectedBox.setStyle("-fx-background-color: white; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
+                selectedBox.getChildren().get(3).setVisible(false);
+            }
+            supervisorBox.setStyle("-fx-background-color: #d1e7dd; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
+            selectedBox = supervisorBox;
+            botonesContainer.setVisible(true);
+        });
+
+        return supervisorBox;
+
+    }
+
+    private void cargarVistaPermisos(int supervisorId) {
+        try {
+            Node root = supervisoresContainer.getScene().getRoot();
+            if (root instanceof Parent) {
+                Parent parent = (Parent) root;
+                StackPane mainContent = (StackPane) parent.lookup("#mainContent");
+
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/Permisos.fxml"));
+                Parent permisosRoot = loader.load();
+
+                // Obtener el controlador de la vista de permisos y pasar UsuariosDAO y supervisorId
+                PermisosController permisosController = loader.getController();
+
+                // Inicializar UsuariosDAO en PermisosController
+                Connection conexion = DatabaseConnection.getConnection();
+                UsuariosDAO usuariosDAO = new UsuariosDAO(conexion);
+                permisosController.initialize(usuariosDAO, supervisorId, usuarioAutenticado);
+
+                // Limpiar el contenido del StackPane y agregar la vista de permisos
+                mainContent.getChildren().clear();
+                mainContent.getChildren().add(permisosRoot);
+            }
+        } catch (IOException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+    private HBox crearEmpleadoBox(int empleadoId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
+        HBox empleadoBox = new HBox();
+        empleadoBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;");
+        empleadoBox.setSpacing(10);
+
+
+        ImageView statusIcon = new ImageView();
+        statusIcon.setFitHeight(10);
+        statusIcon.setFitWidth(10);
+
+        // Define el ícono basado en el estatus del empleado
+        String statusImagePath;
+        switch (estatusId) {
+            case 1:
+                statusImagePath = "/resources/verde.jpg";
+                break;
+            case 2:
+                statusImagePath = "/resources/amarillo.jpg";
+                break;
+            case 3:
+                statusImagePath = "/resources/gris.jpg";
+                break;
+            case 4:
+                statusImagePath = "/resources/rojo.jpg";
+                break;
+            default:
+                statusImagePath = "/resources/gris.jpg";
+                break;
+        }
+
+        Image statusImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream(statusImagePath)));
+        statusIcon.setImage(statusImage);
+
+        VBox textContainer = new VBox();
+        textContainer.setSpacing(5);
+
+        Label nombreLabel = new Label(nombre.toUpperCase());
+        nombreLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label apellidoPaternoLabel = new Label(apellidoPaterno.toUpperCase());
+        apellidoPaternoLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+        Label profesionLabel = new Label(profesion != null ? profesion : "Profesión no especificada");
+        profesionLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: grey;");
+
+        textContainer.getChildren().addAll(nombreLabel, apellidoPaternoLabel, profesionLabel);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        VBox botonesContainer = new VBox();
+        botonesContainer.setSpacing(5);
+        botonesContainer.setVisible(false);
+
+
         // Verificar si el usuario es un Supervisor
         if (usuarioAutenticado instanceof Supervisor) {
             Supervisor supervisor = (Supervisor) usuarioAutenticado;
@@ -297,11 +433,22 @@ public class RegistroSucursalController {
             // Si es un líder (no es un Supervisor), permitir editar y dar de baja
             Button editarButton = new Button("Editar");
             editarButton.setOnAction(event -> cargarVistaEdicion(empleadoId));
+            editarButton.setStyle("-fx-font-size: 14px; -fx-background-color: #0078D7; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+            editarButton.setPrefWidth(100);
             botonesContainer.getChildren().add(editarButton);
 
             Button eliminarButton = new Button("Dar baja");
             eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId, empleadoBox));
+            eliminarButton.setStyle("-fx-font-size: 14px; -fx-background-color: #D9534F; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+            eliminarButton.setPrefWidth(100);
             botonesContainer.getChildren().add(eliminarButton);
+
+            Button relleno = new Button("");
+            eliminarButton.setPrefWidth(100);
+            relleno.setStyle("-fx-font-size: 14px; -fx-background-color: #5BC0DE; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+            relleno.setVisible(false);
+            botonesContainer.getChildren().add(relleno);
+
         }
 
         empleadoBox.getChildren().addAll(statusIcon, textContainer, spacer, botonesContainer);
