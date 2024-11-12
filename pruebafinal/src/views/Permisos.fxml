@@ -15,13 +15,6 @@
                         <Label style="-fx-font-size: 14px;" text="(Define un rol o asigna derechos)" />
                     </HBox>
 
-                    <!-- Barra de búsqueda de supervisores -->
-                    <HBox alignment="CENTER_LEFT" spacing="10">
-                        <Label style="-fx-font-weight: bold;" text="Buscar Supervisor:" />
-                        <TextField fx:id="searchField"  prefWidth="300" promptText="Buscar supervisor..." />
-                        <Button  text="Buscar" />
-                    </HBox>
-
                     <!-- Label para mostrar el nombre del supervisor -->
                     <Label fx:id="supervisorLabel" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #333;" text="Supervisor: " />
                 </VBox>
