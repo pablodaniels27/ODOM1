@@ -290,7 +290,7 @@ public class BaseDAO {
                 "en.id AS entradaId, en.hora_entrada, en.hora_salida, t.nombre AS tipo_asistencia, " +
                 "ts.nombre AS tipo_salida, " +
                 "(SELECT l2.details FROM logs l2 " +
-                " WHERE l2.entrada_id = en.id " +  // Usar entrada_id en lugar de target_employee_id
+                " WHERE l2.entrada_id = en.id " +
                 " AND l2.action = 'Cambio de tipo de asistencia' " +
                 " ORDER BY l2.timestamp DESC LIMIT 1) AS notas " +
                 "FROM entradas_salidas en " +
@@ -298,7 +298,7 @@ public class BaseDAO {
                 "JOIN dias ON en.dia_id = dias.id " +
                 "JOIN estatus_empleado es ON e.estatus_id = es.id " +
                 "JOIN tipos_asistencia t ON en.tipo_asistencia_id = t.id " +
-                "JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " +
+                "LEFT JOIN tipos_salida ts ON en.tipo_salida_id = ts.id " + // Cambiado a LEFT JOIN
                 "WHERE dias.fecha BETWEEN ? AND ? ";
 
         if (supervisorDepartamentoId != -1) {
@@ -1504,7 +1504,7 @@ public class BaseDAO {
             int diaId = obtenerDiaId(connection, fecha);
 
             // Actualizar la salida en la base de datos
-            String sql = "UPDATE entradas_salidas SET hora_salida = ?, tipo_salida_id = 4 WHERE empleado_id = ? AND dia_id = ?";
+            String sql = "UPDATE entradas_salidas SET hora_salida = ?, WHERE empleado_id = ? AND dia_id = ?";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setTime(1, java.sql.Time.valueOf(horaSalida));
                 statement.setInt(2, empleadoId);
