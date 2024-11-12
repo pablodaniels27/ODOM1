@@ -198,14 +198,7 @@ public class MainController {
 
 
 
-    @FXML
-    public void showPermisos() {
-        if (!(usuarioAutenticado instanceof Supervisor)) {
-            loadContent("/views/Permisos.fxml");
-        } else {
-            showAccessDeniedAlert();
-        }
-    }
+
 
     @FXML
     public void showAuditoria() {

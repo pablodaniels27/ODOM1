@@ -18,8 +18,8 @@
                     <!-- Barra de búsqueda de supervisores -->
                     <HBox alignment="CENTER_LEFT" spacing="10">
                         <Label style="-fx-font-weight: bold;" text="Buscar Supervisor:" />
-                        <TextField fx:id="searchField" onKeyReleased="#searchForSupervisors" prefWidth="300" promptText="Buscar supervisor..." />
-                        <Button onAction="#handleSearchButton" text="Buscar" />
+                        <TextField fx:id="searchField"  prefWidth="300" promptText="Buscar supervisor..." />
+                        <Button  text="Buscar" />
                     </HBox>
 
                     <!-- Label para mostrar el nombre del supervisor -->
@@ -46,6 +46,7 @@
                     <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                         <Button fx:id="applyChangesButton" onAction="#applyChanges" text="Aplicar cambios" />
                         <Button fx:id="undoChangesButton" onAction="#undoChanges" text="Deshacer cambios" />
+                        <Button fx:id="regresarButton" onAction="#regresarARegistroSucursal" text="Regresar" />
                     </HBox>
                 </AnchorPane>
             </bottom>
