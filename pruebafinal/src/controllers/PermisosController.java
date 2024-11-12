@@ -108,14 +108,36 @@ public class PermisosController {
 
     @FXML
     private void regresarARegistroSucursal() {
+        if (cambiosSinGuardar) {
+            List<String> permisosModificados = obtenerCambiosRealizados();
+
+            Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
+            confirmacion.setTitle("Cambios sin guardar");
+            confirmacion.setHeaderText("Tienes cambios sin guardar en los permisos:");
+            confirmacion.setContentText(String.join("\n", permisosModificados) + "\n\n¿Deseas omitir los cambios?");
+
+            ButtonType botonOmitir = new ButtonType("Omitir cambios");
+            ButtonType botonCancelar = new ButtonType("Cancelar", ButtonBar.ButtonData.CANCEL_CLOSE);
+            confirmacion.getButtonTypes().setAll(botonOmitir, botonCancelar);
+
+            confirmacion.showAndWait().ifPresent(response -> {
+                if (response == botonOmitir) {
+                    volverARegistroSucursal();
+                }
+            });
+        } else {
+            volverARegistroSucursal();
+        }
+    }
+
+    private void volverARegistroSucursal() {
         try {
-            // Similar a EdicionController para navegar de vuelta a RegistroSucursal
             StackPane mainContent = (StackPane) regresarButton.getScene().lookup("#mainContent");
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/RegistroSucursalView.fxml"));
             Parent registroView = loader.load();
 
             RegistroSucursalController registroController = loader.getController();
-            registroController.setUsuarioAutenticado(usuarioAutenticado);  // Asegura que pase el usuario autenticado
+            registroController.setUsuarioAutenticado(usuarioAutenticado);
 
             mainContent.getChildren().clear();
             mainContent.getChildren().add(registroView);
@@ -123,6 +145,7 @@ public class PermisosController {
             e.printStackTrace();
         }
     }
+
 
 
     private void cargarPermisosDisponibles() {
@@ -255,5 +278,18 @@ public class PermisosController {
         } else {
             System.out.println("No hay cambios en los permisos.");
         }
+    }
+
+    private List<String> obtenerCambiosRealizados() {
+        List<String> permisosModificados = new ArrayList<>();
+        for (Map.Entry<String, CheckBox> entry : permisosCheckBoxMap.entrySet()) {
+            String permiso = entry.getKey();
+            boolean estadoInicial = estadoInicialPermisos.get(permiso);
+            boolean estadoActual = entry.getValue().isSelected();
+            if (estadoInicial != estadoActual) {
+                permisosModificados.add(permiso + (estadoActual ? " - Activado" : " - Desactivado"));
+            }
+        }
+        return permisosModificados;
     }
 }
