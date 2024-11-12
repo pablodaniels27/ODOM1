@@ -125,9 +125,9 @@ public class PermisosController {
 
     @FXML
     private void regresarARegistroSucursal() {
-        if (cambiosSinGuardar) {
-            List<String> permisosModificados = obtenerCambiosRealizados();
-
+        // Verificar si hay cambios reales en comparación con el estado inicial
+        List<String> permisosModificados = obtenerCambiosRealizados();
+        if (!permisosModificados.isEmpty()) {
             Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
             confirmacion.setTitle("Cambios sin guardar");
             confirmacion.setHeaderText("Tienes cambios sin guardar en los permisos:");
@@ -143,7 +143,7 @@ public class PermisosController {
                 }
             });
         } else {
-            volverARegistroSucursal();
+            volverARegistroSucursal(); // No hay cambios, regresar directamente
         }
     }
 
@@ -261,15 +261,7 @@ public class PermisosController {
 
     @FXML
     private void applyChanges() {
-        List<String> permisosModificados = new ArrayList<>();
-        for (Map.Entry<String, CheckBox> entry : permisosCheckBoxMap.entrySet()) {
-            String permiso = entry.getKey();
-            boolean estadoInicial = estadoInicialPermisos.get(permiso);
-            boolean estadoActual = entry.getValue().isSelected();
-            if (estadoInicial != estadoActual) {
-                permisosModificados.add(permiso + (estadoActual ? " - Activado" : " - Desactivado"));
-            }
-        }
+        List<String> permisosModificados = obtenerCambiosRealizados();
 
         if (!permisosModificados.isEmpty()) {
             Alert confirmacion = new Alert(Alert.AlertType.CONFIRMATION);
@@ -283,17 +275,36 @@ public class PermisosController {
 
             confirmacion.showAndWait().ifPresent(response -> {
                 if (response == botonConfirmar) {
-                    // Llama a guardarPermisosSupervisor o cualquier método para aplicar cambios
+                    // Guardar cambios en la base de datos
                     try {
                         guardarPermisosSupervisor(supervisorId);
                         cambiosSinGuardar = false;
+
+                        // Actualizar estado inicial para reflejar el estado actual después de guardar
+                        actualizarEstadoInicial();
+
+                        System.out.println("Cambios aplicados exitosamente.");
                     } catch (SQLException e) {
                         e.printStackTrace();
                     }
                 }
             });
         } else {
-            System.out.println("No hay cambios en los permisos.");
+            // Mensaje indicando que no hay cambios
+            Alert sinCambios = new Alert(Alert.AlertType.INFORMATION);
+            sinCambios.setTitle("Sin Cambios");
+            sinCambios.setHeaderText(null);
+            sinCambios.setContentText("No has realizado ningún cambio.");
+            sinCambios.showAndWait();
+        }
+    }
+
+    // Método para actualizar el estado inicial después de aplicar los cambios
+    private void actualizarEstadoInicial() {
+        for (Map.Entry<String, CheckBox> entry : permisosCheckBoxMap.entrySet()) {
+            String permiso = entry.getKey();
+            boolean estadoActual = entry.getValue().isSelected();
+            estadoInicialPermisos.put(permiso, estadoActual); // Actualiza el estado inicial
         }
     }
 
