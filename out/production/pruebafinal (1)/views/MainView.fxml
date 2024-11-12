@@ -34,7 +34,7 @@
                         <Insets bottom="10" left="0" right="10" top="10" />
                     </HBox.margin>
                 </Button>
-               
+
             <Button  fx:id="auditoriaButton" ellipsisString="" layoutX="540.0" layoutY="20.0" onAction="#showAuditoria" styleClass="responsive-button" text="Auditoria" />
 
                 <!-- Espaciador para empujar los botones de Configuración y Ayuda a la derecha -->
