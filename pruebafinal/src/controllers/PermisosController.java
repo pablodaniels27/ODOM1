@@ -94,6 +94,8 @@ public class PermisosController {
 
                     checkBox.selectedProperty().addListener((observable, oldValue, newValue) -> cambiosSinGuardar = true);
                 }
+
+                aplicarDependenciasIniciales(); // Llamar a esta función después de cargar los permisos
             } else {
                 System.out.println("Supervisor no encontrado en la base de datos.");
                 applyChangesButton.setDisable(true);
@@ -103,6 +105,21 @@ public class PermisosController {
             e.printStackTrace();
             applyChangesButton.setDisable(true);
             undoChangesButton.setDisable(true);
+        }
+    }
+
+    // Método para aplicar las dependencias iniciales de los permisos
+    private void aplicarDependenciasIniciales() {
+        for (Map.Entry<String, String> entry : permisosDependencias.entrySet()) {
+            String permisoDependiente = entry.getKey();
+            String permisoPrincipal = entry.getValue();
+
+            CheckBox checkBoxPrincipal = permisosCheckBoxMap.get(permisoPrincipal);
+            CheckBox checkBoxDependiente = permisosCheckBoxMap.get(permisoDependiente);
+
+            if (checkBoxPrincipal != null && checkBoxDependiente != null) {
+                checkBoxDependiente.setDisable(!checkBoxPrincipal.isSelected());
+            }
         }
     }
 
