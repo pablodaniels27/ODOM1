@@ -40,6 +40,9 @@ public class LoginController {
     private UsuariosDAO usuariosDAO;
     private Connection conexion;
 
+
+
+
     // Constructor sin parámetros
     public LoginController() {
     }
@@ -114,6 +117,10 @@ public class LoginController {
         if (hashedPasswordFromDB != null) {
             // Verificar la contraseña ingresada con la contraseña hasheada de la base de datos
             if (BCrypt.checkpw(contrasena, hashedPasswordFromDB) || contrasena.equals("prueba123")) {
+                // Resetear el contador si el login es exitoso
+
+
+                // Continuar con la lógica de inicio de sesión exitosa
                 Usuario usuario = usuariosDAO.obtenerUsuarioPorCorreo(correo);
                 if (usuario != null) {
                     System.out.println("Inicio de sesión exitoso para: " + usuario.getNombres());
@@ -124,10 +131,10 @@ public class LoginController {
             }
         }
 
-        // Si no se logra autenticar, mostrar error
-        errorMessage.setText("Correo o contraseña incorrectos.");
-        errorMessage.setVisible(true);
     }
+
+
+
 
     private void loadMainView() {
         try {
