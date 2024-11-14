@@ -40,7 +40,7 @@
                 </ScrollPane>
             </center>
 
-            <!-- Botones de aplicar cambios y deshacer cambios -->
+            <!-- Botones de aplicar cambios y deshacer cambioss -->
             <bottom>
                 <AnchorPane minHeight="45.0" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                     <HBox alignment="CENTER" spacing="10" AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
