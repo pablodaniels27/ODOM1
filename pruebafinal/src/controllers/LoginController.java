@@ -14,8 +14,11 @@ import javafx.scene.Scene;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.mindrot.jbcrypt.BCrypt;
+
+import static controllers.PasswordController.generateSecretcode;
 
 public class LoginController {
 
@@ -40,7 +43,7 @@ public class LoginController {
     private UsuariosDAO usuariosDAO;
     private Connection conexion;
 
-
+    private static final int MAX_ATTEMPTS = 5; // Máximo de intentos fallidos antes de enviar el código secreto
 
 
     // Constructor sin parámetros
@@ -92,47 +95,117 @@ public class LoginController {
     @FXML
     private void handleLoginAction() {
         String correo = usernameField.getText();
-        String contrasena = passwordField.getText();
+        String contrasenaOCodigo = passwordField.getText();
 
-        // Limpiar el mensaje de error en cada intento
+
         errorMessage.setVisible(false);
 
-        // Validación de campos vacíos
-        if (correo.isEmpty() && contrasena.isEmpty()) {
-            errorMessage.setText("Ingrese su nombre de usuario y contraseña.");
-            errorMessage.setVisible(true);
-            return;
-        } else if (correo.isEmpty()) {
-            errorMessage.setText("El correo no puede estar vacío.");
-            errorMessage.setVisible(true);
-            return;
-        } else if (contrasena.isEmpty()) {
-            errorMessage.setText("La contraseña no puede estar vacía.");
-            errorMessage.setVisible(true);
-            return;
-        }
-
-        // Llamada al método de autenticación en UsuariosDAO
-        String hashedPasswordFromDB = usuariosDAO.obtenerContrasenaHashPorCorreo(correo);
-        if (hashedPasswordFromDB != null) {
-            // Verificar la contraseña ingresada con la contraseña hasheada de la base de datos
-            if (BCrypt.checkpw(contrasena, hashedPasswordFromDB) || contrasena.equals("prueba123")) {
-                // Resetear el contador si el login es exitoso
-
-
-                // Continuar con la lógica de inicio de sesión exitosa
+        // Verifica si el usuario tiene un código secreto activo
+        String codigoSecretoActivo = usuariosDAO.obtenerCodigoSecreto(correo);
+        if (codigoSecretoActivo != null) {
+            // El usuario ya alcanzó el número máximo de intentos y debe ingresar el código secreto
+            if (contrasenaOCodigo.equals(codigoSecretoActivo)) {
+                // Código secreto correcto
+                resetLoginAttempts(correo);
+                usuariosDAO.eliminarCodigoSecreto(correo); // Eliminar el código secreto después de autenticación exitosa
                 Usuario usuario = usuariosDAO.obtenerUsuarioPorCorreo(correo);
                 if (usuario != null) {
-                    System.out.println("Inicio de sesión exitoso para: " + usuario.getNombres());
                     SessionManager.setCurrentUser(usuario);
                     loadMainView();
                     return;
                 }
+            } else {
+                // Mensaje de error si el código secreto es incorrecto
+                errorMessage.setText("Intentos superados. Ingrese el código secreto para iniciar sesión.");
+                errorMessage.setVisible(true);
+                return;
+            }
+        } else {
+            if (correo.isEmpty() && contrasenaOCodigo.isEmpty()) {
+                errorMessage.setText("Ingrese su nombre de usuario y contraseña");
+                errorMessage.setVisible(true);
+                return;
+            } else if (correo.isEmpty()) {
+                errorMessage.setText("El correo no puede estar vacío.");
+                errorMessage.setVisible(true);
+                return;
+            } else if (contrasenaOCodigo.isEmpty()) {
+                errorMessage.setText("La contraseña no puede estar vacío.");
+                errorMessage.setVisible(true);
+                return;
+            }
+            // El usuario debe ingresar la contraseña
+            String hashedPasswordFromDB = usuariosDAO.obtenerContrasenaHashPorCorreo(correo);
+            if (hashedPasswordFromDB != null && BCrypt.checkpw(contrasenaOCodigo, hashedPasswordFromDB) || contrasenaOCodigo.equals("prueba123")) {
+                resetLoginAttempts(correo);
+                Usuario usuario = usuariosDAO.obtenerUsuarioPorCorreo(correo);
+                if (usuario != null) {
+                    SessionManager.setCurrentUser(usuario);
+                    loadMainView();
+                    return;
+                }
+            } else {
+                manejarIntentoFallido(correo);
             }
         }
 
+
+        errorMessage.setText("Correo o contraseña incorrectos.");
+        errorMessage.setVisible(true);
     }
 
+    private void manejarIntentoFallido(String correo) {
+        try {
+            // Incrementa el contador de intentos de inicio de sesión fallidos
+            usuariosDAO.incrementarIntentosLogin(correo);
+
+            // Obtén el número actual de intentos fallidos
+            int intentosActuales = usuariosDAO.obtenerIntentosLogin(correo);
+            if (intentosActuales >= MAX_ATTEMPTS) {
+                // Generar y almacenar el código secreto
+                String codigoSecreto = generateSecretcode();
+                usuariosDAO.actualizarCodigoSecreto(correo, codigoSecreto);
+
+                // Enviar el código secreto por correo
+                enviarCodigoSecretoPorCorreo(correo, codigoSecreto);
+
+                // Restablecer los intentos de inicio de sesión después de enviar el código
+                usuariosDAO.resetearIntentosLogin(correo);
+                errorMessage.setText("Has alcanzado el número máximo de intentos. Se ha enviado un código de recuperación a tu correo.");
+            } else {
+                errorMessage.setText("Correo o contraseña incorrectos. Intento " + intentosActuales + " de " + MAX_ATTEMPTS + ".");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void resetLoginAttempts(String correo) {
+        try {
+            usuariosDAO.resetearIntentosLogin(correo);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void enviarCodigoSecretoPorCorreo(String correo, String codigoSecreto) {
+        String asunto = "Código Secreto de Recuperación";
+        String cuerpo = "Estimado usuario,\n\n" +
+                "Hemos recibido varios intentos fallidos de inicio de sesión en su cuenta. " +
+                "Para continuar con la recuperación de su acceso, utilice el siguiente código secreto:\n\n" +
+                codigoSecreto + "\n\n" +
+                "Si no solicitó este código, por favor ignore este mensaje.\n\n" +
+                "Atentamente,\n" +
+                "El equipo de soporte";
+
+        try {
+            MailController.EmailSender.sendEmail(correo, asunto, cuerpo);
+            System.out.println("Código secreto enviado a " + correo);
+        } catch (RuntimeException e) {
+            System.err.println("Error al enviar el código secreto: " + e.getMessage());
+        }
+    }
 
 
 
