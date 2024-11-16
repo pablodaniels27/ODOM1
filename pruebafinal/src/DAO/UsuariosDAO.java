@@ -306,6 +306,126 @@ public class UsuariosDAO {
         }
     }
 
+    public void actualizarIntentosLogin(String correo, int intentos) throws SQLException {
+        String query = "UPDATE usuarios SET intentos_login = ? WHERE correo_electronico = ?";
+        try (PreparedStatement statement = conexion.prepareStatement(query)) {
+            statement.setInt(1, intentos);
+            statement.setString(2, correo);
+            statement.executeUpdate();
+        }
+    }
+
+    public void actualizarCodigoSecreto(String correo, String codigoSecreto) throws SQLException {
+        String query = "UPDATE usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "SET u.codigo_secreto = ? " +
+                "WHERE e.correo_electronico = ?";
+        try (PreparedStatement statement = conexion.prepareStatement(query)) {
+            statement.setString(1, codigoSecreto);
+            statement.setString(2, correo);
+            statement.executeUpdate();
+            System.out.println("Código secreto actualizado para el correo: " + correo);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error al actualizar el código secreto para el correo: " + correo);
+        }
+    }
+
+
+    public int incrementarIntentosLogin(String correo) throws SQLException {
+        String queryIncrement = "UPDATE usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "SET u.intentos_login = u.intentos_login + 1 " +
+                "WHERE e.correo_electronico = ?";
+        String querySelect = "SELECT u.intentos_login FROM usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "WHERE e.correo_electronico = ?";
+
+        try (PreparedStatement stmtIncrement = conexion.prepareStatement(queryIncrement);
+             PreparedStatement stmtSelect = conexion.prepareStatement(querySelect)) {
+
+            // Incrementar el contador de intentos de inicio de sesión
+            stmtIncrement.setString(1, correo);
+            stmtIncrement.executeUpdate();
+
+            // Obtener el nuevo valor de intentos_login
+            stmtSelect.setString(1, correo);
+            try (ResultSet rs = stmtSelect.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("intentos_login");
+                }
+            }
+        }
+        return 0; // En caso de error, se retorna 0, aunque debería manejarse como una excepción en producción
+    }
+
+    public void resetearIntentosLogin(String correo) throws SQLException {
+        String query = "UPDATE usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "SET u.intentos_login = 0 " +
+                "WHERE e.correo_electronico = ?";
+
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            stmt.executeUpdate();
+        }
+    }
+    public int obtenerIntentosLogin(String correo) {
+        String query = "SELECT u.intentos_login FROM usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "WHERE e.correo_electronico = ?";
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("intentos_login");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0; // Retorna 0 si no se encuentra el usuario o en caso de error
+    }
+
+    public String obtenerCodigoSecreto(String correo) {
+        String query = "SELECT u.codigo_secreto FROM usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "WHERE e.correo_electronico = ?";
+
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("codigo_secreto"); // Devuelve el código secreto si existe
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Retorna null si no hay un código secreto activo
+    }
+
+    public void eliminarCodigoSecreto(String correo) {
+        String query = "UPDATE usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "SET u.codigo_secreto = NULL " +
+                "WHERE e.correo_electronico = ?";
+
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            stmt.executeUpdate();
+            System.out.println("Código secreto eliminado para el correo: " + correo);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error al eliminar el código secreto para el correo: " + correo);
+        }
+    }
+
+
+
+
+
+
+
+
 
 
 }

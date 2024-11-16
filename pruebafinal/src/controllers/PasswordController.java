@@ -18,6 +18,18 @@ public class PasswordController {
         return password.toString();
     }
 
+    private static final String CodigoSecreto = "0123456789";
+    private static final int codigo_LENGTH = 6;
+
+    public static String generateSecretcode() {
+        StringBuilder codigo = new StringBuilder(codigo_LENGTH);
+        for (int i = 0; i < codigo_LENGTH; i++) {
+            int index = random.nextInt(CodigoSecreto.length());
+            codigo.append(CodigoSecreto.charAt(index));
+        }
+        return codigo.toString();
+    }
+
 
     public static String hashPassword(String plainPassword) {
         return BCrypt.hashpw(plainPassword, BCrypt.gensalt(12));
