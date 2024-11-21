@@ -1421,8 +1421,9 @@ public class BaseDAO {
     //IDENTIFICARSE CONTROLLER///////
 
     public static List<Map<String, Object>> obtenerHuellasEmpleadosActivos() throws SQLException {
-        // Construir la consulta usando las constantes
-        String sql = "SELECT h." + CAMPO_HUELLA + ", e.id, e." + CAMPO_NOMBRES + ", e." + CAMPO_APELLIDOPATERNO + " " +
+        // Modificamos la consulta para incluir el correo electrónico
+        String sql = "SELECT h." + CAMPO_HUELLA + ", e.id, e." + CAMPO_NOMBRES + ", e." + CAMPO_APELLIDOPATERNO +
+                ", e." + CAMPO_CORREO + " " + // Incluimos el correo electrónico
                 "FROM huellas h " +
                 "JOIN empleados e ON h." + CAMPO_EMPLEADO_ID + " = e.id " +
                 "WHERE e." + CAMPO_ESTATUS_ID + " = 1";
@@ -1435,10 +1436,11 @@ public class BaseDAO {
 
             while (resultSet.next()) {
                 Map<String, Object> huellaData = new HashMap<>();
-                huellaData.put(CAMPO_HUELLA, resultSet.getBytes(CAMPO_HUELLA));
+                huellaData.put("huella", resultSet.getBytes("huella"));
                 huellaData.put("id", resultSet.getInt("id"));
-                huellaData.put(CAMPO_NOMBRES, resultSet.getString(CAMPO_NOMBRES));
-                huellaData.put(CAMPO_APELLIDOPATERNO, resultSet.getString(CAMPO_APELLIDOPATERNO));
+                huellaData.put("nombres", resultSet.getString("nombres"));
+                huellaData.put("apellido_paterno", resultSet.getString("apellido_paterno"));
+                huellaData.put("correo_electronico", resultSet.getString("correo_electronico"));
 
                 huellas.add(huellaData);
             }
@@ -1452,27 +1454,29 @@ public class BaseDAO {
     //Asistencias Controller//
 
     public static Optional<Map<String, LocalTime>> obtenerRegistrosDelDia(int empleadoId, LocalDate fecha) throws SQLException {
-        String sql = "SELECT hora_entrada, hora_salida FROM entradas_salidas " +
-                "JOIN dias ON entradas_salidas.dia_id = dias.id " +
-                "WHERE entradas_salidas.empleado_id = ? AND di  as.fecha = ?";
+        String query = "SELECT es.hora_entrada, es.hora_salida " +
+                "FROM entradas_salidas es " +
+                "JOIN dias d ON es.dia_id = d.id " +
+                "WHERE es.empleado_id = ? AND d.fecha = ?";
+        try (Connection conexion = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conexion.prepareStatement(query)) {
 
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
+            // Establecer los parámetros
+            stmt.setInt(1, empleadoId);
+            stmt.setString(2, fecha.toString()); // Convertir LocalDate a 'YYYY-MM-DD'
 
-            statement.setInt(1, empleadoId);
-            statement.setDate(2, java.sql.Date.valueOf(fecha));
-            ResultSet resultSet = statement.executeQuery();
-
-            if (resultSet.next()) {
-                Map<String, LocalTime> recordData = new HashMap<>();
-                recordData.put(CAMPO_HORAENTRADA, resultSet.getTime(CAMPO_HORAENTRADA).toLocalTime());
-                recordData.put(CAMPO_HORASALIDA, resultSet.getTime(CAMPO_HORASALIDA) != null ? resultSet.getTime(CAMPO_HORASALIDA).toLocalTime() : null);
-
-                return Optional.of(recordData);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    // Crear el mapa con los resultados
+                    Map<String, LocalTime> horarios = Map.of(
+                            "hora_entrada", rs.getTime("hora_entrada") != null ? rs.getTime("hora_entrada").toLocalTime() : null,
+                            "hora_salida", rs.getTime("hora_salida") != null ? rs.getTime("hora_salida").toLocalTime() : null
+                    );
+                    return Optional.of(horarios);
+                }
             }
         }
-
-        return Optional.empty();
+        return Optional.empty(); // No hay registros para el día
     }
 
     public static void insertarEntradaAsistencia(int empleadoId, LocalDate fecha, LocalTime horaEntrada) throws SQLException {

@@ -221,6 +221,23 @@ public class UsuariosDAO {
         return null; // Retorna null si no se encuentra la contraseña
     }
 
+    public void actualizarContrasenaTemporal(String correo, String hashedPassword) throws SQLException {
+        String query = "UPDATE usuarios u " +
+                "JOIN empleados e ON u.empleado_id = e.id " +
+                "SET u.contrasena_hash = ? " +
+                "WHERE e.correo_electronico = ?";
+
+        try (PreparedStatement stmt = conexion.prepareStatement(query)) {
+            stmt.setString(1, hashedPassword);
+            stmt.setString(2, correo);
+            stmt.executeUpdate();
+            System.out.println("Contraseña temporal actualizada para el correo: " + correo);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            System.err.println("Error al actualizar la contraseña temporal para el correo: " + correo);
+        }
+    }
+
     // Método para obtener un objeto Usuario por su correo electrónico
     public Usuario obtenerUsuarioPorCorreo(String correo) {
         String query = "SELECT e.id, e.nombres, e.apellido_paterno, e.apellido_materno, e.correo_electronico, j.nombre AS tipo_usuario, " +

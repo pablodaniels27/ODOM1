@@ -8,7 +8,7 @@ import java.util.Properties;
 
 public class MailController {
 
-    public class EmailSender {
+    public static class EmailSender {
         public static void sendEmail(String to, String subject, String body) {
             // Configuración del servidor SMTP de Gmail
             final String username = "utigi78@gmail.com"; // Cambia esto por tu correo de Gmail
@@ -40,5 +40,16 @@ public class MailController {
                 throw new RuntimeException("Error al enviar el correo: " + e.getMessage(), e);
             }
         }
+
+        static void enviarCorreoConContrasena(String correo, String mensaje) {
+            String asunto = "Recuperación de contraseña";
+            try {
+                MailController.EmailSender.sendEmail(correo, asunto, mensaje);
+                System.out.println("Correo enviado exitosamente a " + correo);
+            } catch (RuntimeException e) {
+                System.err.println("Error al enviar el correo: " + e.getMessage());
+            }
+        }
+
     }
 }

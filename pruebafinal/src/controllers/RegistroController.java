@@ -12,6 +12,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -375,7 +376,8 @@ public class RegistroController {
 
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
-            stage.setTitle("Enrollment Form");
+            stage.setTitle("Capturar Huella");
+            stage.getIcons().add(new Image(ForgotPasswordPopupController.class.getResourceAsStream("/resources/ODOM.jpg")));
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();

@@ -18,6 +18,8 @@ import javafx.stage.Stage;
 
 import java.awt.image.BufferedImage;
 import javafx.scene.image.Image;
+import javafx.stage.Window;
+
 import javax.imageio.ImageIO;
 
 import java.io.ByteArrayOutputStream;
@@ -35,7 +37,7 @@ public class EnrollmentFormController {
     private Label idLabel;
 
     @FXML
-    private Button saveTemplateButton;
+    private Button continuarButton;
 
     @FXML
     private Button stopButton;
@@ -51,16 +53,31 @@ public class EnrollmentFormController {
     private boolean bandera = false;
 
 
+
     private RegistroController registroController;
 
     public void initialize() {
         capturer = DPFPGlobal.getCaptureFactory().createCapture();
         enrollment = DPFPGlobal.getEnrollmentFactory().createEnrollment();
         initCaptureEvents();
-        saveTemplateButton.setDisable(true);
+        continuarButton.setDisable(true);
         stopButton.setDisable(true);
 
+
+
+
         startCapture();
+
+        // Agregar manejador de cierre
+        Platform.runLater(() -> {
+            Stage stage = (Stage) stopButton.getScene().getWindow();
+            stage.setOnCloseRequest(event -> {
+                // Llama al método closeWindow() cuando la ventana se cierre
+                closeWindow();
+            });
+        });
+
+
     }
 
     public void setEdicionController(EdicionController controller) {
@@ -87,14 +104,14 @@ public class EnrollmentFormController {
             @Override
             public void readerConnected(DPFPReaderStatusEvent e) {
                 Platform.runLater(() -> {
-                    statusLabel.setText("The fingerprint reader was connected.");
+                    statusLabel.setText("Lector conectado");
                 });
             }
 
             @Override
             public void readerDisconnected(DPFPReaderStatusEvent e) {
                 Platform.runLater(() -> {
-                    statusLabel.setText("The fingerprint reader was disconnected.");
+                    statusLabel.setText("Lector no conectado");
                 });
             }
         });
@@ -111,7 +128,7 @@ public class EnrollmentFormController {
     public void startCapture() {
         capturer.startCapture();
         Platform.runLater(() -> {
-            statusLabel.setText("Using the fingerprint reader, scan your fingerprint.");
+            statusLabel.setText("Capturando huella");
             stopButton.setDisable(false);
         });
     }
@@ -120,7 +137,7 @@ public class EnrollmentFormController {
     private void stopCapture() {
         capturer.stopCapture();
         Platform.runLater(() -> {
-            statusLabel.setText("Capture stopped.");
+            statusLabel.setText("Captura finalizada.");
             stopButton.setDisable(true);
         });
     }
@@ -136,7 +153,7 @@ public class EnrollmentFormController {
                     switch (enrollment.getTemplateStatus()) {
                         case TEMPLATE_STATUS_READY:
                             template = enrollment.getTemplate();
-                            saveTemplateButton.setDisable(false);
+                            continuarButton.setDisable(false);
 
                             // Enviar el template y la imagen de la huella al RegistroController
                             if (registroController != null || edicionController != null) {
@@ -214,7 +231,8 @@ public class EnrollmentFormController {
 
     @FXML
     private void handleSaveTemplateButtonAction(ActionEvent event) {
-        saveTemplate();
+        Stage stage = (Stage) continuarButton.getScene().getWindow();
+        stage.close();
     }
 
     private void showFingerprintImage(DPFPSample sample) {
@@ -247,7 +265,7 @@ public class EnrollmentFormController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Guardar plantilla de huella digital");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Fingerprint Template", "*.ser"));
-        Stage stage = (Stage) saveTemplateButton.getScene().getWindow();
+        Stage stage = (Stage) continuarButton.getScene().getWindow();
         File file = fileChooser.showSaveDialog(stage);
 
         if (file != null) {

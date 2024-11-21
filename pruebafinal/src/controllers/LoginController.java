@@ -4,6 +4,7 @@ import DAO.UsuariosDAO;
 import Usuarios.*;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -42,6 +43,7 @@ public class LoginController {
     private Stage primaryStage;
     private UsuariosDAO usuariosDAO;
     private Connection conexion;
+    private static Stage popupStage = null;
 
     private static final int MAX_ATTEMPTS = 5; // Máximo de intentos fallidos antes de enviar el código secreto
 
@@ -52,22 +54,13 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        PasswordHashing();
+
         splitPane.setDividerPositions(0.3);
         splitPane.lookupAll(".split-pane-divider").forEach(div -> div.setMouseTransparent(true));
         backgroundImage.fitWidthProperty().bind(splitPane.widthProperty());
         backgroundImage.fitHeightProperty().bind(splitPane.heightProperty());
         setConexion();
     }
-
-
-
-        public  void  PasswordHashing() {
-            String password = "prueba123";
-            String hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt(12));  // Generar un hash válido
-            System.out.println(hashedPassword);
-        }
-
 
     public void setConexion() {
         try {
@@ -78,6 +71,31 @@ public class LoginController {
             e.printStackTrace();
         }
     }
+
+    @FXML
+    private void openForgotPasswordPopup() {
+
+        if (popupStage != null && popupStage.isShowing()) {
+            popupStage.requestFocus(); // Si ya está abierto, simplemente enfoca el popup existente
+            return;
+        }
+
+        try {
+            FXMLLoader loader = new FXMLLoader(ForgotPasswordPopupController.class.getResource("/views/ForgotPasswordPopup.fxml"));
+            Parent root = loader.load();
+
+            popupStage = new Stage();
+            popupStage.setScene(new Scene(root));
+            popupStage.setTitle("Recuperar Contraseña");
+            popupStage.getIcons().add(new Image(ForgotPasswordPopupController.class.getResourceAsStream("/resources/ODOM.jpg")));
+            popupStage.setResizable(false);
+            popupStage.setOnCloseRequest(event -> popupStage = null); // Libera la instancia cuando se cierre
+            popupStage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 
