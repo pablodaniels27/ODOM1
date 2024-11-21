@@ -33,9 +33,6 @@ public class RegistroSucursalController2 {
     private VBox empleadosContainer;
 
     @FXML
-    private VBox supervisoresContainer;
-
-    @FXML
     private TextField searchEmpleadosField;
 
     @FXML
@@ -169,11 +166,6 @@ public class RegistroSucursalController2 {
     }
 
 
-
-
-
-
-
     private HBox crearEmpleadoBox(int empleadoId, String nombre, String apellidoPaterno, String profesion, int estatusId) {
         HBox empleadoBox = new HBox();
         empleadoBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;");
@@ -234,14 +226,26 @@ public class RegistroSucursalController2 {
             if (supervisor.tienePermiso("Editar empleados")) {
                 Button editarButton = new Button("Editar");
                 editarButton.setOnAction(event -> cargarVistaEdicion(empleadoId));
+                editarButton.setStyle("-fx-font-size: 14px; -fx-background-color: #0078D7; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+                editarButton.setPrefWidth(100);
                 botonesContainer.getChildren().add(editarButton);
             }
 
             if (supervisor.tienePermiso("Dar de baja empleados")) {
                 Button eliminarButton = new Button("Dar baja");
                 eliminarButton.setOnAction(event -> darDeBajaEmpleado(empleadoId, empleadoBox));
+                eliminarButton.setStyle("-fx-font-size: 14px; -fx-background-color: #D9534F; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+                eliminarButton.setPrefWidth(100);
                 botonesContainer.getChildren().add(eliminarButton);
+
+                Button relleno = new Button("");
+                eliminarButton.setPrefWidth(100);
+                relleno.setStyle("-fx-font-size: 14px; -fx-background-color: #5BC0DE; -fx-text-fill: white; -fx-padding: 5px 10px; -fx-background-radius: 5px;");
+                relleno.setVisible(false);
+                botonesContainer.getChildren().add(relleno);
             }
+
+
         } else {
             // Si es un líder (no es un Supervisor), permitir editar y dar de baja
             Button editarButton = new Button("Editar");
@@ -316,7 +320,6 @@ public class RegistroSucursalController2 {
 
                     // Eliminar la HBox del empleado de la vista después de actualizar la base de datos
                     empleadosContainer.getChildren().remove(empleadoBox);
-                    supervisoresContainer.getChildren().remove(empleadoBox);
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
