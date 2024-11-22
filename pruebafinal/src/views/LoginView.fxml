@@ -27,13 +27,13 @@
 
                 <Label fx:id="errorMessage" text="" style="-fx-text-fill: red; -fx-font-size: 14px;" visible="false" />
 
-                <TextField fx:id="usernameField" onKeyPressed="#handleEnterKey" prefWidth="250.0" promptText="User name" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />
+                <TextField fx:id="usernameField" onKeyPressed="#handleEnterKey" prefWidth="250.0" promptText="Email" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />
 
                 <PasswordField fx:id="passwordField" onKeyPressed="#handleEnterKey" prefWidth="250.0" promptText="Password" style="-fx-background-radius: 10; -fx-padding: 10; -fx-border-color: #CCCCCC; -fx-border-radius: 10;" />
 
                 <Button fx:id="loginButton" onAction="#handleLoginAction" prefHeight="40.0" prefWidth="250.0" style="-fx-background-color: #28A745; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 10;" text="SIGN IN" />
 
-                <Hyperlink style="-fx-text-fill: #28A745;" text="Forgot User Name | Password?" />
+                <Hyperlink style="-fx-text-fill: #28A745;" text="Forgot Password?" />
 
                 <Hyperlink style="-fx-text-fill: #28A745;" text="SIGN UP" />
             </VBox>

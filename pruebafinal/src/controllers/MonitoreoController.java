@@ -13,6 +13,7 @@ import javafx.scene.layout.VBox;
 
 import java.sql.*;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -147,12 +148,20 @@ public class MonitoreoController {
     @FXML
     public void initialize() {
 
+        // Configura el orden alternante para nombreColumn
+        configureNombreColumnSorting();
+        configureFechaEntradaColumnSorting();
+        configureHoraEntradaColumnSorting();
+        configureHoraSalidaColumnSorting();
+
         idColumn.setSortable(false);
+        horaSalidaColumn.setSortable(false);
         tiempoLaboradoColumn.setSortable(false);
         tipoAsistenciaColumn.setSortable(false);
         tipoSalidaColumn.setSortable(false);
         estadoColumn.setSortable(false);
         notasColum.setSortable(false);
+
         configureSearchField();
         configureNotasColumn();
         configureTableColumns();
@@ -215,6 +224,144 @@ public class MonitoreoController {
             mostrarRegistrosDeEmpleado(empleado.getId());
         }
     }
+
+    //metodo para ordenar en alfabetico
+    private void configureNombreColumnSorting() {
+        // Desactiva el ordenamiento automático
+        nombreColumn.setSortable(false);
+
+        // Asegura que el título sea correcto y escucha el clic en el encabezado
+        nombreColumn.setGraphic(new Label("Nombre completo"));
+        nombreColumn.getGraphic().setOnMouseClicked(event -> {
+            // Ordena la lista completa de employees
+            if (nombreColumn.getSortType() == TableColumn.SortType.ASCENDING) {
+                employees.sort((map1, map2) -> map2.get("nombreCompleto").toString().compareToIgnoreCase(map1.get("nombreCompleto").toString()));
+                nombreColumn.setSortType(TableColumn.SortType.DESCENDING);
+            } else {
+                employees.sort((map1, map2) -> map1.get("nombreCompleto").toString().compareToIgnoreCase(map2.get("nombreCompleto").toString()));
+                nombreColumn.setSortType(TableColumn.SortType.ASCENDING);
+            }
+
+            // Actualiza la vista para mostrar solo los registros de la página actual
+            showPage(currentPage);
+        });
+    }
+
+    private void configureFechaEntradaColumnSorting() {
+        // Desactiva el ordenamiento automático
+        fechaEntradaColumn.setSortable(false);
+
+        // Asegura que el título sea correcto y escucha el clic en el encabezado
+        fechaEntradaColumn.setGraphic(new Label("Fecha"));
+        fechaEntradaColumn.getGraphic().setOnMouseClicked(event -> {
+            // Ordena la lista completa de employees por la fecha
+            if (fechaEntradaColumn.getSortType() == TableColumn.SortType.ASCENDING) {
+                employees.sort((map1, map2) -> {
+                    // Parsear y comparar las fechas en formato LocalDate
+                    LocalDate date1 = LocalDate.parse(map2.get("fechaEntrada").toString());
+                    LocalDate date2 = LocalDate.parse(map1.get("fechaEntrada").toString());
+                    return date1.compareTo(date2);
+                });
+                fechaEntradaColumn.setSortType(TableColumn.SortType.DESCENDING);
+            } else {
+                employees.sort((map1, map2) -> {
+                    // Parsear y comparar las fechas en formato LocalDate
+                    LocalDate date1 = LocalDate.parse(map1.get("fechaEntrada").toString());
+                    LocalDate date2 = LocalDate.parse(map2.get("fechaEntrada").toString());
+                    return date1.compareTo(date2);
+                });
+                fechaEntradaColumn.setSortType(TableColumn.SortType.ASCENDING);
+            }
+
+            // Actualiza la vista para mostrar solo los registros de la página actual
+            showPage(currentPage);
+        });
+    }
+
+    private void configureHoraEntradaColumnSorting() {
+        // Desactiva el ordenamiento automático
+        horaEntradaColumn.setSortable(false);
+
+        // Asegura que el título sea correcto y escucha el clic en el encabezado
+        horaEntradaColumn.setGraphic(new Label("H.de entrada"));
+        horaEntradaColumn.getGraphic().setOnMouseClicked(event -> {
+            // Ordena la lista completa de employees por la hora de entrada
+            if (horaEntradaColumn.getSortType() == TableColumn.SortType.ASCENDING) {
+                employees.sort((map1, map2) -> {
+                    LocalTime time1 = map1.get("horaEntrada") != null ? LocalTime.parse(map1.get("horaEntrada").toString()) : null;
+                    LocalTime time2 = map2.get("horaEntrada") != null ? LocalTime.parse(map2.get("horaEntrada").toString()) : null;
+
+                    // Ordena null al final
+                    if (time1 == null && time2 == null) return 0;
+                    if (time1 == null) return 1;
+                    if (time2 == null) return -1;
+
+                    return time1.compareTo(time2);
+                });
+                horaEntradaColumn.setSortType(TableColumn.SortType.DESCENDING);
+            } else {
+                employees.sort((map1, map2) -> {
+                    LocalTime time1 = map1.get("horaEntrada") != null ? LocalTime.parse(map1.get("horaEntrada").toString()) : null;
+                    LocalTime time2 = map2.get("horaEntrada") != null ? LocalTime.parse(map2.get("horaEntrada").toString()) : null;
+
+                    // Ordena null al final
+                    if (time1 == null && time2 == null) return 0;
+                    if (time1 == null) return 1;
+                    if (time2 == null) return -1;
+
+                    return time2.compareTo(time1);
+                });
+                horaEntradaColumn.setSortType(TableColumn.SortType.ASCENDING);
+            }
+
+            // Actualiza la vista para mostrar solo los registros de la página actual
+            showPage(currentPage);
+        });
+    }
+
+    private void configureHoraSalidaColumnSorting() {
+        // Desactiva el ordenamiento automático
+        horaSalidaColumn.setSortable(false);
+
+        // Asegura que el título sea correcto y escucha el clic en el encabezado
+        horaSalidaColumn.setGraphic(new Label("H.de salida"));
+        horaSalidaColumn.getGraphic().setOnMouseClicked(event -> {
+            // Ordena la lista completa de employees por la hora de salida
+            if (horaSalidaColumn.getSortType() == TableColumn.SortType.ASCENDING) {
+                employees.sort((map1, map2) -> {
+                    LocalTime time1 = map1.get("horaSalida") != null ? LocalTime.parse(map1.get("horaSalida").toString()) : null;
+                    LocalTime time2 = map2.get("horaSalida") != null ? LocalTime.parse(map2.get("horaSalida").toString()) : null;
+
+                    // Ordena null al final
+                    if (time1 == null && time2 == null) return 0;
+                    if (time1 == null) return 1;
+                    if (time2 == null) return -1;
+
+                    return time1.compareTo(time2);
+                });
+                horaSalidaColumn.setSortType(TableColumn.SortType.DESCENDING);
+            } else {
+                employees.sort((map1, map2) -> {
+                    LocalTime time1 = map1.get("horaSalida") != null ? LocalTime.parse(map1.get("horaSalida").toString()) : null;
+                    LocalTime time2 = map2.get("horaSalida") != null ? LocalTime.parse(map2.get("horaSalida").toString()) : null;
+
+                    // Ordena null al final
+                    if (time1 == null && time2 == null) return 0;
+                    if (time1 == null) return 1;
+                    if (time2 == null) return -1;
+
+                    return time2.compareTo(time1);
+                });
+                horaSalidaColumn.setSortType(TableColumn.SortType.ASCENDING);
+            }
+
+            // Actualiza la vista para mostrar solo los registros de la página actual
+            showPage(currentPage);
+        });
+    }
+
+
+
 
     private void mostrarRegistrosDeEmpleado(int empleadoId) {
         try {

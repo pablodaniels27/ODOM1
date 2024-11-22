@@ -26,8 +26,7 @@ import java.net.URL;
 
 public class MainController {
 
-    @FXML
-    private Button permisosButton;  // Botón de Permisos
+
 
     @FXML
     private Button auditoriaButton;  // Botón de Auditoría
@@ -81,12 +80,12 @@ public class MainController {
             Supervisor supervisor = (Supervisor) usuario;
             System.out.println("Permisos del supervisor: " + supervisor.getPermisos());  // Depuración para verificar permisos
             System.out.println("Usuario autenticado es un Supervisor. Aplicando restricciones...");
-            permisosButton.setVisible(false);
+
             auditoriaButton.setVisible(false);
             showInicio();  // Mostrar inicio para el supervisor
         } else if (usuario instanceof Empleado) {
             System.out.println("Usuario autenticado es un Empleado. Aplicando restricciones...");
-            permisosButton.setVisible(false);
+
             auditoriaButton.setVisible(false);
             registroButton.setVisible(false);
             registroSucursalButton.setVisible(false);
@@ -198,14 +197,7 @@ public class MainController {
 
 
 
-    @FXML
-    public void showPermisos() {
-        if (!(usuarioAutenticado instanceof Supervisor)) {
-            loadContent("/views/Permisos.fxml");
-        } else {
-            showAccessDeniedAlert();
-        }
-    }
+
 
     @FXML
     public void showAuditoria() {
