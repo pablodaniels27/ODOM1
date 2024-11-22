@@ -40,12 +40,6 @@
                 <!-- Espaciador para empujar los botones de Configuración y Ayuda a la derecha -->
                 <Pane HBox.hgrow="ALWAYS" />
 
-                <!-- Botón Configuración con margen -->
-                <Button ellipsisString="" onAction="#showConfiguración" styleClass="responsive-button" text="Configuración">
-                    <HBox.margin>
-                        <Insets bottom="10" left="0" right="10" top="10" />
-                    </HBox.margin>
-                </Button>
 
                 <!-- Botón Ayuda con margen en el lado derecho -->
                 <Button ellipsisString="" onAction="#showAyuda" prefHeight="36.0" prefWidth="83.0" styleClass="responsive-button" text="Ayuda">
