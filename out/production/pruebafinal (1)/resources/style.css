@@ -194,3 +194,21 @@
 .check-box {
     -fx-font-size: 16px; /* Aumenta el tamaño del texto de los CheckBoxes */
 }
+
+/* colores del grafico */
+
+.chart-bar.series0 {
+    -fx-bar-fill: #4CAF50; /* Verde para Asistencia */
+}
+
+.chart-bar.series1 {
+    -fx-bar-fill: #F44336; /* Rojo para No Asistencia */
+}
+
+.chart-bar.series2 {
+    -fx-bar-fill: #FFEB3B; /* Amarillo para Retardo */
+}
+
+.chart-bar.series3 {
+    -fx-bar-fill: #2196F3; /* Azul para Justificación */
+}

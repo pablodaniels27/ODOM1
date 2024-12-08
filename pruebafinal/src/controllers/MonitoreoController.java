@@ -643,7 +643,7 @@ public class MonitoreoController {
 
             // Crear el ChoiceBox con las opciones
             ChoiceBox<String> choiceBox = new ChoiceBox<>();
-            choiceBox.getItems().addAll("Asistencia", "No Asistencia", "Retardo", "Justificación");
+            choiceBox.getItems().addAll("Asistencia","No Asistencia","Retardo","Justificación");
 
             // Obtener el tipo de asistencia actual del empleado para registrarlo luego
             String tipoAsistenciaActual = (String) employeeData.getOrDefault("tipoAsistencia", "Desconocido");

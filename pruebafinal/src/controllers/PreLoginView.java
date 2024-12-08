@@ -28,7 +28,17 @@ public class PreLoginView {
 
     @FXML
     public void initialize() {
-
+        // Cargar la imagen de fondo en el ImageView
+        try {
+            Image backgroundImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/fondo.jpg")));
+            gifImageView.setImage(backgroundImage);
+            gifImageView.setPreserveRatio(false); // Ajusta el tamaño de la imagen al contenedor
+            gifImageView.setFitWidth(2000); // Ajusta estas dimensiones según tu diseño
+            gifImageView.setFitHeight(2000);
+        } catch (Exception e) {
+            System.err.println("Error al cargar la imagen de fondo: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -59,7 +69,7 @@ public class PreLoginView {
 
             // Configurar la ventana emergente (popup)
             Stage popupStage = new Stage();
-            popupStage.initModality(Modality.APPLICATION_MODAL);  // Bloquea la ventana principal hasta que se cierre el popup
+            popupStage.initModality(Modality.APPLICATION_MODAL); // Bloquea la ventana principal hasta que se cierre el popup
             popupStage.setTitle("Identificación de Usuario");
 
             popupStage.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/resources/ODOM.jpg"))));
@@ -73,7 +83,7 @@ public class PreLoginView {
 
             // Añadir un evento de cierre para asegurarse de que los recursos se liberen
             popupStage.setOnHidden(event -> {
-                identificarseController.closeWindow();  // Asegúrate de liberar los recursos en este método
+                identificarseController.closeWindow(); // Asegúrate de liberar los recursos en este método
             });
 
             // Establecer tamaño máximo y mínimo de la ventana emergente

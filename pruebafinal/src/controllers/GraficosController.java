@@ -109,7 +109,7 @@ public class GraficosController {
     }
 
     private void crearSeriesDeDatos(BarChart<String, Number> barChart, Map<String, Map<String, Integer>> asistenciaPorDepartamento) {
-        List<String> tiposAsistenciaEsperados = Arrays.asList("Asistencia", "No Asistencia", "Retardo", "Justificación");
+        List<String> tiposAsistenciaEsperados = Arrays.asList("Asistencia","No Asistencia","Retardo","Justificación");
 
         // Crear series de datos para cada tipo de asistencia
         for (String tipoAsistencia : tiposAsistenciaEsperados) {

@@ -760,77 +760,58 @@ public class BaseDAO {
     }
 
 
-    public static List<InicioController.Employee> obtenerEmpleados(String filter, int departamentoId) throws SQLException {
+    public static List<InicioController.Employee> obtenerEmpleadosActivosPorDepartamento(String filter, int departamentoId) throws SQLException {
         List<InicioController.Employee> employees = new ArrayList<>();
+        String query = "SELECT id, CONCAT(" + CAMPO_NOMBRES + ", ' ', " + CAMPO_APELLIDOPATERNO + ", ' ', " + CAMPO_APELLIDOMATERNO + ") AS " + CAMPO_NOMBRECOMPLETO +
+                ", " + CAMPO_PROFESION + " FROM empleados WHERE " + CAMPO_ESTATUS_ID + " = 1 AND " + CAMPO_DEPARTAMENTO_ID + " = ?";
 
-        // Construir la consulta para obtener solo empleados del departamento del supervisor
-        String query = "SELECT id, CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") AS " + CAMPO_NOMBRECOMPLETO +
-                ", e." + CAMPO_PROFESION + " " +
-                "FROM empleados e " +
-                "WHERE e." + CAMPO_DEPARTAMENTO_ID + " = ?";  // Filtro por departamento
-
-        // Si hay un filtro, añadir la condición a la consulta SQL
         if (!filter.isEmpty()) {
-            query += " AND CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") LIKE ?";
+            query += " AND CONCAT(" + CAMPO_NOMBRES + ", ' ', " + CAMPO_APELLIDOPATERNO + ", ' ', " + CAMPO_APELLIDOMATERNO + ") LIKE ?";
         }
 
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            // Asignar el `departamentoId`
             preparedStatement.setInt(1, departamentoId);
-
-            // Asignar el filtro si está presente
             if (!filter.isEmpty()) {
                 preparedStatement.setString(2, "%" + filter + "%");
             }
 
             ResultSet resultSet = preparedStatement.executeQuery();
-
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String fullName = resultSet.getString(CAMPO_NOMBRECOMPLETO);
                 String profession = resultSet.getString(CAMPO_PROFESION);
-
                 employees.add(new InicioController.Employee(id, fullName, profession));
             }
         }
-
         return employees;
     }
 
-    public static List<InicioController.Employee> obtenerTodosLosEmpleados(String filter) throws SQLException {
+    public static List<InicioController.Employee> obtenerEmpleadosActivos(String filter) throws SQLException {
         List<InicioController.Employee> employees = new ArrayList<>();
+        String query = "SELECT id, CONCAT(" + CAMPO_NOMBRES + ", ' ', " + CAMPO_APELLIDOPATERNO + ", ' ', " + CAMPO_APELLIDOMATERNO + ") AS " + CAMPO_NOMBRECOMPLETO +
+                ", " + CAMPO_PROFESION + " FROM empleados WHERE " + CAMPO_ESTATUS_ID + " = 1";
 
-        // Consulta para obtener todos los empleados, sin filtrar por departamento
-        String query = "SELECT id, CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") AS " + CAMPO_NOMBRECOMPLETO +
-                ", e." + CAMPO_PROFESION + " " +
-                "FROM empleados e";
-
-        // Si hay un filtro, añadir la condición a la consulta SQL
         if (!filter.isEmpty()) {
-            query += " WHERE CONCAT(e." + CAMPO_NOMBRES + ", ' ', e." + CAMPO_APELLIDOPATERNO + ", ' ', e." + CAMPO_APELLIDOMATERNO + ") LIKE ?";
+            query += " AND CONCAT(" + CAMPO_NOMBRES + ", ' ', " + CAMPO_APELLIDOPATERNO + ", ' ', " + CAMPO_APELLIDOMATERNO + ") LIKE ?";
         }
 
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            // Asignar el filtro si está presente
             if (!filter.isEmpty()) {
                 preparedStatement.setString(1, "%" + filter + "%");
             }
 
             ResultSet resultSet = preparedStatement.executeQuery();
-
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String fullName = resultSet.getString(CAMPO_NOMBRECOMPLETO);
                 String profession = resultSet.getString(CAMPO_PROFESION);
-
                 employees.add(new InicioController.Employee(id, fullName, profession));
             }
         }
-
         return employees;
     }
 
@@ -1467,11 +1448,9 @@ public class BaseDAO {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    // Crear el mapa con los resultados
-                    Map<String, LocalTime> horarios = Map.of(
-                            "hora_entrada", rs.getTime("hora_entrada") != null ? rs.getTime("hora_entrada").toLocalTime() : null,
-                            "hora_salida", rs.getTime("hora_salida") != null ? rs.getTime("hora_salida").toLocalTime() : null
-                    );
+                    Map<String, LocalTime> horarios = new HashMap<>();
+                    horarios.put("hora_entrada", rs.getTime("hora_entrada") != null ? rs.getTime("hora_entrada").toLocalTime() : null);
+                    horarios.put("hora_salida", rs.getTime("hora_salida") != null ? rs.getTime("hora_salida").toLocalTime() : null);
                     return Optional.of(horarios);
                 }
             }

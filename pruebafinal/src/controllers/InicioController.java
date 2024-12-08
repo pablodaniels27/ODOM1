@@ -89,6 +89,7 @@ public class InicioController {
     @FXML
     private Label sundayExitLabel;
 
+    private VBox selectedVBox = null; // Para rastrear el cuadro seleccionado
 
     private List<Employee> employees;
     private YearMonth currentYearMonth;
@@ -129,10 +130,9 @@ public class InicioController {
         loadEmployeesFromDatabase("");
     }
 
-    // Método para cargar empleados desde la base de datos
     private void loadEmployeesFromDatabase(String filter) {
-        employees = getEmployeesFromDatabase(filter);
-        System.out.println("Number of employees loaded: " + employees.size());
+        employees = getActiveEmployeesFromDatabase(filter);
+        System.out.println("Number of active employees loaded: " + employees.size());
 
         // Limpiar el contenedor de empleados antes de agregar nuevos elementos
         employeeListContainer.getChildren().clear();
@@ -144,23 +144,42 @@ public class InicioController {
         }
     }
 
-    // Crear un VBox para representar a un empleado
     private VBox createEmployeeVBox(Employee employee) {
-        VBox vbox = new VBox(5); // Espaciado de 5 entre elementos
-        vbox.setStyle("-fx-padding: 10; -fx-border-color: lightgray; -fx-background-color: white; -fx-background-radius: 10; -fx-border-radius: 10;");
+        VBox employeeBox = new VBox(5); // Espaciado de 5 entre elementos
+        employeeBox.setStyle("-fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10; -fx-background-color: white;");
+        employeeBox.setSpacing(10);
 
         Label nameLabel = new Label(employee.fullName());
         nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-
         Label professionLabel = new Label(employee.profession());
         professionLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: gray;");
 
-        // Añadir evento de clic al VBox
-        vbox.setOnMouseClicked(event -> handleEmployeeSelection(event, employee));
+        employeeBox.getChildren().addAll(nameLabel, professionLabel);
 
-        vbox.getChildren().addAll(nameLabel, professionLabel);
+        // Efecto hover
+        employeeBox.setOnMouseEntered(event -> {
+            if (selectedVBox != employeeBox) {
+                employeeBox.setStyle("-fx-background-color: #f0f8ff; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
+            }
+        });
 
-        return vbox;
+        employeeBox.setOnMouseExited(event -> {
+            if (selectedVBox != employeeBox) {
+                employeeBox.setStyle("-fx-background-color: white; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
+            }
+        });
+
+        // Efecto de selección
+        employeeBox.setOnMouseClicked(event -> {
+            if (selectedVBox != null) {
+                selectedVBox.setStyle("-fx-background-color: white; -fx-border-color: lightgrey; -fx-border-width: 1; -fx-padding: 10;");
+                handleEmployeeSelection(employee);
+            }
+            employeeBox.setStyle("-fx-background-color: #d1e7dd; -fx-border-color: lightgrey; -fx-border-width: 3; -fx-padding: 10;");
+            selectedVBox = employeeBox;
+        });
+
+        return employeeBox;
     }
 
     // Método para manejar la búsqueda
@@ -170,7 +189,7 @@ public class InicioController {
     }
 
     // Método para manejar la selección de un empleado en la lista
-    private void handleEmployeeSelection(MouseEvent event, Employee employee) {
+    private void handleEmployeeSelection( Employee employee) {
         if (employee != null) {
             this.selectedEmployee = employee;
             visitsInfoLabel.setText(employee.fullName());
@@ -345,33 +364,27 @@ public class InicioController {
         sundayExitLabel.setText("");
     }
 
+
     // Método para obtener los empleados desde la base de datos
-    // Método para obtener los empleados desde la base de datos
-    private List<Employee> getEmployeesFromDatabase(String filter) {
+    private List<Employee> getActiveEmployeesFromDatabase(String filter) {
         try {
-            // Obtener el usuario actual desde la sesión
             Usuario usuario = SessionManager.getCurrentUser();
 
-
-            // Si es un líder, obtener todos los empleados
             if (usuario instanceof Lider) {
-                // Si el usuario es un líder, traer todos los empleados sin filtrar por departamento
-                return BaseDAO.obtenerTodosLosEmpleados(filter);
-
+                // Obtener todos los empleados activos
+                return BaseDAO.obtenerEmpleadosActivos(filter);
             } else if (usuario instanceof Supervisor) {
-                // Si es un supervisor, filtrar por departamento
+                // Obtener empleados activos del departamento del supervisor
                 Supervisor supervisor = (Supervisor) usuario;
-                int departamentoId = supervisor.getDepartamentoId(); // Obtener el departamento del supervisor
-                return BaseDAO.obtenerEmpleados(filter, departamentoId);
+                int departamentoId = supervisor.getDepartamentoId();
+                return BaseDAO.obtenerEmpleadosActivosPorDepartamento(filter, departamentoId);
             }
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        // Si hay un error o no se cumple ninguna condición, devolver una lista vacía
         return new ArrayList<>();
     }
+
 
 
 
